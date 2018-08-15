@@ -9,7 +9,7 @@ createTrainingGames( number of games you want, number of playouts after each pos
 import numpy as np
 from MCTSCrazyhouse import MCTS
 
-treeSearch = MCTS('supervisedMINI.pt')
+treeSearch = MCTS('supervisedSMALL.pt')
 selfPlayInput, selfPlayOutput = treeSearch.createTrainingGames(100, 1)
 np.save("selfPlay01Input.npy", selfPlayInput)
 np.save("selfPlay01Output.npy", selfPlayOutput)

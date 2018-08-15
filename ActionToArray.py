@@ -446,7 +446,7 @@ def moveEvaluation(move, board, prediction):
     prediction = prediction.numpy().flatten()
     prediction = 1 / (1 + np.exp(-prediction))
     move = moveArray(move, board).flatten()
-    for i in range(384):
+    for i in range(320, 384):
         move[i] = 0
     evaluate = (move * prediction)
     finalEval = np.sum(evaluate)

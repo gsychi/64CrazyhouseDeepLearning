@@ -119,6 +119,9 @@ class MCTS():
 
         # should scale the evaluations from 0 to 1.
         evaluations = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction)
+
+        maxValue = 1/np.amax(evaluations)
+        evaluations *= maxValue
         self.childrenNNEvaluation.append(evaluations)
 
         # NEED TO ADD ACTUALLY A PAWN
@@ -316,7 +319,7 @@ class MCTS():
             # playout from a certain position.
             self.playout(str(int(i + 1)), notFromBeginning=True, arrayBoard=tempBoard.arrayBoard,
                          pythonBoard=tempBoard.board,
-                         plies=tempBoard.plies, wCap=tempBoard.whiteCaptivePieces, explorationConstant=0.15,
+                         plies=tempBoard.plies, wCap=tempBoard.whiteCaptivePieces, explorationConstant=0.3,
                          bCap=tempBoard.blackCaptivePieces, noise=False, actuallyAPawn=tempBoard.actuallyAPawn,
                          printPGN=False)
 
