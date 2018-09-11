@@ -14,12 +14,12 @@ pgnGames = list(pathlib.Path('lichessdatabase').glob('*.pgn'))
 listOfMoves = []
 for i in range(len(pgnGames)):
     pgn = open(pgnGames[i])
-    for k in range(100): #190000):  # 200,000 assures all games are looked at.
+    for k in range(40000):  # 190,000 assures all games are looked at.
         try:
             game = chess.pgn.read_game(pgn)
             whiteElo = int(game.headers["WhiteElo"])
             blackElo = int(game.headers["BlackElo"])
-            benchmark = 2200
+            benchmark = 2350
             if whiteElo >= benchmark and blackElo >= benchmark:
                 print(whiteElo)
                 print(blackElo)
@@ -51,19 +51,10 @@ for j in range(len(listOfMoves)):
             print("ERROR!")
 
         board.makeMove(listOfMoves[j][i])
-        # check if state is seen before
+        # add it to database
+        inList.append(state)
+        outList.append(action)
 
-        seenBefore = False
-        directory = -1
-        for k in range(len(inList)):
-            if np.sum(abs(inList[k].flatten() - state.flatten())) == 0:
-                seenBefore = True
-                directory = k
-        if not seenBefore:
-            inList.append(state)
-            outList.append(action)
-        else:
-            outList[directory] += action
 
     print(board.board)
     board.gameResult()
@@ -74,6 +65,7 @@ for j in range(len(listOfMoves)):
 
 # all games are parsed, now convert list into array
 inputs = np.zeros((len(inList), 1, 32, 28))
+
 outputs = np.zeros((len(outList), 4504))
 
 for i in range(len(inList)):
@@ -84,9 +76,9 @@ print(inputs.shape)
 print(outputs.shape)
 
 # normalize data so that the largest possible value of a move is 1.
-for i in range(len(outputs)):
-    for j in range(4504):
-        outputs[i][j] /= np.amax(outputs[i])
+#for i in range(len(outputs)):
+    #for j in range(4504):
+        #outputs[i][j] /= np.amax(outputs[i])
 
 """
 Below we convert our weighted probabilities into the logit function 

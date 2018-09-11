@@ -15,14 +15,15 @@ def trainNetwork(states, outputMoves, EPOCHS=10000, BATCH_SIZE=1000, LR=0.001, l
     outputMoves = torch.from_numpy(outputMoves)
     answers = (np.argmax(outputMoves, axis=1)).long()
 
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(device)
 
     boards, actions = states, outputMoves
 
-    data = MyDataset(boards, answers)  # use answers instead of actions when choosing CEL
+    data = MyDataset(boards, actions)  # use answers instead of actions when choosing CEL
 
     trainLoader = torch.utils.data.DataLoader(dataset=data, batch_size=BATCH_SIZE, shuffle=True)
-    testLoader = torch.utils.data.DataLoader(dataset=data, batch_size=len(boards), shuffle=False)
+    testLoader = torch.utils.data.DataLoader(dataset=data, batch_size=5000, shuffle=False)
     # to create a prediction, create a new dataset with input of the states, and output should just be np.zeros()
 
     # TRAINING!
@@ -40,12 +41,11 @@ def trainNetwork(states, outputMoves, EPOCHS=10000, BATCH_SIZE=1000, LR=0.001, l
 
     criterion = nn.PoissonNLLLoss()  # use this if you want to train from pick up square as well
 
-    criterion = nn.CrossEntropyLoss()
+    #criterion = nn.CrossEntropyLoss()
     #  use this if you want to train from argmax values. This trains faster,
     # but only trains one value as best move instead of weighted probability.
 
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)
-
     total_step = len(trainLoader)
 
     bestAccuracy = 0
@@ -55,10 +55,6 @@ def trainNetwork(states, outputMoves, EPOCHS=10000, BATCH_SIZE=1000, LR=0.001, l
             for i, (images, labels) in enumerate(trainLoader):
                 images = images.to(device)
                 labels = labels.to(device)
-                if epoch >= 150:
-                    LR = 0.01
-                elif epoch >= 250:
-                    LR = 0.001
 
                 # Forward pass
                 outputMoves = model(images)
@@ -78,6 +74,7 @@ def trainNetwork(states, outputMoves, EPOCHS=10000, BATCH_SIZE=1000, LR=0.001, l
                 model.eval()  # eval mode (batchnorm uses moving mean/variance instead of mini-batch mean/variance)
                 answers = np.argmax(actions.numpy(), axis=1)
                 with torch.no_grad():
+                    correct = 0
                     for images, labels in testLoader:
                         images = images.to(device)
                         # labels = labels.to(device)
@@ -91,8 +88,8 @@ def trainNetwork(states, outputMoves, EPOCHS=10000, BATCH_SIZE=1000, LR=0.001, l
                         print(predicted.numpy())
                         print(answers)
 
-                        correct = (predicted.numpy() == answers).sum()
-                        acc = 100 * (correct / len(answers))
+                        correct += (predicted.numpy() == answers).sum()
+                        acc = 100 * (correct / len(boards))
                         print("argmax prediction: ", acc, "% correct.")
 
                         if epoch == 1:
@@ -100,7 +97,6 @@ def trainNetwork(states, outputMoves, EPOCHS=10000, BATCH_SIZE=1000, LR=0.001, l
                         else:
                             if acc > bestAccuracy:
                                 bestAccuracy = acc
-                                torch.save(model, saveDirectory)
 
                         if acc >= THRESHOLD_FOR_SAVE:
                             torch.save(model, saveDirectory)
@@ -115,8 +111,8 @@ def trainNetwork(states, outputMoves, EPOCHS=10000, BATCH_SIZE=1000, LR=0.001, l
 
 train = True
 if train:
-    inputs = np.load("masterInputs.npy")
-    outputs = np.load("masterOutputs.npy")
+    inputs = np.load("Training Data/masterInputs.npy")
+    outputs = np.load("Training Data/masterOutputs.npy")
 
     # the computer does not seem to be placing pieces so let's change that.
 
@@ -130,6 +126,6 @@ if train:
     # outputs = np.zeros((1, 4504))
 
     # Now, with this database, we start training the neural network.
-    trainNetwork(inputs, outputs, loadDirectory="supervisedaL.pt", saveDirectory="supervisedSMALL.pt", EPOCHS=1000,
-                 BATCH_SIZE=64, updateInterval=1, LR=0.01)  # 0.005
+    trainNetwork(inputs, outputs, loadDirectory="sBIGFULL-4LAYER-RELU.pt", saveDirectory="sNEWFULL-4LAYER-RELU.pt", EPOCHS=1000,
+                 BATCH_SIZE=64, updateInterval=99, LR=0.005)  # 0.005
 

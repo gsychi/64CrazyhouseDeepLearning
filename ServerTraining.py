@@ -123,12 +123,12 @@ if train:
     listOfMoves = []
     for i in range(len(pgnGames)):
         pgn = open(pgnGames[i])
-        for k in range(190000):  # 190000):  # 200,000 assures all games are looked at.
+        for k in range(190000):  # 190,000 assures all games are looked at.
             try:
                 game = chess.pgn.read_game(pgn)
                 whiteElo = int(game.headers["WhiteElo"])
                 blackElo = int(game.headers["BlackElo"])
-                benchmark = 2400
+                benchmark = 2450
                 if whiteElo >= benchmark and blackElo >= benchmark:
                     print(whiteElo)
                     print(blackElo)

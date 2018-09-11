@@ -33,7 +33,22 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
     while sim.result == 2:
         noiseVal = 0.6 / (6 * (sim.plies // 2 + 1))
         if sim.plies % 2 == 0:
-            bestNet.competitivePlayoutsFromPosition(playouts, sim)
+            if playouts > 0:
+                bestNet.competitivePlayoutsFromPosition(playouts, sim)
+            else:
+                position = sim.boardToString()
+                if position not in bestNet.dictionary:
+                    state = torch.from_numpy(sim.boardToState())
+                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
+                    testSet = MyDataset(state, nullAction)
+                    generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
+                    with torch.no_grad():
+                        for images, labels in generatePredic:
+                            outputs = bestNet.neuralNet(images)
+                            bestNet.addPositionToMCTS(sim.boardToString(),
+                                                      ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                                       sim.board),
+                                                      sim.arrayBoard, outputs)
             directory = bestNet.dictionary[sim.boardToString()]
             index = np.argmax(
                 MCTSCrazyhouse.PUCT_Algorithm(bestNet.childrenStateWin[directory], bestNet.childrenStateSeen[directory], 0.02,
@@ -47,7 +62,22 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
             sim.makeMove(move)
             sim.gameResult()
         elif sim.plies % 2 == 1:
-            testingNet.competitivePlayoutsFromPosition(playouts, sim)
+            if playouts > 0:
+                testingNet.competitivePlayoutsFromPosition(playouts, sim)
+            else:
+                position = sim.boardToString()
+                if position not in testingNet.dictionary:
+                    state = torch.from_numpy(sim.boardToState())
+                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
+                    testSet = MyDataset(state, nullAction)
+                    generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
+                    with torch.no_grad():
+                        for images, labels in generatePredic:
+                            outputs = testingNet.neuralNet(images)
+                            testingNet.addPositionToMCTS(sim.boardToString(),
+                                                         ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                                          sim.board),
+                                                         sim.arrayBoard, outputs)
             directory = testingNet.dictionary[sim.boardToString()]
             index = np.argmax(
                 MCTSCrazyhouse.PUCT_Algorithm(testingNet.childrenStateWin[directory], testingNet.childrenStateSeen[directory], 0.02,
@@ -97,7 +127,22 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
     while sim.result == 2:
         noiseVal = 0.6/(6*(sim.plies//2 + 1))
         if sim.plies % 2 == 1:
-            bestNet.competitivePlayoutsFromPosition(playouts, sim)
+            if playouts > 0:
+                bestNet.competitivePlayoutsFromPosition(playouts, sim)
+            else:
+                position = sim.boardToString()
+                if position not in bestNet.dictionary:
+                    state = torch.from_numpy(sim.boardToState())
+                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
+                    testSet = MyDataset(state, nullAction)
+                    generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
+                    with torch.no_grad():
+                        for images, labels in generatePredic:
+                            outputs = bestNet.neuralNet(images)
+                            bestNet.addPositionToMCTS(sim.boardToString(),
+                                              ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                               sim.board),
+                                              sim.arrayBoard, outputs)
             directory = bestNet.dictionary[sim.boardToString()]
             index = np.argmax(
                 MCTSCrazyhouse.PUCT_Algorithm(bestNet.childrenStateWin[directory], bestNet.childrenStateSeen[directory], 0.02,
@@ -111,7 +156,22 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
             sim.makeMove(move)
             sim.gameResult()
         elif sim.plies % 2 == 0:
-            testingNet.competitivePlayoutsFromPosition(playouts, sim)
+            if playouts > 0:
+                testingNet.competitivePlayoutsFromPosition(playouts, sim)
+            else:
+                position = sim.boardToString()
+                if position not in testingNet.dictionary:
+                    state = torch.from_numpy(sim.boardToState())
+                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
+                    testSet = MyDataset(state, nullAction)
+                    generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
+                    with torch.no_grad():
+                        for images, labels in generatePredic:
+                            outputs = testingNet.neuralNet(images)
+                            testingNet.addPositionToMCTS(sim.boardToString(),
+                                              ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                               sim.board),
+                                              sim.arrayBoard, outputs)
             directory = testingNet.dictionary[sim.boardToString()]
             index = np.argmax(
                 MCTSCrazyhouse.PUCT_Algorithm(testingNet.childrenStateWin[directory], testingNet.childrenStateSeen[directory], 0.02,
@@ -170,6 +230,6 @@ def bestNetworkTest(bestNet, testingNet, games, playouts, clearAfterEachRound=Fa
 
 testing = True
 if testing:
-    trained = MCTS('random.pt')
-    untrained = MCTS('supervisedSMALL.pt')
-    print(bestNetworkTest(untrained, trained, 10, 1))
+    best = MCTS('sBIGFULL-4LAYER-RELU.pt')
+    newNet = MCTS('s58000-4LAYER-RELU.pt')
+    print(bestNetworkTest(best, newNet, 1000, 0))

@@ -45,9 +45,9 @@ def zeroList(n):
 def PUCT_Algorithm(w, n, c, N, q):
     # Provides a win rate score from 0 to 1
     selfPlayEvaluation = np.divide(w, n, out=np.zeros_like(w), where=n != 0)
-    #for i in range(len(selfPlayEvaluation)):
-        #if n[i] == 0:
-            #selfPlayEvaluation[i] = 0.5
+    # for i in range(len(selfPlayEvaluation)):
+    # if n[i] == 0:
+    # selfPlayEvaluation[i] = 0.5
     nnEvaluation = q
     winRate = (nnEvaluation + selfPlayEvaluation) * 0.5
 
@@ -56,6 +56,7 @@ def PUCT_Algorithm(w, n, c, N, q):
 
     PUCT = winRate + exploration
     return PUCT
+
 
 def noiseEvals(nnEvals, bounds):
     # this diversifies training data during its self-play games, in order to ensure that the computer looks at a lot of
@@ -117,11 +118,15 @@ class MCTS():
         self.childrenStateSeen.append(np.zeros(len(legalMoves)))
         self.childrenStateWin.append(np.zeros(len(legalMoves)))
 
-        # should scale the evaluations from 0 to 1.
+
         evaluations = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction)
 
-        maxValue = 1/np.amax(evaluations)
+        """
+        # should scale the evaluations from 0 to 1.
+        maxValue = 1 / np.amax(evaluations)
         evaluations *= maxValue
+        """
+
         self.childrenNNEvaluation.append(evaluations)
 
         # NEED TO ADD ACTUALLY A PAWN
@@ -323,12 +328,11 @@ class MCTS():
                          bCap=tempBoard.blackCaptivePieces, noise=False, actuallyAPawn=tempBoard.actuallyAPawn,
                          printPGN=False)
 
-            # self.printSize()
-            print(self.childrenMoveNames[self.dictionary[sim.boardToString()]])
-            print(self.childrenStateWin[self.dictionary[sim.boardToString()]])
-            print(self.childrenStateSeen[self.dictionary[sim.boardToString()]])
-            print(self.childrenNNEvaluation[self.dictionary[sim.boardToString()]])
-
+            self.printSize()
+            # print(self.childrenMoveNames[self.dictionary[sim.boardToString()]])
+            # print(self.childrenStateWin[self.dictionary[sim.boardToString()]])
+            # print(self.childrenStateSeen[self.dictionary[sim.boardToString()]])
+            # print(self.childrenNNEvaluation[self.dictionary[sim.boardToString()]])
 
     def simulateTrainingGame(self, playouts, round="1"):
 
@@ -353,14 +357,30 @@ class MCTS():
 
         sim = ChessEnvironment()
         while sim.result == 2:
-            self.trainingPlayoutsFromPosition(playouts, sim)
+            if playouts > 0:
+                self.trainingPlayoutsFromPosition(playouts, sim)
+            else:
+                position = sim.boardToString()
+                if position not in self.dictionary:
+                    state = torch.from_numpy(sim.boardToState())
+                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
+                    testSet = MyDataset(state, nullAction)
+                    generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
+                    with torch.no_grad():
+                        for images, labels in generatePredic:
+                            outputs = self.neuralNet(images)
+                            self.addPositionToMCTS(sim.boardToString(),
+                                                   ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                                    sim.board),
+                                                   sim.arrayBoard, outputs)
             directory = self.dictionary[sim.boardToString()]
             index = np.argmax(
                 PUCT_Algorithm(self.childrenStateWin[directory], self.childrenStateSeen[directory], 0.5,
                                # 0.25-0.30 guarantees diversity
                                np.sum(self.childrenStateSeen[directory]),
-                               noiseEvals(self.childrenNNEvaluation[directory], 2.1 / (6 * ((sim.plies // 2) + 1))))
+                               noiseEvals(self.childrenNNEvaluation[directory], 2.1 / (7 * ((sim.plies // 2) + 1))))
             )
+            #print(index)
             move = self.childrenMoveNames[directory][index]
             moveNames = self.childrenMoveNames[directory]
 
@@ -418,13 +438,12 @@ class MCTS():
                 blackStateWin.append(blackStateSeen[j] * 1)
 
         parentStates = np.concatenate((whiteParentState, blackParentState))
-        statesSeen = whiteStateSeen + blackStateSeen
         statesWin = whiteStateWin + blackStateWin
         statesNames = whiteStateNames + blackStateNames
 
         print(PGN)
 
-        return parentStates, statesSeen, statesWin, statesNames
+        return parentStates, statesWin, statesNames
 
     def simulateCompetitiveGame(self, playouts):
 
@@ -480,24 +499,22 @@ class MCTS():
 
     def createTrainingGames(self, numberOfGames, playouts):
         trainingParentStates = np.zeros(1)
-        trainingStatesSeen = []
         trainingStatesWin = []
         trainingStatesName = []
-        trainingWinPercentages = []
 
         for i in range(numberOfGames):
             newParentStates, \
-            newStatesSeen, \
             newStatesWin, \
             newStatesName = self.simulateTrainingGame(playouts, round=str(int(i + 1)))
 
             if i == 0:  # if nothing has been added yet
                 trainingParentStates = newParentStates
-                trainingStatesSeen = newStatesSeen
                 trainingStatesWin = newStatesWin
                 trainingStatesName = newStatesName
 
             if i != 0:
+                # in the past, we checked if information was in dataset. It is not necessary.
+                """
                 removeDirectories = []
                 for k in range(len(trainingParentStates)):
                     for j in range(len(newParentStates)):
@@ -513,20 +530,23 @@ class MCTS():
                     del newStatesSeen[index]
                     del newStatesWin[index]
                     del newStatesName[index]
+                    """
 
                 trainingParentStates = np.concatenate((trainingParentStates, newParentStates), axis=0)
-                trainingStatesSeen = trainingStatesSeen + newStatesSeen
                 trainingStatesWin = trainingStatesWin + newStatesWin
                 trainingStatesName = trainingStatesName + newStatesName
-        # Create win percentage for all moves:
-        for j in range(len(trainingStatesWin)):  # length of tSW and tSS should be the same
+
+        """
+         # Create win percentage for all moves:
+         for j in range(len(trainingStatesWin)):  # length of tSW and tSS should be the same
             newEntry = np.divide(trainingStatesWin[j], trainingStatesSeen[j], out=np.zeros_like(trainingStatesWin[j]),
                                  where=trainingStatesSeen[j] != 0)
             trainingWinPercentages.append(newEntry)
+        """
 
         # return the information. trainingWinPercentages has to be converted to a numpy array of correct shape!
         print("Size of Training Material: ", len(trainingParentStates))
-        print(len(trainingWinPercentages))
+        # print(len(trainingWinPercentages))
         print(len(trainingStatesName))
         print(len(trainingParentStates))
         print(trainingParentStates.shape)
@@ -551,19 +571,20 @@ class MCTS():
             for i in range(64):
                 pieces = "PNBRQKpnbrqk"
                 for j in range(len(pieces)):
-                    if trainingParentStates[k].flatten()[(j*64)+i] == 1:
-                        blankBoard[i//8][i % 8] = pieces[j]
-
-            # this is the board.
-            #print(blankBoard)
-            # this is the move chosen
-            #print(trainingStatesName[k][np.argmax(trainingStatesSeen[k])])
+                    if trainingParentStates[k].flatten()[(j * 64) + i] == 1:
+                        blankBoard[i // 8][i % 8] = pieces[j]
 
             for l in range(len(trainingStatesName[k])):
+                # this checks for any errors
+                if np.sum(ActionToArray.moveArray(trainingStatesName[k][l], blankBoard)) == 0:
+                    print("ERROR")
+
                 if l == 0:
-                    actionTaken = ActionToArray.moveArray(trainingStatesName[k][l], blankBoard) * trainingStatesWin[k][l]
+                    actionTaken = ActionToArray.moveArray(trainingStatesName[k][l], blankBoard) \
+                                  * trainingStatesWin[k][l]
                 else:
-                    additionalAction = ActionToArray.moveArray(trainingStatesName[k][l], blankBoard) * trainingStatesWin[k][l]
+                    additionalAction = ActionToArray.moveArray(trainingStatesName[k][l], blankBoard) \
+                                       * trainingStatesWin[k][l]
                     actionTaken = actionTaken + additionalAction
 
             if k == 0:
@@ -580,8 +601,8 @@ class MCTS():
         when training.
         
         """
-        #trainingParentActions = (trainingParentActions / 1.0002) + 0.0001
-        #trainingParentActions = np.log((trainingParentActions/(1-trainingParentActions)))
+        # trainingParentActions = (trainingParentActions / 1.0002) + 0.0001
+        # trainingParentActions = np.log((trainingParentActions/(1-trainingParentActions)))
 
         return trainingParentStates, trainingParentActions
 
