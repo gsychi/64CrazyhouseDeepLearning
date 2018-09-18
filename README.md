@@ -5,7 +5,7 @@ A deep learning Crazyhouse chess program that uses a Monte Carlo Tree Search (MC
 
 https://ftlearning.wordpress.com/2018/08/13/64-a-crazyhouse-learning-project/
 
-# Documentation
+# I want to try
 
 # Requirements
 
