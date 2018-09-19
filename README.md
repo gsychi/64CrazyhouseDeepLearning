@@ -3,6 +3,8 @@ A deep learning Crazyhouse chess program that uses a Monte Carlo Tree Search (MC
 
 Information on the inner workings and the code breakdown can be found on the blog post [here](https://ftlearning.wordpress.com/2018/08/13/64-a-crazyhouse-learning-project/). 
 
+Side Note: Parts of the code are yet to be optimized since everything is still in testing.
+
 
 ## What is this?
 
