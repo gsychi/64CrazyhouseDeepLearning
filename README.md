@@ -39,10 +39,10 @@ Once these are all running on your computer, then you will be able to continue t
 
 ### Required Future Edits
 
-1. GPU Optimization (Urgency: High)
+1. GPU Optimization (Urgency: <b>High</b>)
 2. Changes to playout mechanism. Right now, all playouts end only after a result (win or draw) is reached. However, in the future, the tree should be able to specify a search depth and use np.amax to determine the win probability in the final searched position (1-np.amax if depth is even). This has not been implemented yet, as all values outputted by the neural network are less than 1e-03 after the first ten moves or so. (Urgency: High)
-Create a Leela-like online server training system for everyone to work with and to lend their GPUs on. (Urgency: medium)
-Time Control – If this engine is to compete in competitions, it must be able to determine when it can search further, and whether it has the time to do so.(Urgency: low)
+3. Create a Leela-like online server training system for everyone to work with and to lend their GPUs on. (Urgency: medium)
+4. Time Control – If this engine is to compete in competitions, it must be able to determine when it can search further, and whether it has the time to do so.(Urgency: low)
 Translate into C++? (Urgency: low)
 
 ## Contributors
