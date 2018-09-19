@@ -406,7 +406,7 @@ class MCTS():
 
             sim.makeMove(move)
             sim.gameResult()
-            print(sim.board)
+            #print(sim.board)
 
             if sim.plies == 1:
                 node = PGN.add_variation(chess.Move.from_uci(move))

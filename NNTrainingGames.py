@@ -9,7 +9,7 @@ createTrainingGames( number of games you want, number of playouts after each pos
 import numpy as np
 from MCTSCrazyhouse import MCTS
 
-treeSearch = MCTS('sFULL-4LAYER-RELU.pt')
+treeSearch = MCTS('sNEWFULL-4LAYER-RELU.pt')
 selfPlayInput, selfPlayOutput = treeSearch.createTrainingGames(200, 0)
 np.save("selfPlay01Input.npy", selfPlayInput)
 np.save("selfPlay01Output.npy", selfPlayOutput)

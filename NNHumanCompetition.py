@@ -23,8 +23,8 @@ def NetworkCompetitionWhite(network, playouts, round="1"):
     PGN.headers["Site"] = "Cozy Computer Lounge"
     PGN.headers["Date"] = datetime.datetime.today().strftime('%Y-%m-%d %H:%M')
     PGN.headers["Round"] = round
-    PGN.headers["White"] = "Network: " + network.nameOfNetwork
-    PGN.headers["Black"] = "Human"
+    PGN.headers["Black"] = "Network: " + network.nameOfNetwork
+    PGN.headers["White"] = "Human"
     PGN.headers["Variant"] = "Crazyhouse"
 
     sim = ChessEnvironment()
@@ -88,8 +88,8 @@ def NetworkCompetitionBlack(network, playouts, round="1"):
     PGN.headers["Site"] = "Cozy Computer Lounge"
     PGN.headers["Date"] = datetime.datetime.today().strftime('%Y-%m-%d %H:%M')
     PGN.headers["Round"] = round
-    PGN.headers["White"] = "Human"
-    PGN.headers["Black"] = "Network: " + network.nameOfNetwork
+    PGN.headers["Black"] = "Human"
+    PGN.headers["White"] = "Network: " + network.nameOfNetwork
     PGN.headers["Variant"] = "Crazyhouse"
 
 
@@ -149,7 +149,5 @@ def NetworkCompetitionBlack(network, playouts, round="1"):
     print(PGN)
 
 
-testing = True
-if testing:
-    best = MCTS('sBIGFULL-4LAYER-RELU.pt')
-    NetworkCompetitionBlack(best, 0)
+network = MCTS('sFULL1-5LAYER-24.pt')
+NetworkCompetitionBlack(network, 0)

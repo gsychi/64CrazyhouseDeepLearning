@@ -230,6 +230,6 @@ def bestNetworkTest(bestNet, testingNet, games, playouts, clearAfterEachRound=Fa
 
 testing = True
 if testing:
-    best = MCTS('sBIGFULL-4LAYER-RELU.pt')
-    newNet = MCTS('s58000-4LAYER-RELU.pt')
-    print(bestNetworkTest(best, newNet, 1000, 0))
+    best = MCTS('sFULL2-5LAYER-10.pt')
+    newNet = MCTS('sBEST-5LAYER-10.pt')
+    print(bestNetworkTest(best, newNet, 50, 0))

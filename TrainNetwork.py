@@ -68,7 +68,8 @@ def trainNetwork(states, outputMoves, EPOCHS=10000, BATCH_SIZE=1000, LR=0.001, l
                 if (i + 1) % 1 == 0:
                     print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'
                           .format(epoch + 1, EPOCHS, i + 1, total_step, loss.item()))
-            torch.save(model, saveDirectory)
+                if (i + 1) % 100 == 0:
+                    torch.save(model, saveDirectory)
             if epoch % updateInterval == 999:
                 # Test the model
                 model.eval()  # eval mode (batchnorm uses moving mean/variance instead of mini-batch mean/variance)
@@ -111,21 +112,17 @@ def trainNetwork(states, outputMoves, EPOCHS=10000, BATCH_SIZE=1000, LR=0.001, l
 
 train = True
 if train:
-    inputs = np.load("Training Data/masterInputs.npy")
-    outputs = np.load("Training Data/masterOutputs.npy")
-
-    # the computer does not seem to be placing pieces so let's change that.
-
-    print("downloading done")
-    print(inputs.shape)
-    print(np.amax(outputs, axis=1))
-    print(np.sum(outputs, axis=1))
 
     # if you want a random network
-    # inputs = np.zeros((1, 1, 112, 8))
-    # outputs = np.zeros((1, 4504))
+    inputs = np.zeros((1, 1, 112, 8))
+    outputs = np.zeros((1, 4504))
+
+    #uncomment this if there exists training data
+    inputs = np.load("Training Data/masterInputs.npy")
+    outputs = np.load("Training Data/masterOutputs.npy")
+    print("downloading done")
 
     # Now, with this database, we start training the neural network.
-    trainNetwork(inputs, outputs, loadDirectory="sBIGFULL-4LAYER-RELU.pt", saveDirectory="sNEWFULL-4LAYER-RELU.pt", EPOCHS=1000,
-                 BATCH_SIZE=64, updateInterval=99, LR=0.005)  # 0.005
+    trainNetwork(inputs, outputs, loadDirectory="nothing.pt", saveDirectory="sFULL-3LAYER-20.pt", EPOCHS=1000,
+                 BATCH_SIZE=64, updateInterval=99, LR=0.01)  # 0.005
 

@@ -3132,7 +3132,7 @@ def trainNetwork(states, outputMoves, EPOCHS=10000, BATCH_SIZE=1000, LR=0.001, l
 
     boards, actions = states, outputMoves
 
-    data = MyDataset(boards, answers)  # use answers instead of actions when choosing CEL
+    data = MyDataset(boards, actions)  # use answers instead of actions when choosing CEL
 
     trainLoader = torch.utils.data.DataLoader(dataset=data, batch_size=BATCH_SIZE, shuffle=True)
     testLoader = torch.utils.data.DataLoader(dataset=data, batch_size=len(boards), shuffle=False)
@@ -3153,7 +3153,7 @@ def trainNetwork(states, outputMoves, EPOCHS=10000, BATCH_SIZE=1000, LR=0.001, l
 
     criterion = nn.PoissonNLLLoss()  # use this if you want to train from pick up square as well
 
-    criterion = nn.CrossEntropyLoss()
+    #criterion = nn.CrossEntropyLoss()
     #  use this if you want to train from argmax values. This trains faster,
     # but only trains one value as best move instead of weighted probability.
 
@@ -3240,19 +3240,9 @@ if train:
                 print("ERROR!")
 
             board.makeMove(listOfMoves[j][i])
-            # check if state is seen before
-
-            seenBefore = False
-            directory = -1
-            for k in range(len(inList)):
-                if np.sum(abs(inList[k].flatten() - state.flatten())) == 0:
-                    seenBefore = True
-                    directory = k
-            if not seenBefore:
-                inList.append(state)
-                outList.append(action)
-            else:
-                outList[directory] += action
+            # add it to database
+            inList.append(state)
+            outList.append(action)
 
         print(board.board)
         board.gameResult()
@@ -3263,34 +3253,23 @@ if train:
 
     # all games are parsed, now convert list into array
     inputs = np.zeros((len(inList), 1, 32, 28))
+
     outputs = np.zeros((len(outList), 4504))
 
-    for i in range(len(inList)):
-        inputs[i] = inList[i][0]
-        outputs[i] = outList[i][0]
+    i = 0
+    while len(inList) > 0:
+        inputs[i] = inList[len(inList) - 1][0]
+        outputs[i] = outList[len(inList) - 1][0]
+        inList.pop()
+        outList.pop()
+        i += 1
 
     print(inputs.shape)
     print(outputs.shape)
 
-    # normalize data so that the largest possible value of a move is 1.
-    for i in range(len(outputs)):
-        for j in range(4504):
-            outputs[i][j] /= np.amax(outputs[i])
-
-    # the computer does not seem to be placing pieces so let's change that.
-
-    print("downloading done")
-    print(inputs.shape)
-    print(np.amax(outputs, axis=1))
-    print(np.sum(outputs, axis=1))
-
-    # if you want a random network
-    # inputs = np.zeros((1, 1, 112, 8))
-    # outputs = np.zeros((1, 4504))
-
     # Now, with this database, we start training the neural network.
-    trainNetwork(inputs, outputs, loadDirectory="supervisedaL.pt", saveDirectory="supervisedSMALL.pt", EPOCHS=1000,
-                 BATCH_SIZE=64, updateInterval=1, LR=0.01)  # 0.005
+    trainNetwork(inputs, outputs, loadDirectory="none.pt", saveDirectory="sFULL-3LAYER-32.pt", EPOCHS=1000,
+                 BATCH_SIZE=64, updateInterval=99, LR=0.01)  # 0.005
 
 
 
