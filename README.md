@@ -33,6 +33,15 @@ Once these are all running on your computer, then you will be able to continue t
 
 ## How to Run
 
+Start off by downloading the repository through terminal...
+
+    git clone https://github.com/FTdiscovery/64CrazyhouseDeepLearning.git
+    
+... or by downloading the ZIP file on the top right hand corner.
+
+### Supervised Learning
+
+
 
 
 ## What if I have a GPU?
