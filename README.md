@@ -1,4 +1,4 @@
-# 64CrazyhouseDeepLearning
+# 64 Crazyhouse Deep Learning
 A deep learning Crazyhouse chess program that uses a Monte Carlo Tree Search (MCTS) based evaluation system and reinforcement to enhance its play style. Created as an individual project by a high school student.
 
 Information on the inner workings and the code breakdown can be found on the blog post [here](https://ftlearning.wordpress.com/2018/08/13/64-a-crazyhouse-learning-project/). 
