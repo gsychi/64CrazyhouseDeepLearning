@@ -37,11 +37,11 @@ Start off by downloading the repository through terminal...
 
     git clone https://github.com/FTdiscovery/64CrazyhouseDeepLearning.git
     
-... or by downloading the ZIP file on the top right hand corner.
+... or by downloading the ZIP file on the top right hand corner. Then we can continue to the next part.
 
 ### Supervised Learning
 
-
+The first step is to create a database from actual PGN games. However, before we begin downloading information, it is important to first create two (empty) folders in the 64CrazyhouseDeepLearning repository. One will be named <i>lichessdatabase</i>, while the other will be named <i>Training Data</i>. You may change the names of them, of course - these are just the directories I have specified in the program - but bear in mind that it is necessary to change the code if you desire so.
 
 
 ## What if I have a GPU?
