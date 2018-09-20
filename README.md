@@ -42,7 +42,7 @@ Start off by downloading the repository through terminal...
 
 ## Creating a Supervised Learning (SL) Based Model
 
-The first step is to create a database from actual PGN games. However, before we begin downloading information, it is important to first create two (empty) folders in the 64CrazyhouseDeepLearning repository. One will be named <i>lichessdatabase</i>, while the other will be named <i>Training Data</i>. You may change the names of them, of course - these are just the directories I have specified in the program - but bear in mind that it is necessary to change the code if you desire so.
+As you may imagine, this step will require a database created from Crazyhouse games. There exists no database or folder for that attached in this repository; luckily, this process can be easily completed by following the steps on the documentation. The <b> CreateDatabase.py </b> file looks through all the PGN files in a folder and generates two numpy files for the neural network to train from. For that reason, it is important to first create two (empty) folders in the 64CrazyhouseDeepLearning repository. One will be named <i>lichessdatabase</i>, while the other will be named <i>Training Data</i>. You may change the names of them, of course - these are just the directories I have specified in the program - but bear in mind that it is necessary to change the code if you desire so.
 
 
 ## What if I have a GPU?
