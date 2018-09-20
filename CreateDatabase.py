@@ -14,7 +14,7 @@ pgnGames = list(pathlib.Path('lichessdatabase').glob('*.pgn'))
 listOfMoves = []
 for i in range(len(pgnGames)):
     pgn = open(pgnGames[i])
-    for k in range(40):  # 190,000 assures all games are looked at.
+    for k in range(190000):  # 190,000 assures all games are looked at.
         try:
             game = chess.pgn.read_game(pgn)
             whiteElo = int(game.headers["WhiteElo"])
@@ -89,5 +89,5 @@ The NN gets confused by this so we will comment it out for now.
 # outputs = np.log((outputs/(1-outputs)))
 
 
-np.save("Training Data/SMALLmasterInputs.npy", inputs)
-np.save("Training Data/SMALLmasterOutputs.npy", outputs)
+np.save("Training Data/masterInputs.npy", inputs)
+np.save("Training Data/masterOutputs.npy", outputs)
