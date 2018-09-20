@@ -18,16 +18,17 @@ Your name will be added on the list of contributors once you have uploaded a rel
 
 ## Requirements
 
-As this program was written, tested, and edited on the PyCharm CE IDE, I recommend that users also download this program and run the code on it. However, it is also possible to run it through terminal/other IDEs, provided that all the necessary libraries are downloaded. Python 3 (3.6) is strongly recommended.
+It will be necessary to download the following packages:
 
-In order to run all the files, it will be necessary to download the necessary packages:
+python-chess <br>
+scipy <br>
+numpy (if that's somehow not on your computer) <br>
+torch (pytorch) <br>
+torchvision <br>
+pathlib <br>
 
-python-chess
-scipy
-numpy (if that's somehow not on your computer)
-torch (pytorch)
-torchvision
-pathlib
+As this program was written, tested, and edited on the PyCharm CE IDE, I also recommend that users also download the interpreter and run the code on it. However, I acknowledge that it is possible to run any of the attached files through terminal/other IDEs, provided that all the necessary libraries are downloaded. Python 3 (3.6) is strongly recommended.
+
 
 Once these are all running on your computer, then you will be able to continue to the next step!
 
