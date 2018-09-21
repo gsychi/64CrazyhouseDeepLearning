@@ -58,7 +58,7 @@ The second step is to determine the model size
 2. Changes to playout mechanism. Right now, all playouts end only after a result (win or draw) is reached. However, in the future, the tree should be able to specify a search depth and use np.amax to determine the win probability in the final searched position (1-np.amax if depth is even). This has not been implemented yet, as all values outputted by the neural network are less than 1e-03 after the first ten moves or so. (Urgency: <b>High</b>)
 3. Create a Leela-like online server training system for everyone to work with and to lend their GPUs on. (Urgency: <b>medium</b>)
 4. Time Control – If this engine is to compete in competitions, it must be able to determine when it can search further, and whether it has the time to do so.(Urgency: <b>low</b>)
-Translate into C++? (Urgency: <b>low</b>)
+5. Translate into C++? (Urgency: <b>low</b>)
 
 ## Contributors
 
