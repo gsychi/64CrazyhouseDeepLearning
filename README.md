@@ -46,17 +46,19 @@ As you may imagine, this step will require a database created from Crazyhouse ga
 
 Once these folders are created, we begin by adding Crazyhouse pgn files into the <i> lichessdatabase </i> folder. As the title suggest, zipped PGN files containing ~130-190,000 games can be downloaded [from the Lichess Database.](https://database.lichess.org/). These are found by clicking on the VARIANTS tab, and then scrolling down to the CRAZYHOUSE section. You may download as many files, or even take your own Crazyhouse PGN files input, and drag them into the <i> lichessdatabase </i> folder. Do note that for pgn files from the above database have to be unzipped.
 
-Once all games are downloaded, simply run <b> CreateDatabase.py </b>. The file will take some time to generate a database. Be careful, however, of how much memory and RAM you have on your computer. A dataset of ~15,000 games creates an input matrix and output matrix with ~830,000 rows, and this requires 38.37 GB of space. 
+Once all games are downloaded, simply run <b> CreateDatabase.py</b>. The file will take some time to generate a database. Be careful, however, of how much memory and RAM you have on your computer. A dataset of ~15,000 games creates an input matrix and output matrix with ~830,000 rows, and this requires 38.37 GB of space. 
+
+The second step is to determine the model size 
 
 ## What if I have a GPU?
 
 ### Required Future Edits
 
 1. GPU Optimization (Urgency: <b>High</b>)
-2. Changes to playout mechanism. Right now, all playouts end only after a result (win or draw) is reached. However, in the future, the tree should be able to specify a search depth and use np.amax to determine the win probability in the final searched position (1-np.amax if depth is even). This has not been implemented yet, as all values outputted by the neural network are less than 1e-03 after the first ten moves or so. (Urgency: High)
-3. Create a Leela-like online server training system for everyone to work with and to lend their GPUs on. (Urgency: medium)
-4. Time Control – If this engine is to compete in competitions, it must be able to determine when it can search further, and whether it has the time to do so.(Urgency: low)
-Translate into C++? (Urgency: low)
+2. Changes to playout mechanism. Right now, all playouts end only after a result (win or draw) is reached. However, in the future, the tree should be able to specify a search depth and use np.amax to determine the win probability in the final searched position (1-np.amax if depth is even). This has not been implemented yet, as all values outputted by the neural network are less than 1e-03 after the first ten moves or so. (Urgency: <b>High</b>)
+3. Create a Leela-like online server training system for everyone to work with and to lend their GPUs on. (Urgency: <b>medium</b>)
+4. Time Control – If this engine is to compete in competitions, it must be able to determine when it can search further, and whether it has the time to do so.(Urgency: <b>low</b>)
+Translate into C++? (Urgency: <b>low</b>)
 
 ## Contributors
 
