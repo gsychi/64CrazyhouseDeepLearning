@@ -48,7 +48,7 @@ Once these folders are created, we begin by adding Crazyhouse pgn files into the
 
 Once all games are downloaded, simply run <b> CreateDatabase.py</b>. The file will take some time to generate a database. Be careful, however, of how much memory and RAM you have on your computer. A dataset of ~15,000 games creates an input matrix and output matrix with ~830,000 rows, and this requires 38.37 GB of space. 
 
-The second step is to determine the model size 
+The second step is to determine the model parameters that you would like to use. This can be found and edited on <b> ChessConvNet.py</b>.
 
 ## What if I have a GPU?
 
