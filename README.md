@@ -85,6 +85,13 @@ Here is an example of a modification of the neural network. The first two layers
 
 ## What if I have a GPU?
 
+
+## Reinforcement Learning Based Model
+
+Instructions coming soon...
+
+
+
 ## Required Future Edits
 
 1. GPU Optimization (Urgency: <b>High</b>)
