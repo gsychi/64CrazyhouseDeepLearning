@@ -103,12 +103,12 @@ i.e. If I use the default settings, my file would be uploaded as <b>sFTDiscovery
 
 i.e. If I use the above modification, my file would be uploaded as <b>sFTDiscovery-5LAYER-32-32-64-64-64.pt</b>.
 
-<b> If you decide to completely overhaul the architecture</b>, please name your file as the following:
+<b> If you decide to completely overhaul the architecture</b>, please add a file of the changed ChessConvNet.py and name your files as the following:
 
-+ sUSERNAME.pt
-+ Additionally, please add a file of the changed ChessConvNet.py
++ sUSERNAME.pt (for the trained model)
++ sUSERNAME.py (for the changed ChessConvNet.py architecture)
 
-i.e. Say I created a completely new network on ChessConvNet.py. I would then call it FTDiscovery.py and send my model, sFTDiscovery.py, along with it.
+i.e. If I created a completely new network architecture on ChessConvNet.py. I would then call that <b> FTDiscovery.py</b> and send my model, <b> sFTDiscovery.pt </b>, along with it.
 
 
 ### What about ChessResNet.py?
