@@ -52,13 +52,33 @@ The second step is to determine the model parameters that you would like to use.
 
 ## What if I have a GPU?
 
-### Required Future Edits
+## Required Future Edits
 
 1. GPU Optimization (Urgency: <b>High</b>)
 2. Changes to playout mechanism. Right now, all playouts end only after a result (win or draw) is reached. However, in the future, the tree should be able to specify a search depth and use np.amax to determine the win probability in the final searched position (1-np.amax if depth is even). This has not been implemented yet, as all values outputted by the neural network are less than 1e-03 after the first ten moves or so. (Urgency: <b>High</b>)
 3. Create a Leela-like online server training system for everyone to work with and to lend their GPUs on. (Urgency: <b>medium</b>)
 4. Time Control – If this engine is to compete in competitions, it must be able to determine when it can search further, and whether it has the time to do so.(Urgency: <b>low</b>)
 5. Translate into C++? (Urgency: <b>low</b>)
+
+## Additional Code Information
+
+### Input Representation
+The input for the neural network is a basic (raw) representation of the board. It is an array of 896 values (14 planes of 8×8 boards), which determines the player turn, position of each piece type, captive pieces held by a player, and whether the piece is a promotion. The last part is relevant since promoted pieces can only be placed down as pawns after being captured.
+
+### Output Representation
+The output for the neural network is a 1D representation of multiple move planes (8×8 boards). Here they are as followed:
+
+The first five planes represent the possible squares in which a given piece should be placed (pawn, knight, bishop, rook, queen).
+
+The next plane represents the piece that should be picked up from the board.
+
+The next 56 planes represent the possible queen moves. There are 8 planes for each direction (N, NE, E, SE, S, SW, W, NW), and 7 planes for how far a piece can move (1-7). This is used to map all moves made by a pawn, bishop, rook, queen, and king.
+
+The next 8 planes represent the possible knight moves (2F1L, 2F1R, 1F2L, 1F2R, 1B2L, 1B2R, 2B1L, 2B1R). This is used to map moves made by a knight.
+
+Last, we have 3 planes of 8×1 boards, which determine the column in which a pawn is being underpromoted. Each plane denotes a different promotion (rook, bishop, knight).
+
+In total, the action is represented by an array of (5+1+56+8) x (8×8) + 3×8 = 4504 values.
 
 ## Contributors
 
