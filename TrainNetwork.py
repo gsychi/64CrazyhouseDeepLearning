@@ -123,6 +123,6 @@ if train:
     print("downloading done")
 
     # Now, with this database, we start training the neural network.
-    trainNetwork(inputs, outputs, loadDirectory="nothing.pt", saveDirectory="sFULL-3LAYER-20.pt", EPOCHS=1000,
+    trainNetwork(inputs, outputs, loadDirectory="nothing.pt", saveDirectory="sFULL-5LAYER-32.pt", EPOCHS=1000,
                  BATCH_SIZE=64, updateInterval=99, LR=0.01)  # 0.005
 
