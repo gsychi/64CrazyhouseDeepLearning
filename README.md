@@ -48,9 +48,9 @@ Once these folders are created, we begin by adding Crazyhouse pgn files into the
 
 Once all games are downloaded, simply run <b> CreateDatabase.py</b>. The file will take some time to generate a database. Be careful, however, of how much memory and RAM you have on your computer. A dataset of ~15,000 games creates an input matrix and output matrix with ~830,000 rows, and this requires 38.37 GB of space. 
 
-The second step is to determine the model parameters that you would like to use. This can be found and edited on <b> ChessConvNet.py</b>. The default setting at the moment is a 5 layer convolutional neural network, with each layer having 32 convolutions. You are free to use the current architecture or edit it however you like (i.e. add more layers, have more convolutions per layer). I suggest to not increase the number of layers, but rather, to increase the width of the network. 
+The second step is to determine the model parameters that you would like to use. This can be found and edited on <b> ChessConvNet.py</b>. The default setting at the moment is a 5 layer convolutional neural network, with each layer having 32 convolutions. You are free to use the current architecture or edit it however you like (i.e. add more layers, have more convolutions per layer, change kernel size...). I suggest to not increase the number of layers, but rather, to increase the width of the network. 
     
-'''python
+```python
 class ChessConvNet(nn.Module):
     def __init__(self, num_classes):
         self.numClasses = num_classes
@@ -64,19 +64,24 @@ class ChessConvNet(nn.Module):
             nn.BatchNorm2d(32),  # 32
             nn.ReLU())
         self.layer3 = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=1),  # 32, 32
-            nn.BatchNorm2d(32),
+            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),  # 32, 64
+            nn.BatchNorm2d(64),
             nn.ReLU())
         self.layer4 = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=1),  # 32, 32
-            nn.BatchNorm2d(32),
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),  # 64, 64
+            nn.BatchNorm2d(64),
             nn.ReLU())
         self.layer5 = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=1),  # 32, 32
-            nn.BatchNorm2d(32),
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),  # 64, 64
+            nn.BatchNorm2d(64),
             nn.ReLU())
-        self.fc = nn.Linear(896 * 32, num_classes)
- '''
+        self.fc = nn.Linear(896 * 64, num_classes)
+```
+
+Here is an example of a modification of the neural network. The first two layers have 32 convolutions per layer, whereas the last three layers (excluding the fully connected layer) have 64 convolutions per layer. For those less familiar with PyTorch, it may be useful to look at self.layer3 to understand how two layers are connected.
+
+
+
 
 ## What if I have a GPU?
 
