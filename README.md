@@ -80,7 +80,9 @@ class ChessConvNet(nn.Module):
 
 Here is an example of a modification of the neural network. The first two layers have 32 convolutions per layer, whereas the last three layers (excluding the fully connected layer) have 64 convolutions per layer. For those less familiar with PyTorch, it may be useful to look at self.layer3 to understand how two layers are connected.
 
-Once all of this is completed, the training part will be very straightforward. Simply run <b>TrainNetwork.py</b>  for as long as possible, and then drop the file into the [Google Drive folder](https://drive.google.com/drive/folders/1o8uzyvG1zVRAqnvbdFzHs6MHN2eUm0PP). You may change the name of the saved model by changing the saveDirectory="" on the last line of the file. Similarly, you may load a pretrained model in the loadDirectory="" on the same line.
+Once all of this is completed, the training part will be very straightforward. Simply run <b>TrainNetwork.py</b>  for as long as possible, and then drop the file into the [Google Drive folder](https://drive.google.com/drive/folders/1o8uzyvG1zVRAqnvbdFzHs6MHN2eUm0PP). 
+
+You may change the name of the saved model by changing the saveDirectory="" on the last line of the file. Similarly, you may load a pretrained model in the loadDirectory="" on the same line. As an example, the default setting below loads a file from nothing.pt (the code does nothing if this directory does not exist), and saves the newly trained model as sFULL-5LAYER-32.pt.
 
 ```python
 savedtrainNetwork(inputs, outputs, loadDirectory="nothing.pt", saveDirectory="sFULL-5LAYER-32.pt", EPOCHS=1000,
