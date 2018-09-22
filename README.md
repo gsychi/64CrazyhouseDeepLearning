@@ -87,25 +87,26 @@ savedtrainNetwork(inputs, outputs, loadDirectory="nothing.pt", saveDirectory="sF
                  BATCH_SIZE=64, updateInterval=99, LR=0.01)
  ```
 
+<br> <br>
 
-It is important to follow a naming protocol in order to track each network. 
+#### It is important to follow a naming protocol in order to track each network. 
 
 <b> If your network has the same number of convolutions on each layer </b>, please name your file as the following:
 
-sUSERNAME-[number of layers]-[number of convolutions per layer].pt
++ sUSERNAME-[number of layers]-[number of convolutions per layer].pt
 
 i.e. If I use the default settings, my file would be uploaded as <b>sFTDiscovery-5LAYER-32.pt</b>. 
 
 <b> If your network DOES NOT have the same number of convolutions on each layer </b>, please name your file as the following:
 
-sUSERNAME-[number of layers]-[number of convolutions per layer].pt
++ sUSERNAME-[number of layers]-[number of convolutions per layer].pt
 
 i.e. If I use the above modification, my file would be uploaded as <b>sFTDiscovery-5LAYER-32-32-64-64-64.pt</b>.
 
 <b> If you decide to completely overhaul the architecture</b>, please name your file as the following:
 
-sUSERNAME.pt
-+ a file on the changed ChessConvNet.py
++ sUSERNAME.pt
++ Additionally, please add a file of the changed ChessConvNet.py
 
 i.e. Say I created a completely new network on ChessConvNet.py. I would then call it FTDiscovery.py and send my model, sFTDiscovery.py, along with it.
 
