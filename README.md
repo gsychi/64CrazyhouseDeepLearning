@@ -87,9 +87,9 @@ savedtrainNetwork(inputs, outputs, loadDirectory="nothing.pt", saveDirectory="sF
                  BATCH_SIZE=64, updateInterval=99, LR=0.01)
  ```
 
-<br> <br>
+<br>
 
-#### It is important to follow a naming protocol in order to track each network. 
+### It is important to follow a naming protocol in order to track each network. 
 
 <b> If your network has the same number of convolutions on each layer </b>, please name your file as the following:
 
