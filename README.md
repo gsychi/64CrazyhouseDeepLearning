@@ -80,11 +80,56 @@ class ChessConvNet(nn.Module):
 
 Here is an example of a modification of the neural network. The first two layers have 32 convolutions per layer, whereas the last three layers (excluding the fully connected layer) have 64 convolutions per layer. For those less familiar with PyTorch, it may be useful to look at self.layer3 to understand how two layers are connected.
 
-Once all of this is completed, the training part will be very straightforward. Simply run <b>TrainNetwork.py</b>  for as long as possible, and then drop the file into the [Google Drive folder](https://drive.google.com/drive/folders/1o8uzyvG1zVRAqnvbdFzHs6MHN2eUm0PP).  
+Once all of this is completed, the training part will be very straightforward. Simply run <b>TrainNetwork.py</b>  for as long as possible, and then drop the file into the [Google Drive folder](https://drive.google.com/drive/folders/1o8uzyvG1zVRAqnvbdFzHs6MHN2eUm0PP). You may change the name of the saved model by changing the saveDirectory="" on the last line of the file. Similarly, you may load a pretrained model in the loadDirectory="" on the same line.
 
+```python
+savedtrainNetwork(inputs, outputs, loadDirectory="nothing.pt", saveDirectory="sFULL-5LAYER-32.pt", EPOCHS=1000,
+                 BATCH_SIZE=64, updateInterval=99, LR=0.01)
+ ```
+
+
+It is important to follow a naming protocol in order to track each network. 
+
+<b> If your network has the same number of convolutions on each layer </b>, please name your file as the following:
+
+sUSERNAME-[number of layers]-[number of convolutions per layer].pt
+
+i.e. If I use the default settings, my file would be uploaded as <b>sFTDiscovery-5LAYER-32.pt</b>. 
+
+<b> If your network DOES NOT have the same number of convolutions on each layer </b>, please name your file as the following:
+
+sUSERNAME-[number of layers]-[number of convolutions per layer].pt
+
+i.e. If I use the above modification, my file would be uploaded as <b>sFTDiscovery-5LAYER-32-32-64-64-64.pt</b>.
+
+<b> If you decide to completely overhaul the architecture</b>, please name your file as the following:
+
+sUSERNAME.pt
++ a file on the changed ChessConvNet.py
+
+i.e. Say I created a completely new network on ChessConvNet.py. I would then call it FTDiscovery.py and send my model, sFTDiscovery.py, along with it.
 
 
 ### What about ChessResNet.py?
+
+ChessResNet.py has yet to be tested. For those who would like to try it out, you will have to edit the TrainNetwork function and change the line...
+
+```python
+model = ChessConvNet(OUTPUT_ARRAY_LEN).double()
+```
+
+...into this.
+```python
+model = ChessResNet.ResNet18().double()
+
+# Note that ChessResNet.ResNet32().double(), ChessResNet.ResNet50().double(), ChessResNet.ResNet101().double(), and ChessResNet.ResNet152().double() are possible architectures.
+```
+
+Saved models would be specified as followed:
+
+sUSERNAME-RESNET[resnet architecture number].pt
+
+i.e. A ResNet32 model trained by username LinguisticBobby would be called sLinguisticBobby-RESNET32.pt
 
 
 ## What if I have a GPU?
