@@ -80,7 +80,11 @@ class ChessConvNet(nn.Module):
 
 Here is an example of a modification of the neural network. The first two layers have 32 convolutions per layer, whereas the last three layers (excluding the fully connected layer) have 64 convolutions per layer. For those less familiar with PyTorch, it may be useful to look at self.layer3 to understand how two layers are connected.
 
+Once all of this is completed, the training part will be very straightforward. Simply run <b>TrainNetwork.py</b>  for as long as possible, and then drop the file into the [Google Drive folder] (https://drive.google.com/drive/folders/1o8uzyvG1zVRAqnvbdFzHs6MHN2eUm0PP).  
 
+
+
+### What about ChessResNet.py?
 
 
 ## What if I have a GPU?
