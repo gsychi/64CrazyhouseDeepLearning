@@ -180,6 +180,14 @@ Last, we have 3 planes of 8×1 boards, which determine the column in which a paw
 
 In total, the action is represented by an array of (5+1+56+8) x (8×8) + 3×8 = 4504 values.
 
+## Sample Games
+
+
+<iframe src="https://lichess.org/embed/rNHBHPVD#42?theme=auto&bg=auto"
+width=600 height=397 frameborder=0></iframe>
+
+
+
 ## Contributors
 
 Below is a list of contributors to the project:
