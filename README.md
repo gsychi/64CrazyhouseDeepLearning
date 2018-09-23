@@ -182,9 +182,16 @@ In total, the action is represented by an array of (5+1+56+8) x (8×8) + 3×8 = 
 
 ## Sample Games
 
+{::nomarkdown}
 
 <iframe src="https://lichess.org/embed/rNHBHPVD#42?theme=auto&bg=auto"
 width=600 height=397 frameborder=0></iframe>
+
+<iframe src="https://lichess.org/embed/Avwo9yaz#29?theme=auto&bg=auto"
+width=600 height=397 frameborder=0></iframe>
+
+{:/}
+
 
 
 
