@@ -185,42 +185,24 @@ In total, the action is represented by an array of (5+1+56+8) x (8×8) + 3×8 = 
 
 ### Self Play Games
 
-[White "Network: sFULL-5LAYER-10"]
-[Black "Network: sFULL1-5LAYER-10"]
-[Result "0-1"]
-[WhiteElo "?"]
-[BlackElo "?"]
-[Variant "Crazyhouse"]
-[TimeControl "-"]
-[ECO "?"]
-[Opening "?"]
 
 1. e4 e6 2. d4 d5 3. e5 Ne7 4. Nf3 Nf5 5. Bd3 Nc6 6. O-O Be7 7. c3 O-O 8. Bf4 f6 9. Nbd2 fxe5 10. dxe5 P@e4 11. P@d6 exf3 12. Nxf3 Bxd6 13. exd6 P@e4 14. Bxe4 dxe4 15. P@g5 exf3 16. gxf3 N@h4 17. B@h3 N@e2+ 18. Kh1 B@g2+ 19. Bxg2 Nxg2 20. Kxg2 Nh4+ 21. Kh1 B@g2# 0-1
 
-[White "Network: sFULL-5LAYER-16"]
-[Black "Network: sFULL1-5LAYER-16"]
-[Result "1-0"]
-[WhiteElo "?"]
-[BlackElo "?"]
-[Variant "Crazyhouse"]
-[TimeControl "-"]
-[ECO "?"]
-[Opening "?"]
 
 1. e4 Nc6 2. Nc3 Nf6 3. Nf3 d5 4. exd5 Nxd5 5. Bc4 e6 6. O-O Nb6 7. Bb5 Bd7 8. Re1 Be7 9. d4 O-O 10. P@h6 gxh6 11. Bxh6 P@e4 12. P@g7 exf3 13. Qxf3 P@g4 14. Qxg4 N@f5 15. gxf8=Q# 1-0
 
-[Event "Neural Network Comparison Test"]
-[Site "Cozy Computer Lounge"]
-[Date "2018-09-23 01:25"]
-[Round "21"]
-[White "Network: sFULL-5LAYER-32"]
-[Black "Network: sFULL-5LAYER-32"]
-[Result "1-0"]
-[Variant "Crazyhouse"]
 
 1. e4 Nc6 2. Nc3 Nf6 3. Nf3 d5 4. exd5 Nxd5 5. d4 e6 6. Bb5 Bb4 7. Bd2 Bxc3 8. bxc3 N@e4 9. @b2 Nxd2 10. Qxd2 B@h5 11. O-O-O O-O 12. Kb1 @g4 13. Ng5 Bg6 14. Nxf7 Rxf7 15. Bxc6 bxc6 16. N@h6+ gxh6 17. Qxh6 Rf6 18. N@e7+ Kh8 19. B@g7# 1-0
 
-### Human Wins
+### Wins against Humans
+
+1. e4 Nf6 2. e5 d5 3. d4 Ne4 4. f3 Bf5 5. fxe4 dxe4 6. Bc4 e6 7. Nc3 Qh4+ { White resigns. } 0-1
+
+1. e4 e5 2. Nf3 Nc6 3. Bc4 d6 4. Nc3 Be7 5. d4 exd4 6. Nxd4 Nxd4 7. Qxd4 P@h3 8. Bxf7+ Kxf7 9. Qd5+ B@e6 10. Qh5+ g6 11. Qf3+ Nf6 12. N@g5+ Kg7 13. P@h6+ Kxh6 14. Nxe6+ g5 15. Bxg5+ Kg6 16. Qf5+ Kf7 17. Nxd8+ Bxd8 18. B@d5+ P@e6 19. Bxe6+ Bxe6 20. Qxe6+ Kxe6 21. P@f5+ Kf7 22. P@e6+ { Black resigns. } 1-0
+
+
+
+
 
 ## Contributors
 
