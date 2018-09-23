@@ -144,6 +144,7 @@ i.e. A ResNet32 model trained by username LinguisticBobby would be called sLingu
 
 ## What if I have a GPU?
 
+A GPU is definitely useful in speeding up the training of the neural network. Unfortunately, since I have yet to test the code with one, I am unable to verify whether <b>GPUTrainNetwork.py</b> works. Otherwise, you should follow the exact same process as earlier, with the exception of running the program on GPUTrainNetwork instead of TrainNetwork.py.
 
 ## Reinforcement Learning Based Model
 
