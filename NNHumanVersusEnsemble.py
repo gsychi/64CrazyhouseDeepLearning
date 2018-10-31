@@ -16,8 +16,11 @@ import chess.pgn
 import chess
 import MCTSCrazyhouse
 import time
+from EnsembleMCTSCrazyhouse import EnsembleMCTS
 
-def NetworkCompetitionWhite(network, playouts, round="1"):
+def NetworkCompetitionWhite(playouts, round="1"):
+    network = EnsembleMCTS()
+
     PGN = chess.pgn.Game()
     PGN.headers["Event"] = "Neural Network Comparison Test"
     PGN.headers["Site"] = "Cozy Computer Lounge"
@@ -42,12 +45,20 @@ def NetworkCompetitionWhite(network, playouts, round="1"):
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
                         for images, labels in generatePredic:
-                            network.neuralNet.eval()
-                            outputs = network.neuralNet(images)
+                            network.neuralNet1.eval()
+                            network.neuralNet2.eval()
+                            network.neuralNet3.eval()
+                            network.neuralNet4.eval()
+                            network.neuralNet5.eval()
+                            outputs = network.neuralNet1(images)
+                            outputs2 = network.neuralNet2(images)
+                            outputs3 = network.neuralNet3(images)
+                            outputs4 = network.neuralNet4(images)
+                            outputs5 = network.neuralNet5(images)
                             network.addPositionToMCTS(sim.boardToString(),
                                                       ActionToArray.legalMovesForState(sim.arrayBoard,
                                                                                        sim.board),
-                                                      sim.arrayBoard, outputs)
+                                                      sim.arrayBoard, outputs, outputs2, outputs3, outputs4, outputs5)
             directory = network.dictionary[sim.boardToString()]
             index = np.argmax(
                 MCTSCrazyhouse.PUCT_Algorithm(network.childrenStateWin[directory], network.childrenStateSeen[directory], 0.02,
@@ -83,7 +94,9 @@ def NetworkCompetitionWhite(network, playouts, round="1"):
 
     print(PGN)
 
-def NetworkCompetitionBlack(network, playouts, round="1"):
+def NetworkCompetitionBlack(playouts, round="1"):
+    network = EnsembleMCTS()
+
     PGN = chess.pgn.Game()
     PGN.headers["Event"] = "Neural Network Comparison Test"
     PGN.headers["Site"] = "Cozy Computer Lounge"
@@ -109,12 +122,20 @@ def NetworkCompetitionBlack(network, playouts, round="1"):
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
                         for images, labels in generatePredic:
-                            network.neuralNet.eval()
-                            outputs = network.neuralNet(images)
+                            network.neuralNet1.eval()
+                            network.neuralNet2.eval()
+                            network.neuralNet3.eval()
+                            network.neuralNet4.eval()
+                            network.neuralNet5.eval()
+                            outputs = network.neuralNet1(images)
+                            outputs2 = network.neuralNet2(images)
+                            outputs3 = network.neuralNet3(images)
+                            outputs4 = network.neuralNet4(images)
+                            outputs5 = network.neuralNet5(images)
                             network.addPositionToMCTS(sim.boardToString(),
-                                              ActionToArray.legalMovesForState(sim.arrayBoard,
-                                                                               sim.board),
-                                              sim.arrayBoard, outputs)
+                                                      ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                                       sim.board),
+                                                      sim.arrayBoard, outputs, outputs2, outputs3, outputs4, outputs5)
             directory = network.dictionary[sim.boardToString()]
             index = np.argmax(
                 MCTSCrazyhouse.PUCT_Algorithm(network.childrenStateWin[directory], network.childrenStateSeen[directory], 0.02,
@@ -152,4 +173,4 @@ def NetworkCompetitionBlack(network, playouts, round="1"):
 
 # Final Models/v8-1803to1806.pt
 network = MCTS('7 Layer k=32 Models/v5-1706to1809.pt')
-NetworkCompetitionBlack(network, 0)
+NetworkCompetitionWhite(0)

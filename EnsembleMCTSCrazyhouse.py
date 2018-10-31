@@ -60,7 +60,7 @@ def noiseEvals(nnEvals, bounds):
     return noise + nnEvals
 
 
-class MCTS():
+class EnsembleMCTS():
 
     # We will use three lists:
     # seenStates stores the gameStates that have been seen. This is a library.
@@ -70,7 +70,7 @@ class MCTS():
     # - win count, number of times visited, and neural network evaluation
     # This is helpful because we get to use numpy stuffs.
 
-    def __init__(self, directory):
+    def __init__(self):
 
         self.dictionary = {
             # 'string' = n position. Let this string be the FEN of the position.
@@ -79,12 +79,12 @@ class MCTS():
         self.childrenStateSeen = []  # a 2D list, each directory contains numpy array
         self.childrenStateWin = []  # a 2D list, each directory contains numpy array
         self.childrenNNEvaluation = []  # a 2D list, each directory contains numpy array
-        try:
-            self.neuralNet = torch.load(directory)
-            self.neuralNet.eval()
-        except:
-            print("Network not found!")
-        self.nameOfNetwork = directory[0:-3]
+        self.neuralNet1 = torch.load("7 Layer k=32 Models/v6-1803to1806.pt")
+        self.neuralNet2 = torch.load("7 Layer k=32 Models/v2-1706to1709.pt")
+        self.neuralNet3 = torch.load("7 Layer k=32 Models/v3-1712to1803.pt")
+        self.neuralNet4 = torch.load("7 Layer k=32 Models/v4-1706to1809.pt")
+        self.neuralNet5 = torch.load("v2-1706to1810.pt")
+        self.nameOfNetwork = "Ensemble Network"
 
     # This adds information into the MCTS database
 
@@ -108,14 +108,36 @@ class MCTS():
     def printSize(self):
         print("Size: ", len(self.childrenMoveNames))
 
-    def addPositionToMCTS(self, string, legalMoves, arrayBoard, prediction):
+    def addPositionToMCTS(self, string, legalMoves, arrayBoard, prediction1, prediction2, prediction3, prediction4, prediction5):
         self.dictionary[string] = len(self.dictionary)
         self.childrenMoveNames.append(legalMoves)
         self.childrenStateSeen.append(np.zeros(len(legalMoves)))
         self.childrenStateWin.append(np.zeros(len(legalMoves)))
 
 
-        evaluations = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction)
+        evaluations1 = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction1)
+        evaluations2 = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction2)
+        evaluations3 = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction3)
+        evaluations4 = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction4)
+        evaluations5 = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction5)
+
+        evaluations = (evaluations1+evaluations2+evaluations3+evaluations4+evaluations5)/2.5
+        #print(np.amax(evaluations))
+
+        """
+        #print(evaluations1)
+        print(np.argmax(evaluations1))
+        #print(evaluations2)
+        print(np.argmax(evaluations2))
+        #print(evaluations3)
+        print(np.argmax(evaluations3))
+
+        print("collective choice:")
+        print(np.argmax(evaluations))
+        print("score:", np.amax(evaluations))
+        print('-----')
+        """
+
 
         """
         # should scale the evaluations from 0 to 1.
@@ -173,11 +195,20 @@ class MCTS():
                 generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                 with torch.no_grad():
                     for images, labels in generatePredic:
-                        outputs = self.neuralNet(images)
+                        self.neuralNet1.eval()
+                        self.neuralNet2.eval()
+                        self.neuralNet3.eval()
+                        self.neuralNet4.eval()
+                        self.neuralNet5.eval()
+                        outputs1 = self.neuralNet1(images)
+                        outputs2 = self.neuralNet2(images)
+                        outputs3 = self.neuralNet3(images)
+                        outputs4 = self.neuralNet4(images)
+                        outputs5 = self.neuralNet5(images)
                         self.addPositionToMCTS(tempBoard.boardToString(),
                                                ActionToArray.legalMovesForState(tempBoard.arrayBoard,
                                                                                 tempBoard.board),
-                                               tempBoard.arrayBoard, outputs)
+                                               tempBoard.arrayBoard, outputs1,outputs2,outputs3,outputs4,outputs5)
                         # find and make the preferred move
                         if noise:
                             noiseConstant = 0.15 / (1 * (1 + tempBoard.plies))  # should decrease this...
@@ -364,11 +395,20 @@ class MCTS():
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
                         for images, labels in generatePredic:
-                            outputs = self.neuralNet(images)
+                            self.neuralNet1.eval()
+                            self.neuralNet2.eval()
+                            self.neuralNet3.eval()
+                            self.neuralNet4.eval()
+                            self.neuralNet5.eval()
+                            outputs1 = self.neuralNet1(images)
+                            outputs2 = self.neuralNet2(images)
+                            outputs3 = self.neuralNet3(images)
+                            outputs4 = self.neuralNet4(images)
+                            outputs5 = self.neuralNet5(images)
                             self.addPositionToMCTS(sim.boardToString(),
                                                    ActionToArray.legalMovesForState(sim.arrayBoard,
-                                                                                    sim.board),
-                                                   sim.arrayBoard, outputs)
+                                                                                     sim.board),
+                                                   sim.arrayBoard, outputs1,outputs2,outputs3,outputs4,outputs5)
             directory = self.dictionary[sim.boardToString()]
             index = np.argmax(
                 PUCT_Algorithm(self.childrenStateWin[directory], self.childrenStateSeen[directory], 0.5,

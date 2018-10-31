@@ -7,20 +7,21 @@ from ChessEnvironment import ChessEnvironment
 from ChessConvNet import ChessConvNet
 from MyDataset import MyDataset
 import ActionToArray
-import numpy_indexed as npi
 import pathlib
+import h5py
 
 pgnGames = list(pathlib.Path('lichessdatabase').glob('*.pgn'))
 listOfMoves = []
 for i in range(len(pgnGames)):
     pgn = open(pgnGames[i])
-    for k in range(190000):  # 190,000 assures all games are looked at.
+    for k in range(181000):  # 190,000 assures all games are looked at.
         try:
             game = chess.pgn.read_game(pgn)
             whiteElo = int(game.headers["WhiteElo"])
             blackElo = int(game.headers["BlackElo"])
-            benchmark = 2300
+            benchmark = 2000
             if whiteElo >= benchmark and blackElo >= benchmark:
+                print("Index: ", k)
                 print(whiteElo)
                 print(blackElo)
                 board = game.board()
@@ -33,7 +34,7 @@ for i in range(len(pgnGames)):
         except:
             print("", end="")
 
-f = open("2018games2000.txt", "w+")
+f = open("201809games2300.txt", "w+")
 for i in range(len(listOfMoves)):
     print(listOfMoves[i], ",")
     f.write(str(listOfMoves[i])+",\n")
@@ -47,13 +48,15 @@ for j in range(len(listOfMoves)):
     for i in range(len(listOfMoves[j])):
         state = board.boardToState()
         action = ActionToArray.moveArray(listOfMoves[j][i], board.arrayBoard)
+        for k in range(320,384):
+            action[0][k] = 0
         if board.board.legal_moves.count() != len(ActionToArray.legalMovesForState(board.arrayBoard, board.board)):
             print("ERROR!")
 
         board.makeMove(listOfMoves[j][i])
         # add it to database
         inList.append(state)
-        outList.append(action)
+        outList.append(np.argmax(action))
 
 
     print(board.board)
@@ -65,16 +68,17 @@ for j in range(len(listOfMoves)):
 
 # all games are parsed, now convert list into array
 inputs = np.zeros((len(inList), 1, 32, 28))
-
-outputs = np.zeros((len(outList), 4504))
+outputs = np.zeros(len(outList))
 
 i = 0
 while len(inList) > 0:
     inputs[i] = inList[len(inList)-1][0]
-    outputs[i] = outList[len(inList)-1][0]
+    outputs[i] = outList[len(inList)-1]
     inList.pop()
     outList.pop()
     i += 1
+
+print(outputs)
 
 print(inputs.shape)
 print(outputs.shape)
@@ -88,6 +92,9 @@ The NN gets confused by this so we will comment it out for now.
 # outputs = (outputs/1.0002)+0.0001
 # outputs = np.log((outputs/(1-outputs)))
 
+with h5py.File('Training Data/16-10masterInputs.h5', 'w') as hf:
+    hf.create_dataset("Inputs", data=inputs, compression='gzip', compression_opts=9)
+with h5py.File('Training Data/16-10masterOutputs.h5', 'w') as hf:
+    hf.create_dataset("Outputs", data=outputs, compression='gzip', compression_opts=9)
 
-np.save("Training Data/masterInputs.npy", inputs)
-np.save("Training Data/masterOutputs.npy", outputs)
+

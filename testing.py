@@ -1,18 +1,11 @@
+import h5py
 import numpy as np
 
-inList = [[3,2],[2,1],[5,6],[7,8],[2,9]]
-outList = [4,5,6,1,9]
+#with h5py.File('Training Data/17-03masterOutputs.h5', 'r') as hf:
+            #outputs = hf["Outputs"][1371435:]
 
-inputs = np.array([[0,0],[0,0],[0,0],[0,0],[0,0]])
-outputs = np.array([0,0,0,0,0])
+outputs = np.load("Training Data/Full Data/bigOutputsArgmax(17-03)-(18-10).npy")[1371435:]
+outputs2 = np.load("Training Data/Full Data/bigOutputsArgmax(17-04)-(18-10).npy")
 
-i = 0
-while len(inList) > 0:
-    inputs[i] = inList[len(inList)-1]
-    outputs[i] = outList[len(inList)-1]
-    inList.pop()
-    outList.pop()
-    i += 1
-
-print(inputs)
-print(outputs)
+for i in range(len(outputs)):
+    print(outputs[i]==outputs2[i])

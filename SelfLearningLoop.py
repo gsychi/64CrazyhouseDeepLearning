@@ -4,24 +4,24 @@ This is a loop that keeps training the engine on self-play data.
 """
 import numpy as np
 from MCTSCrazyhouse import MCTS
-import ServerTraining
+import TrainNetwork
 import NNArenaCompetition
 import secrets
 
 # start off by choosing a neural network directory.
-BEST_NETWORK = MCTS('supervised2.pt')
+BEST_NETWORK = MCTS('sFULL-5LAYER-32.pt')
 BEST_NETWORK_DIRECTORY = BEST_NETWORK.nameOfNetwork + ".pt"
 
 # parameters
 GENERATIONS = 100
-TRAINING_GAMES = 50
-TESTING_GAMES = 10
-TRAINING_PLAYOUTS = 1
-TESTING_PLAYOUTS = 2
+TRAINING_GAMES = 1000
+TESTING_GAMES = 250
+TRAINING_PLAYOUTS = 0
+TESTING_PLAYOUTS = 0
 
-EPOCHS = 250
+EPOCHS = 2
 BATCH_SIZE = 32
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.005
 
 # 100 generations
 for i in range(GENERATIONS):
@@ -41,7 +41,7 @@ for i in range(GENERATIONS):
     randomHex = secrets.token_hex(5)+".pt"
     print(randomHex)
     print("Start Training.")
-    ServerTraining.trainNetwork(selfPlayInput, selfPlayOutput, loadDirectory="BEST_NETWORK_DIRECTORY", saveDirectory=randomHex,  # see if we should train from scratch or not...
+    TrainNetwork.trainNetwork(selfPlayInput, selfPlayOutput, loadDirectory="BEST_NETWORK_DIRECTORY", saveDirectory=randomHex,  # see if we should train from scratch or not...
                                 EPOCHS=EPOCHS, BATCH_SIZE=BATCH_SIZE, updateInterval=2, LR=LEARNING_RATE)
 
 

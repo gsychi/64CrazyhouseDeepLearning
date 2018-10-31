@@ -12,41 +12,52 @@ class ChessConvNet(nn.Module):
         self.numClasses = num_classes
         super(ChessConvNet, self).__init__()
         self.layer1 = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2),  # 1, 16
-            nn.BatchNorm2d(32),
+            nn.Conv2d(1, 64, kernel_size=5, stride=1, padding=2),  # 1, 64
+            nn.BatchNorm2d(64),
             nn.ReLU()
             )
         self.layer2 = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=5, stride=1, padding=2),  # 16, 16
-            nn.BatchNorm2d(32),  # 16
+            nn.Conv2d(64, 64, kernel_size=5, stride=1, padding=2),  # 64, 64
+            nn.BatchNorm2d(64),  # 64
             nn.ReLU()
             )
         self.layer3 = nn.Sequential(
-            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),  # 16, 16
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),  # 64, 64
             nn.BatchNorm2d(64),
             nn.ReLU()
             )
         self.layer4 = nn.Sequential(
-            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),  # 16, 16
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),  # 64, 64
             nn.BatchNorm2d(64),
             nn.ReLU()
             )
         self.layer5 = nn.Sequential(
-            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),  # 16, 16
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),  # 64, 64
             nn.BatchNorm2d(64),
             nn.ReLU()
             )
         self.layer6 = nn.Sequential(
-            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),  # 16, 8
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),  # 64, 64
             nn.BatchNorm2d(64),
             nn.ReLU()
             )
         self.layer7 = nn.Sequential(
-            nn.Conv2d(64, 1, kernel_size=1, stride=1, padding=0),  # 8, 4
+            nn.Conv2d(64, 1, kernel_size=1, stride=1, padding=0),  # 64, 1
             nn.BatchNorm2d(1),
             nn.ReLU()
             )
-        self.fc = nn.Linear(896 * 1, num_classes)
+        self.fc = nn.Linear(896, num_classes)
+
+        # if dimensionality issue persists change fc into fc1 and fc2
+        # fc1 = 896 x n, fc2 = n x 4504
+        # less synapses if n <= 747
+        # when n = 4464, 2.419 mil synapses
+        # when n = 224, 1.2096 mil synapses
+        # when n = 164, 604,6400 synapses.
+        # self.fc = 4.036 mil synapses
+
+        #self.fc1 = nn.Linear(896, 164)
+        #self.fc2 = nn.Linear(164, 4504)
 
     def forward(self, x):
         out = self.layer1(x)
@@ -58,9 +69,7 @@ class ChessConvNet(nn.Module):
         out = self.layer7(out)
         out = out.reshape(out.size(0), -1)
         out = self.fc(out)
+
+        #out = self.fc1(out)
+        #out = self.fc2(out)
         return out
-
-
-"""
-icga = game competitions
-"""

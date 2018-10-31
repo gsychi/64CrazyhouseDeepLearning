@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 import torch.utils.data as data_utils
 from MCTSCrazyhouse import MCTS
+#from EnsembleMCTSCrazyhouse import EnsembleMCTS
 import copy
 import chess.variant
 import chess.pgn
@@ -31,7 +32,7 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
 
     sim = ChessEnvironment()
     while sim.result == 2:
-        noiseVal = 0.6 / (6 * (sim.plies // 2 + 1))
+        noiseVal = 3.0 / (10 * (sim.plies // 2 + 1))
         if sim.plies % 2 == 0:
             if playouts > 0:
                 bestNet.competitivePlayoutsFromPosition(playouts, sim)
@@ -44,6 +45,7 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
                         for images, labels in generatePredic:
+                            bestNet.neuralNet.eval()
                             outputs = bestNet.neuralNet(images)
                             bestNet.addPositionToMCTS(sim.boardToString(),
                                                       ActionToArray.legalMovesForState(sim.arrayBoard,
@@ -73,6 +75,7 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
                         for images, labels in generatePredic:
+                            testingNet.neuralNet.eval()
                             outputs = testingNet.neuralNet(images)
                             testingNet.addPositionToMCTS(sim.boardToString(),
                                                          ActionToArray.legalMovesForState(sim.arrayBoard,
@@ -125,7 +128,7 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
 
     sim = ChessEnvironment()
     while sim.result == 2:
-        noiseVal = 0.6/(6*(sim.plies//2 + 1))
+        noiseVal = 3.0/(10*(sim.plies//2 + 1))
         if sim.plies % 2 == 1:
             if playouts > 0:
                 bestNet.competitivePlayoutsFromPosition(playouts, sim)
@@ -138,6 +141,7 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
                         for images, labels in generatePredic:
+                            bestNet.neuralNet.eval()
                             outputs = bestNet.neuralNet(images)
                             bestNet.addPositionToMCTS(sim.boardToString(),
                                               ActionToArray.legalMovesForState(sim.arrayBoard,
@@ -167,6 +171,7 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
                         for images, labels in generatePredic:
+                            testingNet.neuralNet.eval()
                             outputs = testingNet.neuralNet(images)
                             testingNet.addPositionToMCTS(sim.boardToString(),
                                               ActionToArray.legalMovesForState(sim.arrayBoard,
@@ -212,8 +217,10 @@ def bestNetworkTest(bestNet, testingNet, games, playouts, clearAfterEachRound=Fa
         round = str(int(i+1))
         if i%2==0:
             score += NetworkCompetitionWhite(bestNet, testingNet, playouts, round=round)
+            print("Win Rate:", str(100*(score/(i+1))),"%")
         elif i%2==1:
             score += NetworkCompetitionBlack(bestNet, testingNet, playouts, round=round)
+            print("Win Rate:", str(100*(score/(i+1))),"%")
 
         # Make sure that the playouts are updated after
         if clearAfterEachRound:
@@ -222,14 +229,19 @@ def bestNetworkTest(bestNet, testingNet, games, playouts, clearAfterEachRound=Fa
 
     print("Score: ", str(score), ":", str((games - score)))
     if score > (games/2):
+        print("BEST: ", bestNet.nameOfNetwork)
+        print("TEST: ", testingNet.nameOfNetwork)
         print("new network is better than old network")
         return True
     else:
+        print("BEST: ", bestNet.nameOfNetwork)
+        print("TEST: ", testingNet.nameOfNetwork)
         return False
 
 
 testing = True
 if testing:
-    best = MCTS('sFULL2-5LAYER-10.pt')
-    newNet = MCTS('sBEST-5LAYER-10.pt')
-    print(bestNetworkTest(best, newNet, 50, 0))
+    best = MCTS("7 Layer k=32 Models/v5-1706to1809.pt")
+    newNet = MCTS('1705to1810-b50000.pt')
+    #newNet = MCTS('experimentalPoisson.pt')
+    print(bestNetworkTest(best, newNet, 200, 0))
