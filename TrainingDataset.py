@@ -9,10 +9,8 @@ import h5py
 
 class TrainingDataset(torch.utils.data.Dataset):
 
-    def __init__(self, directory, outputs):
-        with h5py.File(directory, 'r') as hf:
-            self.features = hf["Inputs"][0:1000000]
-            print(len(self.features))
+    def __init__(self, inputs, outputs):
+        self.features = inputs
 
         self.targets = outputs
         self.numpy = outputs.numpy()

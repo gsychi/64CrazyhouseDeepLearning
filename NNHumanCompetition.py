@@ -96,7 +96,7 @@ def NetworkCompetitionBlack(network, playouts, round="1"):
 
     sim = ChessEnvironment()
     while sim.result == 2:
-        noiseVal = 0.6/(6*(sim.plies//2 + 1))
+        noiseVal = 2/(10*(sim.plies//2 + 1))
         if sim.plies % 2 == 0:
             if playouts > 0:
                 network.competitivePlayoutsFromPosition(playouts, sim)
@@ -151,5 +151,5 @@ def NetworkCompetitionBlack(network, playouts, round="1"):
     print(PGN)
 
 # Final Models/v8-1803to1806.pt
-network = MCTS('7 Layer k=32 Models/v5-1706to1809.pt')
-NetworkCompetitionBlack(network, 0)
+network = MCTS('7 Layer k=32 Models/1705to1810.pt')
+NetworkCompetitionWhite(network, 0)

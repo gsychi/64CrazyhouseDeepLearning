@@ -14,10 +14,13 @@ def validateNetwork(loadDirectory):
     with h5py.File('Training Data/validationOutputs.h5', 'r') as hf:
         actions = hf["Outputs"][:]
         print(len(actions))
+    with h5py.File('Training Data/validationInputs.h5', 'r') as hf:
+        inputs = hf["Inputs"][:]
+        print(len(inputs))
     actions = torch.from_numpy(actions)
-    data = TrainingDataset('Training Data/validationInputs.h5', actions)
+    data = TrainingDataset(inputs, actions)
 
-    testLoader = torch.utils.data.DataLoader(dataset=data, batch_size=64, shuffle=False)
+    testLoader = torch.utils.data.DataLoader(dataset=data, batch_size=16, shuffle=False)
     # to create a prediction, create a new dataset with input of the states, and output should just be np.zeros()
 
     # this is a convolutional neural network
@@ -42,12 +45,13 @@ def validateNetwork(loadDirectory):
             _, labels = torch.max(labels.data, 1)
             correct += (predicted == labels).sum().item()
 
-            print('Test Accuracy of the model on the test positions: {} %'.format(100 * correct / total))
+            print('Test Accuracy of the model on', total, 'test positions: {} %'.format(100 * correct / total))
 
 validate = True
 if validate:
-    validateNetwork("1705to1810.pt")
+    validateNetwork("7 Layer k=32 Models/1705to1810.pt")
     #validateNetwork("7 Layer k=32 Models/v2-1706to1709.pt")
+    print("1705to1810")
 
 
 

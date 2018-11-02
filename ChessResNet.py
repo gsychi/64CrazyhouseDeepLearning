@@ -95,7 +95,10 @@ class ResNet(nn.Module):
 
 
 def ResNetMain():
-    return ResNet(BasicBlock, [1,1,1,1], [16,16,16,16])
+    return ResNet(BasicBlock, [1,1,1,1], [32,32,64,128])
+
+def ResNetSmall():
+    return ResNet(BasicBlock, [1,1,1,1], [6,6,6,6])
 
 def ResNetMainBottleNeck():
     return ResNet(Bottleneck, [1,1,1,1], [32,32,64,128])

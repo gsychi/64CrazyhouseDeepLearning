@@ -242,6 +242,6 @@ def bestNetworkTest(bestNet, testingNet, games, playouts, clearAfterEachRound=Fa
 testing = True
 if testing:
     best = MCTS("7 Layer k=32 Models/v5-1706to1809.pt")
-    newNet = MCTS('1705to1810-b50000.pt')
+    newNet = MCTS('7 Layer k=32 Models/1705to1810.pt')
     #newNet = MCTS('experimentalPoisson.pt')
-    print(bestNetworkTest(best, newNet, 200, 0))
+    print(bestNetworkTest(best, newNet, 500, 0))

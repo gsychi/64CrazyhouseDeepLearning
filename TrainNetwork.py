@@ -5,39 +5,28 @@ import torch.utils.data as data_utils
 from ChessConvNet import ChessConvNet
 from TrainingDataset import TrainingDataset
 import ChessResNet
-
+import h5py
 
 # inputs and outputs are numpy arrays. This method of checking accuracy only works with imported games.
 # if it's not imported, accuracy will never be 100%, so it will just output the trained network after 10,000 epochs.
-def trainNetwork(inputDirectory, outputMoves, vector=False, EPOCHS=10000, BATCH_SIZE=1000, LR=0.001, loadDirectory='none.pt',
+def trainNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1000, LR=0.001,
+                 loadDirectory='none.pt',
                  saveDirectory='network1.pt', OUTPUT_ARRAY_LEN=4504):
-    if vector:
-        outputs = torch.tensor((), dtype=torch.float64)
-        outputs.new_zeros((len(outputMoves), 4504))
-        for k in range(len(outputMoves)):
-            outputs[k][int(outputMoves[k])] = 1
-    else:
-        outputMoves = torch.from_numpy(outputMoves)  # .long() needed for CEL
 
+    outputs = torch.from_numpy(outputs)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
 
-    if not vector:
-        actions = outputMoves
-    else:
-        actions = outputs
-
-    data = TrainingDataset(inputDirectory, actions)  # use answers instead of actions when choosing CEL
+    data = TrainingDataset(boards, outputs)  # use answers instead of actions when choosing CEL
 
     trainLoader = torch.utils.data.DataLoader(dataset=data, batch_size=BATCH_SIZE, shuffle=True)
     # to create a prediction, create a new dataset with input of the states, and output should just be np.zeros()
 
     # this is a convolutional neural network
-    #model = ChessConvNet(OUTPUT_ARRAY_LEN).double()
+    model = ChessConvNet(OUTPUT_ARRAY_LEN).double()
 
     # this is a residual network
-    #model = ChessResNet.ResNetMain().double()
-    model = ChessResNet.ResNetMainBottleNeck().double()
+    #model = ChessResNet.ResNetSmall().double()
 
     try:
         model = torch.load(loadDirectory)
@@ -46,14 +35,13 @@ def trainNetwork(inputDirectory, outputMoves, vector=False, EPOCHS=10000, BATCH_
 
     criterion = nn.PoissonNLLLoss()  # MSELoss // PoissonNLLLoss //
 
-    #criterion = nn.CrossEntropyLoss()
+    # criterion = nn.CrossEntropyLoss()
     #  use this if you want to train from argmax values. This trains faster, but seems
     #  to be less accurate.
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=LR) # , weight_decay=0.00001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=LR)  # , weight_decay=0.00001)
     total_step = len(trainLoader)
 
-    bestAccuracy = 0
     trainNotFinished = True
     for epoch in range(EPOCHS):
         if trainNotFinished:
@@ -72,14 +60,13 @@ def trainNetwork(inputDirectory, outputMoves, vector=False, EPOCHS=10000, BATCH_
                     predicted = predicted.numpy()
                     print(predicted)
 
-                    #actual = labels.numpy()
+                    # actual = labels.numpy()
                     _, actual = torch.max(labels.data, 1)
                     actual = actual.numpy()
 
                     print(actual)
 
-                    print("Correct:",(predicted == actual).sum())
-
+                    print("Correct:", (predicted == actual).sum())
 
                 # Backward and optimize
                 optimizer.zero_grad()
@@ -91,20 +78,61 @@ def trainNetwork(inputDirectory, outputMoves, vector=False, EPOCHS=10000, BATCH_
                           .format(epoch + 1, EPOCHS, i + 1, total_step, loss.item()))
                 if (i + 1) % 200 == 0:
                     torch.save(model, saveDirectory)
+
     print("Updated!")
     torch.save(model, saveDirectory)
-
 
 train = True
 if train:
 
-    # if you want a random network
-    outputs = np.load("Training Data/Full Data/bigOutputsArgmax(17-05)-(18-10).npy")[0:1000000]
+    outputs = np.load("Training Data/Full Data/bigOutputsArgmax(17-01)-(17-04).npy")
     print(len(outputs))
+    with h5py.File("Training Data/Full Data/bigInputs(17-01)-(17-04).h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
 
-    trainNetwork('Training Data/Full Data/bigInputs(17-05)-(18-10).h5', outputs, loadDirectory="blah.pt", saveDirectory="poisson-resnet-bottleneck-1705to1810.pt", EPOCHS=100,
-                     BATCH_SIZE=64, LR=0.01)  # 0.04?
+    trainNetwork(boards, outputs, loadDirectory="1705to1810.pt",
+                 saveDirectory="1701to1810.pt", EPOCHS=0,
+                 BATCH_SIZE=64, LR=0.01)  # 0.04?
 
+    boards = []
+    outputs = []
 
+    with h5py.File('Training Data/16-12masterOutputs.h5', 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    with h5py.File('Training Data/16-12masterInputs.h5', 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
 
+    trainNetwork(boards, outputs, loadDirectory="1701to1810.pt",
+                 saveDirectory="1612to1810.pt", EPOCHS=0,
+                 BATCH_SIZE=64, LR=0.01)  # 0.04?
 
+    boards = []
+    outputs = []
+
+    with h5py.File('Training Data/16-11masterOutputs.h5', 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    with h5py.File('Training Data/16-11masterInputs.h5', 'r') as hf:
+        inputs = hf["Inputs"][:]
+        print(len(inputs))
+
+    trainNetwork(inputs, outputs, loadDirectory="1612to1810.pt",
+                 saveDirectory="1611to1810.pt", EPOCHS=0,
+                 BATCH_SIZE=64, LR=0.01)  # 0.04?
+
+    inputs = []
+    outputs = []
+
+    with h5py.File('Training Data/16-10masterOutputs.h5', 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    with h5py.File('Training Data/16-10masterInputs.h5', 'r') as hf:
+        inputs = hf["Inputs"][:]
+        print(len(inputs))
+
+    trainNetwork(inputs, outputs, loadDirectory="1611to1810.pt",
+                 saveDirectory="1610to1810.pt", EPOCHS=0,
+                 BATCH_SIZE=64, LR=0.01)  # 0.04?

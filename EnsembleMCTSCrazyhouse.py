@@ -80,10 +80,10 @@ class EnsembleMCTS():
         self.childrenStateWin = []  # a 2D list, each directory contains numpy array
         self.childrenNNEvaluation = []  # a 2D list, each directory contains numpy array
         self.neuralNet1 = torch.load("7 Layer k=32 Models/v6-1803to1806.pt")
-        self.neuralNet2 = torch.load("7 Layer k=32 Models/v2-1706to1709.pt")
+        self.neuralNet2 = torch.load("7 Layer k=32 Models/1705to1810.pt")
         self.neuralNet3 = torch.load("7 Layer k=32 Models/v3-1712to1803.pt")
-        self.neuralNet4 = torch.load("7 Layer k=32 Models/v4-1706to1809.pt")
-        self.neuralNet5 = torch.load("v2-1706to1810.pt")
+        self.neuralNet4 = torch.load("7 Layer k=32 Models/v5-1706to1809.pt")
+        self.neuralNet5 = torch.load("7 Layer k=32 Models/v2-1706to1709.pt")
         self.nameOfNetwork = "Ensemble Network"
 
     # This adds information into the MCTS database
