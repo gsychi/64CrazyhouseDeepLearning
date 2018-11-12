@@ -12,9 +12,9 @@ import h5py
 
 pgnGames = list(pathlib.Path('lichessdatabase').glob('*.pgn'))
 listOfMoves = []
-for i in range(len(pgnGames)):
+for i in range(0, 1): #len(pgnGames)):
     pgn = open(pgnGames[i])
-    for k in range(180000):  # 190,000 assures all games are looked at.
+    for k in range(190000):  # 190,000 assures all games are looked at.
         try:
             game = chess.pgn.read_game(pgn)
             whiteElo = int(game.headers["WhiteElo"])
@@ -48,7 +48,7 @@ for j in range(len(listOfMoves)):
     for i in range(len(listOfMoves[j])):
         state = board.boardToState()
         action = ActionToArray.moveArray(listOfMoves[j][i], board.arrayBoard)
-        for k in range(320,384):
+        for k in range(320, 384):
             action[0][k] = 0
         if board.board.legal_moves.count() != len(ActionToArray.legalMovesForState(board.arrayBoard, board.board)):
             print("ERROR!")
@@ -67,7 +67,7 @@ for j in range(len(listOfMoves)):
     print(str(int(j + 1)), "out of ", len(listOfMoves), "parsed.")
 
 # all games are parsed, now convert list into array
-inputs = np.zeros((len(inList), 1, 32, 28))
+inputs = np.zeros((len(inList), 1, 113, 8))
 outputs = np.zeros(len(outList))
 
 i = 0
@@ -92,9 +92,9 @@ The NN gets confused by this so we will comment it out for now.
 # outputs = (outputs/1.0002)+0.0001
 # outputs = np.log((outputs/(1-outputs)))
 
-with h5py.File('Training Data/16-07masterInputs.h5', 'w') as hf:
+with h5py.File('Training Data/18-05Inputs.h5', 'w') as hf:
     hf.create_dataset("Inputs", data=inputs, compression='gzip', compression_opts=9)
-with h5py.File('Training Data/16-07Outputs.h5', 'w') as hf:
+with h5py.File('Training Data/18-05Outputs.h5', 'w') as hf:
     hf.create_dataset("Outputs", data=outputs, compression='gzip', compression_opts=9)
 
 

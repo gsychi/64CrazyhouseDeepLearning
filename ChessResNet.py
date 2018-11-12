@@ -59,7 +59,7 @@ class ResNet(nn.Module):
     def __init__(self, block, num_blocks, num_kernels, num_classes=4504):
         super(ResNet, self).__init__()
         self.in_planes = 32
-        self.policy_planes = 1
+        self.policy_planes = block.expansion
 
         self.conv1 = nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(32)
@@ -72,7 +72,8 @@ class ResNet(nn.Module):
             nn.BatchNorm2d(self.policy_planes),
             nn.ReLU()
             )
-        self.linear = nn.Linear(896*self.policy_planes, num_classes)  #TECHNICALLY IT IS 896*self.policy_planes*Expanion for bottleneck
+        self.linear1 = nn.Linear(904*self.policy_planes, 226*self.policy_planes)
+        self.linear2 = nn.Linear(226*self.policy_planes, num_classes)  #TECHNICALLY IT IS 904*self.policy_planes*Expanion for bottleneck
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
@@ -90,7 +91,8 @@ class ResNet(nn.Module):
         out = self.layer4(out)
         out = self.finalLayer(out)
         out = out.view(out.size(0), -1)
-        out = self.linear(out)
+        out = F.relu(self.linear1(out))
+        out = self.linear2(out)
         return out
 
 
@@ -98,7 +100,7 @@ def ResNetMain():
     return ResNet(BasicBlock, [1,1,1,1], [32,32,64,128])
 
 def ResNetSmall():
-    return ResNet(BasicBlock, [1,1,1,1], [6,6,6,6])
+    return ResNet(Bottleneck, [1,1,1,1], [16,16,32,64])
 
 def ResNetMainBottleNeck():
     return ResNet(Bottleneck, [1,1,1,1], [32,32,64,128])

@@ -320,15 +320,17 @@ class MCTS():
             # playout from a certain position.
             self.playout(str(int(i + 1)), notFromBeginning=True, arrayBoard=tempBoard.arrayBoard,
                          pythonBoard=tempBoard.board,
-                         plies=tempBoard.plies, wCap=tempBoard.whiteCaptivePieces, explorationConstant=0.3,
+                         plies=tempBoard.plies, wCap=tempBoard.whiteCaptivePieces, explorationConstant=0.2,
                          bCap=tempBoard.blackCaptivePieces, noise=False, actuallyAPawn=tempBoard.actuallyAPawn,
                          printPGN=False)
 
             self.printSize()
-            # print(self.childrenMoveNames[self.dictionary[sim.boardToString()]])
-            # print(self.childrenStateWin[self.dictionary[sim.boardToString()]])
-            # print(self.childrenStateSeen[self.dictionary[sim.boardToString()]])
-            # print(self.childrenNNEvaluation[self.dictionary[sim.boardToString()]])
+            #"""
+            print(self.childrenMoveNames[self.dictionary[sim.boardToString()]])
+            print(self.childrenStateWin[self.dictionary[sim.boardToString()]])
+            print(self.childrenStateSeen[self.dictionary[sim.boardToString()]])
+            print(self.childrenNNEvaluation[self.dictionary[sim.boardToString()]])
+            #"""
 
     def simulateTrainingGame(self, playouts, round="1"):
 

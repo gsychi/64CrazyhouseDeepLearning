@@ -79,11 +79,12 @@ class EnsembleMCTS():
         self.childrenStateSeen = []  # a 2D list, each directory contains numpy array
         self.childrenStateWin = []  # a 2D list, each directory contains numpy array
         self.childrenNNEvaluation = []  # a 2D list, each directory contains numpy array
-        self.neuralNet1 = torch.load("7 Layer k=32 Models/v6-1803to1806.pt")
-        self.neuralNet2 = torch.load("7 Layer k=32 Models/1705to1810.pt")
-        self.neuralNet3 = torch.load("7 Layer k=32 Models/v3-1712to1803.pt")
-        self.neuralNet4 = torch.load("7 Layer k=32 Models/v5-1706to1809.pt")
-        self.neuralNet5 = torch.load("7 Layer k=32 Models/v2-1706to1709.pt")
+        self.neuralNet1 = torch.load("7 Layer Old Input Models/v6-1803to1806.pt")
+        self.neuralNet2 = torch.load("7 Layer Old Input Models/1705to1810.pt")
+        self.neuralNet3 = torch.load("7 Layer Old Input Models/v3-1712to1803.pt")
+        self.neuralNet4 = torch.load("7 Layer Old Input Models/v5-1706to1809.pt")
+        self.neuralNet5 = torch.load("7 Layer Old Input Models/1610to1810.pt")
+        self.neuralNet6 = torch.load("7 Layer Old Input Models/1611to1810.pt")
         self.nameOfNetwork = "Ensemble Network"
 
     # This adds information into the MCTS database
@@ -108,7 +109,7 @@ class EnsembleMCTS():
     def printSize(self):
         print("Size: ", len(self.childrenMoveNames))
 
-    def addPositionToMCTS(self, string, legalMoves, arrayBoard, prediction1, prediction2, prediction3, prediction4, prediction5):
+    def addPositionToMCTS(self, string, legalMoves, arrayBoard, prediction1, prediction2, prediction3, prediction4, prediction5, prediction6):
         self.dictionary[string] = len(self.dictionary)
         self.childrenMoveNames.append(legalMoves)
         self.childrenStateSeen.append(np.zeros(len(legalMoves)))
@@ -120,8 +121,9 @@ class EnsembleMCTS():
         evaluations3 = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction3)
         evaluations4 = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction4)
         evaluations5 = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction5)
+        evaluations6 = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction6)
 
-        evaluations = (evaluations1+evaluations2+evaluations3+evaluations4+evaluations5)/2.5
+        evaluations = (evaluations1+evaluations2+evaluations3+evaluations4+evaluations5+evaluations6)/3
         #print(np.amax(evaluations))
 
         """
@@ -200,15 +202,17 @@ class EnsembleMCTS():
                         self.neuralNet3.eval()
                         self.neuralNet4.eval()
                         self.neuralNet5.eval()
+                        self.neuralNet6.eval()
                         outputs1 = self.neuralNet1(images)
                         outputs2 = self.neuralNet2(images)
                         outputs3 = self.neuralNet3(images)
                         outputs4 = self.neuralNet4(images)
                         outputs5 = self.neuralNet5(images)
+                        outputs6 = self.neuralNet6(images)
                         self.addPositionToMCTS(tempBoard.boardToString(),
                                                ActionToArray.legalMovesForState(tempBoard.arrayBoard,
                                                                                 tempBoard.board),
-                                               tempBoard.arrayBoard, outputs1,outputs2,outputs3,outputs4,outputs5)
+                                               tempBoard.arrayBoard, outputs1,outputs2,outputs3,outputs4,outputs5,outputs6)
                         # find and make the preferred move
                         if noise:
                             noiseConstant = 0.15 / (1 * (1 + tempBoard.plies))  # should decrease this...
@@ -400,15 +404,17 @@ class EnsembleMCTS():
                             self.neuralNet3.eval()
                             self.neuralNet4.eval()
                             self.neuralNet5.eval()
+                            self.neuralNet6.eval()
                             outputs1 = self.neuralNet1(images)
                             outputs2 = self.neuralNet2(images)
                             outputs3 = self.neuralNet3(images)
                             outputs4 = self.neuralNet4(images)
                             outputs5 = self.neuralNet5(images)
+                            outputs6 = self.neuralNet6(images)
                             self.addPositionToMCTS(sim.boardToString(),
                                                    ActionToArray.legalMovesForState(sim.arrayBoard,
                                                                                      sim.board),
-                                                   sim.arrayBoard, outputs1,outputs2,outputs3,outputs4,outputs5)
+                                                   sim.arrayBoard, outputs1,outputs2,outputs3,outputs4,outputs5, outputs6)
             directory = self.dictionary[sim.boardToString()]
             index = np.argmax(
                 PUCT_Algorithm(self.childrenStateWin[directory], self.childrenStateSeen[directory], 0.5,

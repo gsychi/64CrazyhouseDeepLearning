@@ -274,7 +274,7 @@ class ChessEnvironment():
 
     def boardToState(self):
 
-        captiveToBinary = np.zeros((8, 8))
+        captiveToBinary = np.zeros((9, 8))
 
         # Create copies of whiteCaptive and blackCaptive
         temp1 = np.copy(self.whiteCaptivePieces)
@@ -324,14 +324,22 @@ class ChessEnvironment():
                 temp2[4] -= 1
 
             # [7][6], [7][7] determine who is moving
-            captiveToBinary[7][6], captiveToBinary[7][7] = (self.plies % 2), (self.plies % 2)
+            captiveToBinary[7][6], captiveToBinary[7][7] = (self.plies % 2), 1 - (self.plies % 2)
 
-            # need four more entries to determine who can castle...
-            # [3][6], [3][7]
-            # captiveToBinary[3][6] = self.board.castling_rights
+            if self.board.has_kingside_castling_rights(chess.WHITE):
+                captiveToBinary[8][0] = 1
+                captiveToBinary[8][1] = 1
+            if self.board.has_queenside_castling_rights(chess.WHITE):
+                captiveToBinary[8][2] = 1
+                captiveToBinary[8][3] = 1
+            if self.board.has_kingside_castling_rights(chess.BLACK):
+                captiveToBinary[8][4] = 1
+                captiveToBinary[8][5] = 1
+            if self.board.has_kingside_castling_rights(chess.BLACK):
+                captiveToBinary[8][6] = 1
+                captiveToBinary[8][7] = 1
 
         self.updateNumpyBoards()
 
         # perhaps work on adding 1s for spaces....
-        return np.reshape(np.concatenate((self.allBoards, captiveToBinary)), (1, 1, 32, 28))  # 32, 26, or 104, 8
-
+        return np.reshape(np.concatenate((self.allBoards, captiveToBinary)), (1, 1, 113, 8))

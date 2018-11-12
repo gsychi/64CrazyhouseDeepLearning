@@ -23,10 +23,10 @@ def trainNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1000, LR=0.001,
     # to create a prediction, create a new dataset with input of the states, and output should just be np.zeros()
 
     # this is a convolutional neural network
-    model = ChessConvNet(OUTPUT_ARRAY_LEN).double()
+    #model = ChessConvNet(OUTPUT_ARRAY_LEN).double()
 
     # this is a residual network
-    #model = ChessResNet.ResNetSmall().double()
+    model = ChessResNet.ResNetMainBottleNeck().double()
 
     try:
         model = torch.load(loadDirectory)
@@ -85,54 +85,80 @@ def trainNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1000, LR=0.001,
 train = True
 if train:
 
-    outputs = np.load("Training Data/Full Data/bigOutputsArgmax(17-01)-(17-04).npy")
-    print(len(outputs))
-    with h5py.File("Training Data/Full Data/bigInputs(17-01)-(17-04).h5", 'r') as hf:
+    with h5py.File("Training Data/18-10Inputs.h5", 'r') as hf:
         boards = hf["Inputs"][:]
         print(len(boards))
+    with h5py.File("Training Data/18-10Outputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainNetwork(boards, outputs, loadDirectory="BIGRESNET.pt",
+                 saveDirectory="BIGRESNET.pt", EPOCHS=1,
+                 BATCH_SIZE=64, LR=0.01)  # 0.04?
 
-    trainNetwork(boards, outputs, loadDirectory="1705to1810.pt",
-                 saveDirectory="1701to1810.pt", EPOCHS=0,
+    boards = []
+    outputs = []
+    with h5py.File("Training Data/18-09Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-09Outputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainNetwork(boards, outputs, loadDirectory="BIGRESNET.pt",
+                 saveDirectory="BIGRESNET.pt", EPOCHS=1,
                  BATCH_SIZE=64, LR=0.01)  # 0.04?
 
     boards = []
     outputs = []
 
-    with h5py.File('Training Data/16-12masterOutputs.h5', 'r') as hf:
-        outputs = hf["Outputs"][:]
-        print(len(outputs))
-    with h5py.File('Training Data/16-12masterInputs.h5', 'r') as hf:
+    with h5py.File("Training Data/18-08Inputs.h5", 'r') as hf:
         boards = hf["Inputs"][:]
         print(len(boards))
-
-    trainNetwork(boards, outputs, loadDirectory="1701to1810.pt",
-                 saveDirectory="1612to1810.pt", EPOCHS=0,
+    with h5py.File("Training Data/18-08Outputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainNetwork(boards, outputs, loadDirectory="BIGRESNET.pt",
+                 saveDirectory="BIGRESNET.pt", EPOCHS=1,
                  BATCH_SIZE=64, LR=0.01)  # 0.04?
 
     boards = []
     outputs = []
 
-    with h5py.File('Training Data/16-11masterOutputs.h5', 'r') as hf:
+    with h5py.File("Training Data/18-07Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-07Outputs.h5", 'r') as hf:
         outputs = hf["Outputs"][:]
         print(len(outputs))
-    with h5py.File('Training Data/16-11masterInputs.h5', 'r') as hf:
-        inputs = hf["Inputs"][:]
-        print(len(inputs))
-
-    trainNetwork(inputs, outputs, loadDirectory="1612to1810.pt",
-                 saveDirectory="1611to1810.pt", EPOCHS=0,
+    trainNetwork(boards, outputs, loadDirectory="BIGRESNET.pt",
+                 saveDirectory="BIGRESNET.pt", EPOCHS=1,
                  BATCH_SIZE=64, LR=0.01)  # 0.04?
 
-    inputs = []
+    boards = []
     outputs = []
 
-    with h5py.File('Training Data/16-10masterOutputs.h5', 'r') as hf:
+    with h5py.File("Training Data/18-06Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-06Outputs.h5", 'r') as hf:
         outputs = hf["Outputs"][:]
         print(len(outputs))
-    with h5py.File('Training Data/16-10masterInputs.h5', 'r') as hf:
-        inputs = hf["Inputs"][:]
-        print(len(inputs))
-
-    trainNetwork(inputs, outputs, loadDirectory="1611to1810.pt",
-                 saveDirectory="1610to1810.pt", EPOCHS=0,
+    trainNetwork(boards, outputs, loadDirectory="BIGRESNET.pt",
+                 saveDirectory="BIGRESNET.pt", EPOCHS=1,
                  BATCH_SIZE=64, LR=0.01)  # 0.04?
+
+    boards = []
+    outputs = []
+
+    with h5py.File("Training Data/18-05Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-05Outputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainNetwork(boards, outputs, loadDirectory="BIGRESNET.pt",
+                 saveDirectory="BIGRESNET.pt", EPOCHS=1,
+                 BATCH_SIZE=64, LR=0.01)  # 0.04?
+
+    boards = []
+    outputs = []
+
