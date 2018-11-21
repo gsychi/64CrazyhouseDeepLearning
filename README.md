@@ -107,8 +107,15 @@ Once all of this is completed, you can simply run <b>TrainNetwork.py</b> for as 
 If you are having troubles locating the downloaded file, you can change the name of the saved model by changing the saveDirectory="" on the last line of the file. Similarly, you may load a pretrained model in the loadDirectory="" on the same line. As an example, the default setting below loads a file from nothing.pt (the code does nothing if this directory does not exist), and saves the newly trained model as sFULL-5LAYER-32.pt.
 
 ```python
-savedtrainNetwork(inputs, outputs, loadDirectory="nothing.pt", saveDirectory="sFULL-5LAYER-32.pt", EPOCHS=1000,
-                 BATCH_SIZE=64, updateInterval=99, LR=0.01)
+    with h5py.File("Training Data/18-05Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-05Outputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainNetwork(boards, outputs, loadDirectory="LARGERESNET.pt",
+                 saveDirectory="LARGERESNET.pt", EPOCHS=1,
+                 BATCH_SIZE=64, LR=0.01)  # 0.04?
  ```
 
 <br>
