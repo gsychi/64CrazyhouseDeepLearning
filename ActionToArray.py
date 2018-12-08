@@ -444,7 +444,7 @@ def moveArrayToString(array, board, pythonChessBoard, whiteCaptivePieces, blackC
 def moveEvaluation(move, board, prediction):
 
     prediction = prediction.numpy().flatten()
-    prediction = 1 / (1 + np.exp(-prediction))
+    prediction = np.exp(prediction)
     move = moveArray(move, board).flatten()
     for i in range(320, 384):
         move[i] = 0

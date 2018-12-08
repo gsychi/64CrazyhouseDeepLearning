@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -56,13 +57,13 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_kernels, num_classes=4504):
+    def __init__(self, block, num_blocks, num_kernels, num_classes=4504, value_net=False):
         super(ResNet, self).__init__()
-        self.in_planes = 32
+        self.in_planes = 15
         self.policy_planes = block.expansion
 
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(32)
+        self.conv1 = nn.Conv2d(15, 15, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(15)
         self.layer1 = self._make_layer(block, num_kernels[0], num_blocks[0], stride=1)
         self.layer2 = self._make_layer(block, num_kernels[1], num_blocks[1], stride=1)
         self.layer3 = self._make_layer(block, num_kernels[2], num_blocks[2], stride=1)
@@ -72,8 +73,8 @@ class ResNet(nn.Module):
             nn.BatchNorm2d(self.policy_planes),
             nn.ReLU()
             )
-        self.linear1 = nn.Linear(904*self.policy_planes, 226*self.policy_planes)
-        self.linear2 = nn.Linear(226*self.policy_planes, num_classes)  #TECHNICALLY IT IS 904*self.policy_planes*Expanion for bottleneck
+        self.linear = nn.Linear(64*self.policy_planes*block.expansion, num_classes)
+        self.tanh = value_net
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
@@ -91,39 +92,32 @@ class ResNet(nn.Module):
         out = self.layer4(out)
         out = self.finalLayer(out)
         out = out.view(out.size(0), -1)
-        out = F.relu(self.linear1(out))
-        out = self.linear2(out)
+        if self.tanh:
+            out = F.tanh(self.linear(out))
+        else:
+            out = F.log_softmax(self.linear(out))
         return out
 
 
-def ResNetMain():
-    return ResNet(BasicBlock, [1,1,1,1], [32,32,64,128])
+def ValueResNet():
+    return ResNet(BasicBlock, [2,2,2,1], [64,64,64,64], num_classes=1, value_net=True)
 
-def ResNetSmall():
-    return ResNet(Bottleneck, [1,1,1,1], [16,16,32,64])
+def PolicyResNetMain():
+    return ResNet(BasicBlock, [2,2,2,4], [128,128,128,128])
 
-def ResNetMainBottleNeck():
-    return ResNet(Bottleneck, [1,1,1,1], [32,32,64,128])
-
-def ResNet18():
-    return ResNet(BasicBlock, [2,2,2,2], [32,64,128,256])
-
-def ResNet34():
-    return ResNet(BasicBlock, [3,4,6,3], [32,64,128,256])
-
-def ResNet50():
-    return ResNet(Bottleneck, [3,4,6,3], [32,64,128,256])
-
-def ResNet101():
-    return ResNet(Bottleneck, [3,4,23,3], [32,64,128,256])
-
-def ResNet152():
-    return ResNet(Bottleneck, [3,8,36,3], [32,64,128,256])
-
+def PolicyResNetSmall():
+    return ResNet(BasicBlock, [2,2,2,4], [32,32,32,32])
 
 def test():
-    net = ResNetMain()
-    y = net(torch.randn(1,1,32,28))
+    net = ValueResNet()
+    y = net(torch.randn(1,15,8,8))
     print(y.size())
+    print(y.detach().numpy())
+
+    net = PolicyResNetMain()
+    y = net(torch.randn(1,15,8,8))
+    print(y.size())
+    print(y.detach().numpy())
+    print(np.sum(y.detach().numpy(), axis=1))
 
 #test()

@@ -47,9 +47,10 @@ def PUCT_Algorithm(w, n, c, N, q):
     winRate = (nnEvaluation + selfPlayEvaluation) * 0.5
 
     # Exploration
-    exploration = c * np.sqrt(N) / (1 + n)
+    exploration = (c * np.sqrt(N)) / (1 + n)
 
     PUCT = winRate + exploration
+
     return PUCT
 
 
@@ -128,7 +129,7 @@ class MCTS():
         # NEED TO ADD ACTUALLY A PAWN
 
     def playout(self, round,
-                explorationConstant=0.15,  # lower? will test more.
+                explorationConstant=2**0.5,  # lower? will test more.
                 notFromBeginning=False, arrayBoard=0, pythonBoard=0, plies=0, wCap=0, bCap=0,
                 actuallyAPawn=0,
                 noise=True,
@@ -308,7 +309,7 @@ class MCTS():
                          pythonBoard=tempBoard.board,
                          plies=tempBoard.plies, wCap=tempBoard.whiteCaptivePieces, noise=True,
                          bCap=tempBoard.blackCaptivePieces, actuallyAPawn=tempBoard.actuallyAPawn,
-                         explorationConstant=0.3, printPGN=False)
+                         explorationConstant=2**0.5, printPGN=False)
 
             # self.printSize()
             # print(self.childrenMoveNames[self.dictionary[sim.boardToString()]])
@@ -320,7 +321,7 @@ class MCTS():
             # playout from a certain position.
             self.playout(str(int(i + 1)), notFromBeginning=True, arrayBoard=tempBoard.arrayBoard,
                          pythonBoard=tempBoard.board,
-                         plies=tempBoard.plies, wCap=tempBoard.whiteCaptivePieces, explorationConstant=0.2,
+                         plies=tempBoard.plies, wCap=tempBoard.whiteCaptivePieces, explorationConstant=1,
                          bCap=tempBoard.blackCaptivePieces, noise=False, actuallyAPawn=tempBoard.actuallyAPawn,
                          printPGN=False)
 
@@ -330,6 +331,12 @@ class MCTS():
             print(self.childrenStateWin[self.dictionary[sim.boardToString()]])
             print(self.childrenStateSeen[self.dictionary[sim.boardToString()]])
             print(self.childrenNNEvaluation[self.dictionary[sim.boardToString()]])
+            print(PUCT_Algorithm(self.childrenStateWin[self.dictionary[sim.boardToString()]],
+                    self.childrenStateSeen[self.dictionary[sim.boardToString()]],
+                    1, np.sum(self.childrenStateSeen[self.dictionary[sim.boardToString()]]),
+                                self.childrenNNEvaluation[self.dictionary[sim.boardToString()]])
+                    )
+            print("Playout:", np.sum(self.childrenStateSeen[self.dictionary[sim.boardToString()]]))
             #"""
 
     def simulateTrainingGame(self, playouts, round="1"):
@@ -373,7 +380,7 @@ class MCTS():
                                                    sim.arrayBoard, outputs)
             directory = self.dictionary[sim.boardToString()]
             index = np.argmax(
-                PUCT_Algorithm(self.childrenStateWin[directory], self.childrenStateSeen[directory], 0.5,
+                PUCT_Algorithm(self.childrenStateWin[directory], self.childrenStateSeen[directory], 2**0.5,
                                # 0.25-0.30 guarantees diversity
                                np.sum(self.childrenStateSeen[directory]),
                                noiseEvals(self.childrenNNEvaluation[directory], 2.1 / (7 * ((sim.plies // 2) + 1))))
