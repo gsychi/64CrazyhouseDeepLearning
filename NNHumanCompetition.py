@@ -151,5 +151,5 @@ def NetworkCompetitionBlack(network, playouts, round="1"):
     print(PGN)
 
 # Final Models/v8-1803to1806.pt
-network = MCTS('7 Layer k=32 Models/1705to1810.pt')
+network = MCTS('7 Layer Old Input Models/epoch2final-1611to1810.pt')
 NetworkCompetitionWhite(network, 0)

@@ -24,12 +24,12 @@ def validateEnsembleNetwork():
     # to create a prediction, create a new dataset with input of the states, and output should just be np.zeros()
 
     try:
-        model1 = torch.load("7 Layer Old Input Models/1610to1810.pt")
-        model2 = torch.load("7 Layer Old Input Models/v6-1803to1806.pt")
+        model1 = torch.load("7 Layer Old Input Models/epoch2final-1611to1810.pt")
+        model2 = torch.load("7 Layer Old Input Models/epoch2-1705to1810.pt")
         model3 = torch.load("7 Layer Old Input Models/1705to1810.pt")
-        model4 = torch.load("7 Layer Old Input Models/v3-1712to1803.pt")
-        model5 = torch.load("7 Layer Old Input Models/v5-1706to1809.pt")
-        model6 = torch.load("7 Layer Old Input Models/1611to1810.pt")
+        model4 = torch.load("7 Layer Old Input Models/epoch2-1701to1810.pt")
+        model5 = torch.load("7 Layer Old Input Models/epoch2final-1701to1810.pt")
+        model6 = torch.load("7 Layer Old Input Models/epoch2final-1612to1810.pt")
         print("6 TOTAL MODELS")
 
     except:

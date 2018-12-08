@@ -11,10 +11,10 @@ import h5py
 # if it's not imported, accuracy will never be 100%, so it will just output the trained network after 10,000 epochs.
 def validateNetwork(loadDirectory):
 
-    with h5py.File('Training Data/Old Data/validationOutputs.h5', 'r') as hf:
+    with h5py.File('Training Data/18-10Outputs.h5', 'r') as hf:
         actions = hf["Outputs"][:]
         print(len(actions))
-    with h5py.File('Training Data/Old Data/validationInputs.h5', 'r') as hf:
+    with h5py.File('Training Data/18-10Inputs.h5', 'r') as hf:
         inputs = hf["Inputs"][:]
         print(len(inputs))
     actions = torch.from_numpy(actions)
@@ -49,9 +49,8 @@ def validateNetwork(loadDirectory):
 
 validate = True
 if validate:
-    validateNetwork("1705to1810.pt")
-    #validateNetwork("7 Layer k=32 Models/v2-1706to1709.pt")
-    print("1705to1810")
+    validateNetwork("18051808-checkpoint8.pt")
+
 
 
 

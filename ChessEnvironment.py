@@ -274,7 +274,7 @@ class ChessEnvironment():
 
     def boardToState(self):
 
-        captiveToBinary = np.zeros((9, 8))
+        captiveToBinary = np.zeros((16, 8))
 
         # Create copies of whiteCaptive and blackCaptive
         temp1 = np.copy(self.whiteCaptivePieces)
@@ -342,4 +342,4 @@ class ChessEnvironment():
         self.updateNumpyBoards()
 
         # perhaps work on adding 1s for spaces....
-        return np.reshape(np.concatenate((self.allBoards, captiveToBinary)), (1, 1, 113, 8))
+        return np.reshape(np.concatenate((self.allBoards, captiveToBinary)), (1, 15, 8, 8))
