@@ -82,14 +82,14 @@ def trainValueNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.01,
 train = True
 if train:
 
-    with h5py.File("Training Data/18-01Inputs.h5", 'r') as hf:
+    with h5py.File("Training Data/18-02Inputs.h5", 'r') as hf:
         boards = hf["Inputs"][:]
         print(len(boards))
-    with h5py.File("Training Data/18-01ValueOutputs.h5", 'r') as hf:
+    with h5py.File("Training Data/18-02ValueOutputs.h5", 'r') as hf:
         outputs = hf["Outputs"][:]
         print(len(outputs))
     trainValueNetwork(boards, outputs, loadDirectory="1801-VALUE.pt",
-                 saveDirectory="1801-VALUE.pt", EPOCHS=2,
+                 saveDirectory="18011802-VALUE.pt", EPOCHS=2,
                  BATCH_SIZE=128, LR=0.01)
 
     boards = []

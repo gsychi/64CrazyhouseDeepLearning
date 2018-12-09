@@ -25,7 +25,7 @@ import ChessConvNet
 import torch
 import torch.nn as nn
 import torch.utils.data as data_utils
-
+import ValueEvaluation
 
 # Creates a list of zeros hmmm...
 def zeroList(n):
@@ -35,19 +35,16 @@ def zeroList(n):
 
 # w stands for # of wins, n stands for number of times node has been visited.
 # N stands for number of times parent node is visited, and c is just an exploration constant that can be tuned.
-# Q is the evaluation from -1 to 1 of the neural network
+# q is the value evaluation from 0 to 1 of the neural network
+# p is the probability evaluation from 0 to 1 of the neural network
 # UCT Algorithm used by Alpha Zero.
-def PUCT_Algorithm(w, n, c, N, q):
+def PUCT_Algorithm(w, n, c, N, q, p):
     # Provides a win rate score from 0 to 1
     selfPlayEvaluation = np.divide(w, n, out=np.zeros_like(w), where=n != 0)
-    # for i in range(len(selfPlayEvaluation)):
-    # if n[i] == 0:
-    # selfPlayEvaluation[i] = 0.5
-    nnEvaluation = q
-    winRate = (nnEvaluation + selfPlayEvaluation) * 0.5
+    winRate = (q + selfPlayEvaluation) * 0.5
 
     # Exploration
-    exploration = (c * np.sqrt(N)) / (1 + n)
+    exploration = (c * p * np.sqrt(N)) / (1 + n)
 
     PUCT = winRate + exploration
 
@@ -71,7 +68,7 @@ class MCTS():
     # - win count, number of times visited, and neural network evaluation
     # This is helpful because we get to use numpy stuffs.
 
-    def __init__(self, directory):
+    def __init__(self, directory1, directory2):
 
         self.dictionary = {
             # 'string' = n position. Let this string be the FEN of the position.
@@ -79,13 +76,16 @@ class MCTS():
         self.childrenMoveNames = []  # a 2D list, each directory may be of different size, stores name of moves
         self.childrenStateSeen = []  # a 2D list, each directory contains numpy array
         self.childrenStateWin = []  # a 2D list, each directory contains numpy array
-        self.childrenNNEvaluation = []  # a 2D list, each directory contains numpy array
+        self.childrenPolicyEval = []  # a 2D list, each directory contains numpy array
+        self.childrenValueEval = []  # a 2D list, each directory contains numpy array
         try:
-            self.neuralNet = torch.load(directory)
-            self.neuralNet.eval()
+            self.policyNet = torch.load(directory1)
+            self.policyNet.eval()
+            self.valueNet = torch.load(directory2)
+            self.valueNet.eval()
         except:
             print("Network not found!")
-        self.nameOfNetwork = directory[0:-3]
+        self.nameOfNetwork = "policy:"+directory1[0:-3]+";value:"+directory2[0:-3]
 
     # This adds information into the MCTS database
 
@@ -96,37 +96,32 @@ class MCTS():
         self.childrenMoveNames = []  # a 2D list, each directory may be of different size, stores name of moves
         self.childrenStateSeen = []  # a 2D list, each directory contains numpy array
         self.childrenStateWin = []  # a 2D list, each directory contains numpy array
-        self.childrenNNEvaluation = []  # a 2D list, each directory contains numpy array
+        self.childrenPolicyEval = []  # a 2D list, each directory contains numpy array
+        self.childrenValueEval = []  # a 2D list, each directory contains numpy array
 
     def printInformation(self):
         print(self.dictionary)
         print(self.childrenMoveNames)
         print(self.childrenStateSeen)
         print(self.childrenStateWin)
-        print(self.childrenNNEvaluation)
+        print(self.childrenPolicyEval)
+        print(self.childrenValueEval)
         print("Parent states in tree: ", len(self.childrenMoveNames))
 
     def printSize(self):
         print("Size: ", len(self.childrenMoveNames))
 
-    def addPositionToMCTS(self, string, legalMoves, arrayBoard, prediction):
+    def addPositionToMCTS(self, string, legalMoves, arrayBoard, prediction, actualBoard):
         self.dictionary[string] = len(self.dictionary)
         self.childrenMoveNames.append(legalMoves)
         self.childrenStateSeen.append(np.zeros(len(legalMoves)))
         self.childrenStateWin.append(np.zeros(len(legalMoves)))
 
+        policy = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction)
+        self.childrenPolicyEval.append(policy)
 
-        evaluations = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction)
-
-        """
-        # should scale the evaluations from 0 to 1.
-        maxValue = 1 / np.amax(evaluations)
-        evaluations *= maxValue
-        """
-
-        self.childrenNNEvaluation.append(evaluations)
-
-        # NEED TO ADD ACTUALLY A PAWN
+        value = ValueEvaluation.moveValueEvaluations(legalMoves, actualBoard, self.valueNet)
+        self.childrenValueEval.append(value)
 
     def playout(self, round,
                 explorationConstant=2**0.5,  # lower? will test more.
@@ -163,8 +158,9 @@ class MCTS():
             tempBoard.actuallyAPawn = actuallyAPawn
             tempBoard.updateNumpyBoards()
 
-        while tempBoard.result == 2:
-
+        depth = 0
+        while tempBoard.result == 2 and depth < 4:
+            depth += 1
             position = tempBoard.boardToString()
             if position not in self.dictionary:
                 # Create a new entry in the tree, if the state is not seen before.
@@ -174,11 +170,11 @@ class MCTS():
                 generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                 with torch.no_grad():
                     for images, labels in generatePredic:
-                        outputs = self.neuralNet(images)
+                        outputs = self.policyNet(images)
                         self.addPositionToMCTS(tempBoard.boardToString(),
                                                ActionToArray.legalMovesForState(tempBoard.arrayBoard,
                                                                                 tempBoard.board),
-                                               tempBoard.arrayBoard, outputs)
+                                               tempBoard.arrayBoard, outputs, tempBoard)
                         # find and make the preferred move
                         if noise:
                             noiseConstant = 0.15 / (1 * (1 + tempBoard.plies))  # should decrease this...
@@ -191,7 +187,9 @@ class MCTS():
                                                              explorationConstant,
                                                              np.sum(self.childrenStateSeen[
                                                                         len(self.childrenStateSeen) - 1]),
-                                                             noiseEvals(self.childrenNNEvaluation[
+                                                             self.childrenValueEval[
+                                                                            len(self.childrenStateSeen) - 1],
+                                                             noiseEvals(self.childrenPolicyEval[
                                                                             len(self.childrenStateSeen) - 1],
                                                                         noiseConstant)))
                         else:
@@ -220,7 +218,8 @@ class MCTS():
                 index = np.argmax(PUCT_Algorithm(self.childrenStateWin[directory],
                                                  self.childrenStateSeen[directory], explorationConstant,
                                                  np.sum(self.childrenStateSeen[directory]),
-                                                 noiseEvals(self.childrenNNEvaluation[directory], noiseConstant)
+                                                 self.childrenValueEval[directory],
+                                                 noiseEvals(self.childrenPolicyEval[directory], noiseConstant)
                                                  ))
                 move = self.childrenMoveNames[directory][index]
 
@@ -271,6 +270,39 @@ class MCTS():
                 blackStateWin.append(blackStateSeen[j] * 0.5)
             if printPGN:
                 PGN.headers["Result"] = "1/2-1/2"
+        if tempBoard.result == 2:  # game isn't played to very end
+            winRate = np.amax(ValueEvaluation.moveValueEvaluations(ActionToArray.legalMovesForState(tempBoard.arrayBoard, tempBoard.board),
+                                                               tempBoard, self.valueNet))
+            # if depth is divisible by two then win rate is of opponent
+            if depth % 2 == 0:
+                winRate = 1-winRate
+                print(winRate)
+                if tempBoard.plies % 2 == 0:
+                    # this means that we are evaluating white
+                    for i in range(len(whiteStateSeen)):
+                        whiteStateWin.append(whiteStateSeen[i] * winRate)
+                    for j in range(len(blackStateSeen)):
+                        blackStateWin.append(blackStateSeen[j] * (1-winRate))
+                else:
+                    # this means that we are evaluating black
+                    for i in range(len(whiteStateSeen)):
+                        whiteStateWin.append(whiteStateSeen[i] * (1-winRate))
+                    for j in range(len(blackStateSeen)):
+                        blackStateWin.append(blackStateSeen[j] * winRate)
+            else:
+                print(winRate)
+                if tempBoard.plies % 2 == 1:
+                    # this means that we are evaluating white
+                    for i in range(len(whiteStateSeen)):
+                        whiteStateWin.append(whiteStateSeen[i] * winRate)
+                    for j in range(len(blackStateSeen)):
+                        blackStateWin.append(blackStateSeen[j] * (1-winRate))
+                else:
+                    # this means that we are evaluating black
+                    for i in range(len(whiteStateSeen)):
+                        whiteStateWin.append(whiteStateSeen[i] * (1-winRate))
+                    for j in range(len(blackStateSeen)):
+                        blackStateWin.append(blackStateSeen[j] * winRate)
 
         # Print PGN and final state
         if printPGN:
@@ -330,12 +362,8 @@ class MCTS():
             print(self.childrenMoveNames[self.dictionary[sim.boardToString()]])
             print(self.childrenStateWin[self.dictionary[sim.boardToString()]])
             print(self.childrenStateSeen[self.dictionary[sim.boardToString()]])
-            print(self.childrenNNEvaluation[self.dictionary[sim.boardToString()]])
-            print(PUCT_Algorithm(self.childrenStateWin[self.dictionary[sim.boardToString()]],
-                    self.childrenStateSeen[self.dictionary[sim.boardToString()]],
-                    1, np.sum(self.childrenStateSeen[self.dictionary[sim.boardToString()]]),
-                                self.childrenNNEvaluation[self.dictionary[sim.boardToString()]])
-                    )
+            print(self.childrenPolicyEval[self.dictionary[sim.boardToString()]])
+            print(self.childrenValueEval[self.dictionary[sim.boardToString()]])
             print("Playout:", np.sum(self.childrenStateSeen[self.dictionary[sim.boardToString()]]))
             #"""
 
@@ -373,17 +401,18 @@ class MCTS():
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
                         for images, labels in generatePredic:
-                            outputs = self.neuralNet(images)
+                            outputs = self.policyNet(images)
                             self.addPositionToMCTS(sim.boardToString(),
                                                    ActionToArray.legalMovesForState(sim.arrayBoard,
                                                                                     sim.board),
-                                                   sim.arrayBoard, outputs)
+                                                   sim.arrayBoard, outputs, sim)
             directory = self.dictionary[sim.boardToString()]
             index = np.argmax(
                 PUCT_Algorithm(self.childrenStateWin[directory], self.childrenStateSeen[directory], 2**0.5,
                                # 0.25-0.30 guarantees diversity
                                np.sum(self.childrenStateSeen[directory]),
-                               noiseEvals(self.childrenNNEvaluation[directory], 2.1 / (7 * ((sim.plies // 2) + 1))))
+                               self.childrenValueEval[directory],
+                               noiseEvals(self.childrenPolicyEval[directory], 2.1 / (7 * ((sim.plies // 2) + 1))))
             )
             #print(index)
             move = self.childrenMoveNames[directory][index]
@@ -468,7 +497,7 @@ class MCTS():
         self.childrenMoveNames = []  # a 2D list, each directory may be of different size, stores name of moves
         self.childrenStateSeen = []  # a 2D list, each directory contains numpy array
         self.childrenStateWin = []  # a 2D list, each directory contains numpy array
-        self.childrenNNEvaluation = []  # a 2D list, each directory contains numpy array
+        self.childrenPolicyEval = []  # a 2D list, each directory contains numpy array
 
         sim = ChessEnvironment()
         while sim.result == 2:
@@ -479,7 +508,9 @@ class MCTS():
             index = np.argmax(
                 PUCT_Algorithm(self.childrenStateWin[directory], self.childrenStateSeen[directory], 0,
                                np.sum(self.childrenStateSeen[directory]),
-                               self.childrenNNEvaluation[directory])
+                               self.childrenValueEval[directory],
+                               self.childrenPolicyEval[directory]
+                               )
             )
             move = self.childrenMoveNames[directory][index]
             print(move)

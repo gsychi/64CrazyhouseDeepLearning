@@ -45,18 +45,32 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
                         for images, labels in generatePredic:
-                            bestNet.neuralNet.eval()
-                            outputs = bestNet.neuralNet(images)
-                            bestNet.addPositionToMCTS(sim.boardToString(),
+                            bestNet.policyNet.eval()
+                            outputs = bestNet.policyNet(images)
+                            if playouts > 0:
+                                bestNet.addPositionToMCTS(sim.boardToString(),
                                                       ActionToArray.legalMovesForState(sim.arrayBoard,
                                                                                        sim.board),
-                                                      sim.arrayBoard, outputs)
+                                                      sim.arrayBoard, outputs, sim)
+                            else:
+                                bestNet.dictionary[sim.boardToString()] = len(bestNet.dictionary)
+                                policy = ActionToArray.moveEvaluations(ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                               sim.board),
+                                                                       sim.arrayBoard, outputs)
+                                bestNet.childrenMoveNames.append(ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                               sim.board))
+                                bestNet.childrenPolicyEval.append(policy)
+
             directory = bestNet.dictionary[sim.boardToString()]
-            index = np.argmax(
-                MCTSCrazyhouse.PUCT_Algorithm(bestNet.childrenStateWin[directory], bestNet.childrenStateSeen[directory], 0.02,
-                               np.sum(bestNet.childrenStateSeen[directory]),
-                               MCTSCrazyhouse.noiseEvals(bestNet.childrenNNEvaluation[directory], noiseVal))
-            )
+            if playouts > 0:
+                index = np.argmax(
+                    MCTSCrazyhouse.PUCT_Algorithm(bestNet.childrenStateWin[directory], bestNet.childrenStateSeen[directory], 0.02,
+                                   np.sum(bestNet.childrenStateSeen[directory]),
+                                   bestNet.childrenValueEval[directory],
+                                   MCTSCrazyhouse.noiseEvals(bestNet.childrenPolicyEval[directory], noiseVal))
+                )
+            else:
+                index = np.argmax(MCTSCrazyhouse.noiseEvals(bestNet.childrenPolicyEval[directory], noiseVal))
             move = bestNet.childrenMoveNames[directory][index]
             if chess.Move.from_uci(move) not in sim.board.legal_moves:
                 move = ActionToArray.legalMovesForState(sim.arrayBoard, sim.board)[0]
@@ -75,19 +89,33 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
                         for images, labels in generatePredic:
-                            testingNet.neuralNet.eval()
-                            outputs = testingNet.neuralNet(images)
-                            testingNet.addPositionToMCTS(sim.boardToString(),
+                            testingNet.policyNet.eval()
+                            outputs = testingNet.policyNet(images)
+                            if playouts > 0:
+                                testingNet.addPositionToMCTS(sim.boardToString(),
                                                          ActionToArray.legalMovesForState(sim.arrayBoard,
                                                                                           sim.board),
-                                                         sim.arrayBoard, outputs)
+                                                         sim.arrayBoard, outputs, sim)
+                            else:
+                                testingNet.dictionary[sim.boardToString()] = len(testingNet.dictionary)
+                                policy = ActionToArray.moveEvaluations(ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                               sim.board),
+                                                                       sim.arrayBoard, outputs)
+                                testingNet.childrenMoveNames.append(ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                               sim.board))
+                                testingNet.childrenPolicyEval.append(policy)
+
             directory = testingNet.dictionary[sim.boardToString()]
-            index = np.argmax(
-                MCTSCrazyhouse.PUCT_Algorithm(testingNet.childrenStateWin[directory], testingNet.childrenStateSeen[directory], 0.02,
-                                              np.sum(testingNet.childrenStateSeen[directory]),
-                                              MCTSCrazyhouse.noiseEvals(testingNet.childrenNNEvaluation[directory],
-                                                                        noiseVal))
-            )
+            if playouts > 0:
+                index = np.argmax(
+                    MCTSCrazyhouse.PUCT_Algorithm(testingNet.childrenStateWin[directory], testingNet.childrenStateSeen[directory], 0.02,
+                                                  np.sum(testingNet.childrenStateSeen[directory]),
+                                                  testingNet.childrenValueEval[directory],
+                                                  MCTSCrazyhouse.noiseEvals(testingNet.childrenPolicyEval[directory],
+                                                                            noiseVal))
+                )
+            else:
+                index = np.argmax(MCTSCrazyhouse.noiseEvals(testingNet.childrenPolicyEval[directory], noiseVal))
             move = testingNet.childrenMoveNames[directory][index]
             if chess.Move.from_uci(move) not in sim.board.legal_moves:
                 move = ActionToArray.legalMovesForState(sim.arrayBoard, sim.board)[0]
@@ -141,18 +169,32 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
                         for images, labels in generatePredic:
-                            bestNet.neuralNet.eval()
-                            outputs = bestNet.neuralNet(images)
-                            bestNet.addPositionToMCTS(sim.boardToString(),
+                            bestNet.policyNet.eval()
+                            outputs = bestNet.policyNet(images)
+                            if playouts > 0:
+                                bestNet.addPositionToMCTS(sim.boardToString(),
                                               ActionToArray.legalMovesForState(sim.arrayBoard,
                                                                                sim.board),
-                                              sim.arrayBoard, outputs)
+                                              sim.arrayBoard, outputs, sim)
+                            else:
+                                bestNet.dictionary[sim.boardToString()] = len(bestNet.dictionary)
+                                policy = ActionToArray.moveEvaluations(ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                               sim.board),
+                                                                       sim.arrayBoard, outputs)
+                                bestNet.childrenPolicyEval.append(policy)
+                                bestNet.childrenMoveNames.append(ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                               sim.board))
+
             directory = bestNet.dictionary[sim.boardToString()]
-            index = np.argmax(
-                MCTSCrazyhouse.PUCT_Algorithm(bestNet.childrenStateWin[directory], bestNet.childrenStateSeen[directory], 0.02,
-                               np.sum(bestNet.childrenStateSeen[directory]),
-                               MCTSCrazyhouse.noiseEvals(bestNet.childrenNNEvaluation[directory], noiseVal))
-            )
+            if playouts > 0:
+                index = np.argmax(
+                    MCTSCrazyhouse.PUCT_Algorithm(bestNet.childrenStateWin[directory], bestNet.childrenStateSeen[directory], 0.02,
+                                   np.sum(bestNet.childrenStateSeen[directory]),
+                                                  bestNet.childrenValueEval[directory],
+                                   MCTSCrazyhouse.noiseEvals(bestNet.childrenPolicyEval[directory], noiseVal))
+                )
+            else:
+                index = np.argmax(MCTSCrazyhouse.noiseEvals(bestNet.childrenPolicyEval[directory], noiseVal))
             move = bestNet.childrenMoveNames[directory][index]
             if chess.Move.from_uci(move) not in sim.board.legal_moves:
                 move = ActionToArray.legalMovesForState(sim.arrayBoard, sim.board)[0]
@@ -171,19 +213,33 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
                         for images, labels in generatePredic:
-                            testingNet.neuralNet.eval()
-                            outputs = testingNet.neuralNet(images)
-                            testingNet.addPositionToMCTS(sim.boardToString(),
+                            testingNet.policyNet.eval()
+                            outputs = testingNet.policyNet(images)
+                            if playouts > 0:
+                                testingNet.addPositionToMCTS(sim.boardToString(),
                                               ActionToArray.legalMovesForState(sim.arrayBoard,
                                                                                sim.board),
-                                              sim.arrayBoard, outputs)
+                                              sim.arrayBoard, outputs, sim)
+                            else:
+                                testingNet.dictionary[sim.boardToString()] = len(testingNet.dictionary)
+                                policy = ActionToArray.moveEvaluations(ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                               sim.board),
+                                                                       sim.arrayBoard, outputs)
+                                testingNet.childrenPolicyEval.append(policy)
+                                testingNet.childrenMoveNames.append(ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                               sim.board))
+
             directory = testingNet.dictionary[sim.boardToString()]
-            index = np.argmax(
-                MCTSCrazyhouse.PUCT_Algorithm(testingNet.childrenStateWin[directory], testingNet.childrenStateSeen[directory], 0.02,
-                                              np.sum(testingNet.childrenStateSeen[directory]),
-                                              MCTSCrazyhouse.noiseEvals(testingNet.childrenNNEvaluation[directory],
-                                                                        noiseVal))
-            )
+            if playouts > 0:
+                index = np.argmax(
+                    MCTSCrazyhouse.PUCT_Algorithm(testingNet.childrenStateWin[directory], testingNet.childrenStateSeen[directory], 0.02,
+                                                  np.sum(testingNet.childrenStateSeen[directory]),
+                                                  testingNet.childrenValueEval[directory],
+                                                  MCTSCrazyhouse.noiseEvals(testingNet.childrenPolicyEval[directory],
+                                                                            noiseVal))
+                )
+            else:
+                index = np.argmax(MCTSCrazyhouse.noiseEvals(testingNet.childrenPolicyEval[directory], noiseVal))
             move = testingNet.childrenMoveNames[directory][index]
             if chess.Move.from_uci(move) not in sim.board.legal_moves:
                 move = ActionToArray.legalMovesForState(sim.arrayBoard, sim.board)[0]
@@ -241,7 +297,6 @@ def bestNetworkTest(bestNet, testingNet, games, playouts, clearAfterEachRound=Fa
 
 testing = True
 if testing:
-    best = MCTS("18051810-POLICY.pt")
-    newNet = MCTS('18051810-POLICY.pt')
-    #newNet = MCTS('experimentalPoisson.pt')
+    best = MCTS("18051810-POLICY.pt", "18011802-VALUE.pt")
+    newNet = MCTS("18051810-POLICY.pt", "18011802-VALUE.pt")
     print(bestNetworkTest(best, newNet, 100, 1))

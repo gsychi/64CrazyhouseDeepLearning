@@ -21,7 +21,7 @@ import h5py
 pgnGames = list(pathlib.Path('lichessdatabase').glob('*.pgn'))
 listOfMoves = []
 listOfResults = []
-for i in range(0, 1): #len(pgnGames)):
+for i in range(2, 3): #len(pgnGames)):
     pgn = open(pgnGames[i])
     for k in range(190000):  # 190,000 assures all games are looked at.
         try:
@@ -114,11 +114,11 @@ print(valueOutputs.shape)
 print(policyOutputs.shape)
 
 
-with h5py.File('Training Data/18-01Inputs.h5', 'w') as hf:
+with h5py.File('Training Data/18-02Inputs.h5', 'w') as hf:
     hf.create_dataset("Inputs", data=inputs, compression='gzip', compression_opts=9)
-with h5py.File('Training Data/18-01PolicyOutputs.h5', 'w') as hf:
+with h5py.File('Training Data/18-02PolicyOutputs.h5', 'w') as hf:
     hf.create_dataset("Outputs", data=policyOutputs, compression='gzip', compression_opts=9)
-with h5py.File('Training Data/18-01ValueOutputs.h5', 'w') as hf:
+with h5py.File('Training Data/18-02ValueOutputs.h5', 'w') as hf:
     hf.create_dataset("Outputs", data=valueOutputs, compression='gzip', compression_opts=9)
 
 

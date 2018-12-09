@@ -3,7 +3,7 @@ import numpy as np
 import torch.nn as nn
 import torch.utils.data as data_utils
 from ChessConvNet import ChessConvNet
-from TrainingDataset import TrainingDataset
+from PolicyDataset import PolicyDataset
 import ChessResNet
 import h5py
 
@@ -11,20 +11,17 @@ import h5py
 # if it's not imported, accuracy will never be 100%, so it will just output the trained network after 10,000 epochs.
 def validateNetwork(loadDirectory):
 
-    with h5py.File('Training Data/18-10Outputs.h5', 'r') as hf:
-        actions = hf["Outputs"][:]
+    with h5py.File('Training Data/18-10PolicyOutputs.h5', 'r') as hf:
+        actions = hf["Outputs"][0:50000]
         print(len(actions))
     with h5py.File('Training Data/18-10Inputs.h5', 'r') as hf:
-        inputs = hf["Inputs"][:]
+        inputs = hf["Inputs"][0:50000]
         print(len(inputs))
     actions = torch.from_numpy(actions)
-    data = TrainingDataset(inputs, actions)
+    data = PolicyDataset(inputs, actions)
 
     testLoader = torch.utils.data.DataLoader(dataset=data, batch_size=16, shuffle=False)
     # to create a prediction, create a new dataset with input of the states, and output should just be np.zeros()
-
-    # this is a convolutional neural network
-    model = ChessConvNet(4504).double()
 
     try:
         model = torch.load(loadDirectory)
@@ -49,7 +46,7 @@ def validateNetwork(loadDirectory):
 
 validate = True
 if validate:
-    validateNetwork("18051808-checkpoint8.pt")
+    validateNetwork("18051810-POLICY.pt")
 
 
 
