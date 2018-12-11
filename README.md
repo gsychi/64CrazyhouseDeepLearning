@@ -42,9 +42,7 @@ Start off by downloading the repository through terminal...
 
 ## Creating a Supervised Learning (SL) Based Model
 
-
-### Creating a Database
-
+[this part is in renovation! stay tuned]
 
 ## Additional Code Information
 
