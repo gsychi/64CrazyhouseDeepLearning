@@ -42,7 +42,9 @@ Start off by downloading the repository through terminal...
 
 ## Creating a Supervised Learning (SL) Based Model
 
-[this part is in renovation! stay tuned]
+The Supervised Learning is trained on games on lichess.org, all of which can be found on https://database.lichess.org/ .
+
+[more coming soon]
 
 ## Additional Code Information
 
