@@ -17,6 +17,7 @@ import chess.pgn
 import chess
 import MCTSCrazyhouse
 import time
+import ValueEvaluation
 
 def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
     score = 0
@@ -32,6 +33,7 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
 
     sim = ChessEnvironment()
     while sim.result == 2:
+        print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.valueNet))
         noiseVal = 3.0 / (10 * (sim.plies // 2 + 1))
         if sim.plies % 2 == 0:
             if playouts > 0:
@@ -64,7 +66,7 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
             directory = bestNet.dictionary[sim.boardToString()]
             if playouts > 0:
                 index = np.argmax(
-                    MCTSCrazyhouse.PUCT_Algorithm(bestNet.childrenStateWin[directory], bestNet.childrenStateSeen[directory], 0.02,
+                    MCTSCrazyhouse.PUCT_Algorithm(bestNet.childrenStateWin[directory], bestNet.childrenStateSeen[directory], 1,
                                    np.sum(bestNet.childrenStateSeen[directory]),
                                    bestNet.childrenValueEval[directory],
                                    MCTSCrazyhouse.noiseEvals(bestNet.childrenPolicyEval[directory], noiseVal))
@@ -108,7 +110,7 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
             directory = testingNet.dictionary[sim.boardToString()]
             if playouts > 0:
                 index = np.argmax(
-                    MCTSCrazyhouse.PUCT_Algorithm(testingNet.childrenStateWin[directory], testingNet.childrenStateSeen[directory], 0.02,
+                    MCTSCrazyhouse.PUCT_Algorithm(testingNet.childrenStateWin[directory], testingNet.childrenStateSeen[directory], 1,
                                                   np.sum(testingNet.childrenStateSeen[directory]),
                                                   testingNet.childrenValueEval[directory],
                                                   MCTSCrazyhouse.noiseEvals(testingNet.childrenPolicyEval[directory],
@@ -156,7 +158,8 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
 
     sim = ChessEnvironment()
     while sim.result == 2:
-        noiseVal = 3.0/(10*(sim.plies//2 + 1))
+        print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.valueNet))
+        noiseVal = 3.0 /(10*(sim.plies//2 + 1))
         if sim.plies % 2 == 1:
             if playouts > 0:
                 bestNet.competitivePlayoutsFromPosition(playouts, sim)
@@ -188,7 +191,7 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
             directory = bestNet.dictionary[sim.boardToString()]
             if playouts > 0:
                 index = np.argmax(
-                    MCTSCrazyhouse.PUCT_Algorithm(bestNet.childrenStateWin[directory], bestNet.childrenStateSeen[directory], 0.02,
+                    MCTSCrazyhouse.PUCT_Algorithm(bestNet.childrenStateWin[directory], bestNet.childrenStateSeen[directory], 1,
                                    np.sum(bestNet.childrenStateSeen[directory]),
                                                   bestNet.childrenValueEval[directory],
                                    MCTSCrazyhouse.noiseEvals(bestNet.childrenPolicyEval[directory], noiseVal))
@@ -232,7 +235,7 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
             directory = testingNet.dictionary[sim.boardToString()]
             if playouts > 0:
                 index = np.argmax(
-                    MCTSCrazyhouse.PUCT_Algorithm(testingNet.childrenStateWin[directory], testingNet.childrenStateSeen[directory], 0.02,
+                    MCTSCrazyhouse.PUCT_Algorithm(testingNet.childrenStateWin[directory], testingNet.childrenStateSeen[directory], 1,
                                                   np.sum(testingNet.childrenStateSeen[directory]),
                                                   testingNet.childrenValueEval[directory],
                                                   MCTSCrazyhouse.noiseEvals(testingNet.childrenPolicyEval[directory],
@@ -266,7 +269,6 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
     print(PGN)
     return score
 
-# run 400 games.
 def bestNetworkTest(bestNet, testingNet, games, playouts, clearAfterEachRound=False):
     score = 0
     for i in range(games):
@@ -297,6 +299,6 @@ def bestNetworkTest(bestNet, testingNet, games, playouts, clearAfterEachRound=Fa
 
 testing = True
 if testing:
-    best = MCTS("18051810-POLICY.pt", "18011802-VALUE.pt")
-    newNet = MCTS("18051810-POLICY.pt", "18011802-VALUE.pt")
-    print(bestNetworkTest(best, newNet, 100, 1))
+    best = MCTS("New Networks/18011810-ckpt12-POLICY.pt", "Old Networks/18011805-VALUE.pt", 8)
+    newNet = MCTS("New Networks/18011810-POLICY.pt", "Old Networks/18011805-VALUE.pt", 8)
+    print(bestNetworkTest(best, newNet, 1000, 0))

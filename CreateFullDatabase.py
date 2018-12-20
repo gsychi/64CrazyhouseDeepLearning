@@ -21,9 +21,9 @@ import h5py
 pgnGames = list(pathlib.Path('lichessdatabase').glob('*.pgn'))
 listOfMoves = []
 listOfResults = []
-for i in range(2, 3): #len(pgnGames)):
+for i in range(0,1): #len(pgnGames)):
     pgn = open(pgnGames[i])
-    for k in range(190000):  # 190,000 assures all games are looked at.
+    for k in range(165000):  # 190,000 assures all games are looked at.
         try:
             game = chess.pgn.read_game(pgn)
             whiteElo = int(game.headers["WhiteElo"])
@@ -97,7 +97,7 @@ valueOutputs = np.zeros(len(outList))
 policyOutputs = np.zeros(len(actionList))
 
 i = 0
-while len(inList) > 0:
+while len(outList) > 0:
     inputs[i] = inList[len(inList)-1][0]
     valueOutputs[i] = outList[len(outList)-1]
     policyOutputs[i] = actionList[len(actionList)-1]
@@ -114,11 +114,11 @@ print(valueOutputs.shape)
 print(policyOutputs.shape)
 
 
-with h5py.File('Training Data/18-02Inputs.h5', 'w') as hf:
+with h5py.File('Training Data/18-11Inputs.h5', 'w') as hf:
     hf.create_dataset("Inputs", data=inputs, compression='gzip', compression_opts=9)
-with h5py.File('Training Data/18-02PolicyOutputs.h5', 'w') as hf:
+with h5py.File('Training Data/18-11PolicyOutputs.h5', 'w') as hf:
     hf.create_dataset("Outputs", data=policyOutputs, compression='gzip', compression_opts=9)
-with h5py.File('Training Data/18-02ValueOutputs.h5', 'w') as hf:
+with h5py.File('Training Data/18-11ValueOutputs.h5', 'w') as hf:
     hf.create_dataset("Outputs", data=valueOutputs, compression='gzip', compression_opts=9)
 
 

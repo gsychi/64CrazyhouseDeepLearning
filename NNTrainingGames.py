@@ -10,8 +10,5 @@ import numpy as np
 from MCTSCrazyhouse import MCTS
 from EnsembleMCTSCrazyhouse import EnsembleMCTS
 
-treeSearch = EnsembleMCTS()
-#treeSearch = MCTS('7 Layer k=32 Models/experimental.pt')
-selfPlayInput, selfPlayOutput = treeSearch.createTrainingGames(200, 0)
-np.save("selfPlay01Input.npy", selfPlayInput)
-np.save("selfPlay01Output.npy", selfPlayOutput)
+treeSearch = MCTS('New Networks/18011810-POLICY.pt', 'New Networks/18011810-VALUE.pt', 1)
+treeSearch.createTrainingGames(20, 0, 'Self-Play Games/Games1to20-PLAYOUTS0-DEPTH0.pgn')

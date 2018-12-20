@@ -60,7 +60,7 @@ class ResNet(nn.Module):
     def __init__(self, block, num_blocks, num_kernels, num_classes=4504, value_net=False):
         super(ResNet, self).__init__()
         self.in_planes = 15
-        self.policy_planes = block.expansion
+        self.policy_planes = 2
 
         self.conv1 = nn.Conv2d(15, 15, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(15)
@@ -100,7 +100,7 @@ class ResNet(nn.Module):
 
 
 def ValueResNet():
-    return ResNet(BasicBlock, [2,2,2,1], [64,64,64,64], num_classes=1, value_net=True)
+    return ResNet(BasicBlock, [2,2,2,4], [128,128,128,128], num_classes=1, value_net=True)
 
 def PolicyResNetMain():
     return ResNet(BasicBlock, [2,2,2,4], [128,128,128,128])

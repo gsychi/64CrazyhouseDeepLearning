@@ -9,7 +9,7 @@ import h5py
 
 # inputs and outputs are numpy arrays. This method of checking accuracy only works with imported games.
 # if it's not imported, accuracy will never be 100%, so it will just output the trained network after 10,000 epochs.
-def trainValueNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.01,
+def trainValueNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
                  loadDirectory='none.pt',
                  saveDirectory='network1.pt', OUTPUT_ARRAY_LEN=4504):
 
@@ -54,7 +54,7 @@ def trainValueNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.01,
 
                 loss = criterion(outputMoves, labels)
 
-                if (i + 1) % 100 == 0:
+                if (i + 1) % 150 == 0:
                     # find predicted labels
 
                     predicted = model(images).data
@@ -63,6 +63,13 @@ def trainValueNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.01,
                     actual = actual.numpy().flatten()
                     print(predicted)
                     print(actual)
+                    print(np.abs(predicted-actual))
+                    correct = 0
+                    for j in range(BATCH_SIZE):
+                        if np.abs(predicted-actual)[j]<0.2:
+                            correct += 1
+                    print("Correct:", correct)
+
 
 
                 # Backward and optimize
@@ -82,15 +89,132 @@ def trainValueNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.01,
 train = True
 if train:
 
+    with h5py.File("Training Data/18-01Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-01ValueOutputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainValueNetwork(boards, outputs, loadDirectory="",
+                 saveDirectory="New Networks/18011810-VALUE.pt", EPOCHS=1,
+                 BATCH_SIZE=64, LR=0.001)
+
+    boards = []
+    outputs = []
+
     with h5py.File("Training Data/18-02Inputs.h5", 'r') as hf:
         boards = hf["Inputs"][:]
         print(len(boards))
     with h5py.File("Training Data/18-02ValueOutputs.h5", 'r') as hf:
         outputs = hf["Outputs"][:]
         print(len(outputs))
-    trainValueNetwork(boards, outputs, loadDirectory="1801-VALUE.pt",
-                 saveDirectory="18011802-VALUE.pt", EPOCHS=2,
-                 BATCH_SIZE=128, LR=0.01)
+    trainValueNetwork(boards, outputs, loadDirectory="New Networks/18011810-VALUE.pt",
+                 saveDirectory="New Networks/18011810-VALUE.pt", EPOCHS=1,
+                 BATCH_SIZE=64, LR=0.001)
+
+    boards = []
+    outputs = []
+
+    with h5py.File("Training Data/18-03Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-03ValueOutputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainValueNetwork(boards, outputs, loadDirectory="New Networks/18011810-VALUE.pt",
+                 saveDirectory="New Networks/18011810-VALUE.pt", EPOCHS=1,
+                 BATCH_SIZE=64, LR=0.001)
+
+    boards = []
+    outputs = []
+
+    with h5py.File("Training Data/18-04Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-04ValueOutputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainValueNetwork(boards, outputs, loadDirectory="New Networks/18011810-VALUE.pt",
+                 saveDirectory="New Networks/18011810-VALUE.pt", EPOCHS=1,
+                 BATCH_SIZE=64, LR=0.001)
+
+    boards = []
+    outputs = []
+
+    with h5py.File("Training Data/18-05Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-05ValueOutputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainValueNetwork(boards, outputs, loadDirectory="New Networks/18011810-VALUE.pt",
+                 saveDirectory="New Networks/18011810-VALUE.pt", EPOCHS=1,
+                 BATCH_SIZE=64, LR=0.001)
+
+    boards = []
+    outputs = []
+
+    with h5py.File("Training Data/18-06Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-06ValueOutputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainValueNetwork(boards, outputs, loadDirectory="New Networks/18011810-VALUE.pt",
+                 saveDirectory="New Networks/18011810-VALUE.pt", EPOCHS=1,
+                 BATCH_SIZE=64, LR=0.001)
+
+    boards = []
+    outputs = []
+
+    with h5py.File("Training Data/18-07Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-07ValueOutputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainValueNetwork(boards, outputs, loadDirectory="New Networks/18011810-VALUE.pt",
+                 saveDirectory="New Networks/18011810-VALUE.pt", EPOCHS=1,
+                 BATCH_SIZE=64, LR=0.001)
+
+    boards = []
+    outputs = []
+
+    with h5py.File("Training Data/18-08Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-08ValueOutputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainValueNetwork(boards, outputs, loadDirectory="New Networks/18011810-VALUE.pt",
+                 saveDirectory="New Networks/18011810-VALUE.pt", EPOCHS=1,
+                 BATCH_SIZE=64, LR=0.001)
+
+    boards = []
+    outputs = []
+
+    with h5py.File("Training Data/18-09Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-09ValueOutputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainValueNetwork(boards, outputs, loadDirectory="New Networks/18011810-VALUE.pt",
+                 saveDirectory="New Networks/18011810-VALUE.pt", EPOCHS=1,
+                 BATCH_SIZE=64, LR=0.001)
+
+    boards = []
+    outputs = []
+
+    with h5py.File("Training Data/18-10Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-10ValueOutputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainValueNetwork(boards, outputs, loadDirectory="New Networks/18011810-VALUE.pt",
+                 saveDirectory="New Networks/18011810-VALUE.pt", EPOCHS=1,
+                 BATCH_SIZE=64, LR=0.001)
 
     boards = []
     outputs = []

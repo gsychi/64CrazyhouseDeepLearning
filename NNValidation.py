@@ -11,11 +11,11 @@ import h5py
 # if it's not imported, accuracy will never be 100%, so it will just output the trained network after 10,000 epochs.
 def validateNetwork(loadDirectory):
 
-    with h5py.File('Training Data/18-10PolicyOutputs.h5', 'r') as hf:
-        actions = hf["Outputs"][0:50000]
+    with h5py.File('Training Data/18-11PolicyOutputs.h5', 'r') as hf:
+        actions = hf["Outputs"][:]
         print(len(actions))
-    with h5py.File('Training Data/18-10Inputs.h5', 'r') as hf:
-        inputs = hf["Inputs"][0:50000]
+    with h5py.File('Training Data/18-11Inputs.h5', 'r') as hf:
+        inputs = hf["Inputs"][:]
         print(len(inputs))
     actions = torch.from_numpy(actions)
     data = PolicyDataset(inputs, actions)
@@ -39,14 +39,15 @@ def validateNetwork(loadDirectory):
             outputs = model(images)
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
-            _, labels = torch.max(labels.data, 1)
+            _, labels = torch.max(labels.data, 1)  # for poisson nll loss
+            # labels = labels.data
             correct += (predicted == labels).sum().item()
 
             print('Test Accuracy of the model on', total, 'test positions: {} %'.format(100 * correct / total))
 
 validate = True
 if validate:
-    validateNetwork("18051810-POLICY.pt")
+    validateNetwork("New Networks/18011810-POLICY.pt")
 
 
 

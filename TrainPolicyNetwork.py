@@ -9,7 +9,7 @@ import h5py
 
 # inputs and outputs are numpy arrays. This method of checking accuracy only works with imported games.
 # if it's not imported, accuracy will never be 100%, so it will just output the trained network after 10,000 epochs.
-def trainPolicyNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
+def trainPolicyNetwork(boards, outputs, EPOCHS=2, BATCH_SIZE=1, LR=0.001,
                  loadDirectory='none.pt',
                  saveDirectory='network1.pt', OUTPUT_ARRAY_LEN=4504):
 
@@ -35,9 +35,6 @@ def trainPolicyNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
 
     criterion = nn.PoissonNLLLoss()  # MSELoss // PoissonNLLLoss //
 
-    # criterion = nn.CrossEntropyLoss()
-    #  use this if you want to train from argmax values. This trains faster, but seems
-    #  to be less accurate.
 
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)  # , weight_decay=0.00001)
     total_step = len(trainLoader)
@@ -64,7 +61,8 @@ def trainPolicyNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
                     predicted = predicted.numpy()
                     print(predicted)
 
-                    _, actual = torch.max(labels.data, 1)
+                    _, actual = torch.max(labels.data, 1)  # for poisson nll loss
+                    # actual = labels.data
                     actual = actual.numpy()
 
                     print(actual)
@@ -88,15 +86,67 @@ def trainPolicyNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
 train = True
 if train:
 
+    with h5py.File("Training Data/18-01Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-01PolicyOutputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainPolicyNetwork(boards, outputs, loadDirectory="New Networks/18011810-POLICY.pt",
+                 saveDirectory="New Networks/18011810-POLICY.pt", EPOCHS=2,
+                 BATCH_SIZE=64, LR=0.001)
+
+    boards = []
+    outputs = []
+
+    with h5py.File("Training Data/18-02Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-02PolicyOutputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainPolicyNetwork(boards, outputs, loadDirectory="New Networks/18011810-POLICY.pt",
+                 saveDirectory="New Networks/18011810-POLICY.pt", EPOCHS=2,
+                 BATCH_SIZE=64, LR=0.001)
+
+    boards = []
+    outputs = []
+
+    with h5py.File("Training Data/18-03Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-03PolicyOutputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainPolicyNetwork(boards, outputs, loadDirectory="New Networks/18011810-POLICY.pt",
+                 saveDirectory="New Networks/18011810-POLICY.pt", EPOCHS=2,
+                 BATCH_SIZE=64, LR=0.001)
+
+    boards = []
+    outputs = []
+
+    with h5py.File("Training Data/18-04Inputs.h5", 'r') as hf:
+        boards = hf["Inputs"][:]
+        print(len(boards))
+    with h5py.File("Training Data/18-04PolicyOutputs.h5", 'r') as hf:
+        outputs = hf["Outputs"][:]
+        print(len(outputs))
+    trainPolicyNetwork(boards, outputs, loadDirectory="New Networks/18011810-POLICY.pt",
+                 saveDirectory="New Networks/18011810-POLICY.pt", EPOCHS=2,
+                 BATCH_SIZE=64, LR=0.001)
+
+    boards = []
+    outputs = []
+
     with h5py.File("Training Data/18-05Inputs.h5", 'r') as hf:
         boards = hf["Inputs"][:]
         print(len(boards))
     with h5py.File("Training Data/18-05PolicyOutputs.h5", 'r') as hf:
         outputs = hf["Outputs"][:]
         print(len(outputs))
-    trainPolicyNetwork(boards, outputs, loadDirectory="18051810-POLICY.pt",
-                 saveDirectory="18051810-POLICY.pt", EPOCHS=2,
-                 BATCH_SIZE=128, LR=0.01)
+    trainPolicyNetwork(boards, outputs, loadDirectory="New Networks/18011810-POLICY.pt",
+                 saveDirectory="New Networks/18011810-POLICY.pt", EPOCHS=2,
+                 BATCH_SIZE=64, LR=0.001)
 
     boards = []
     outputs = []
@@ -107,9 +157,9 @@ if train:
     with h5py.File("Training Data/18-06PolicyOutputs.h5", 'r') as hf:
         outputs = hf["Outputs"][:]
         print(len(outputs))
-    trainPolicyNetwork(boards, outputs, loadDirectory="18051810-POLICY.pt",
-                 saveDirectory="18051810-POLICY.pt", EPOCHS=2,
-                 BATCH_SIZE=128, LR=0.01)
+    trainPolicyNetwork(boards, outputs, loadDirectory="New Networks/18011810-POLICY.pt",
+                 saveDirectory="New Networks/18011810-POLICY.pt", EPOCHS=2,
+                 BATCH_SIZE=64, LR=0.001)
 
     boards = []
     outputs = []
@@ -120,9 +170,9 @@ if train:
     with h5py.File("Training Data/18-07PolicyOutputs.h5", 'r') as hf:
         outputs = hf["Outputs"][:]
         print(len(outputs))
-    trainPolicyNetwork(boards, outputs, loadDirectory="18051810-POLICY.pt",
-                 saveDirectory="18051810-POLICY.pt", EPOCHS=2,
-                 BATCH_SIZE=128, LR=0.01)
+    trainPolicyNetwork(boards, outputs, loadDirectory="New Networks/18011810-POLICY.pt",
+                 saveDirectory="New Networks/18011810-POLICY.pt", EPOCHS=2,
+                 BATCH_SIZE=64, LR=0.001)
 
     boards = []
     outputs = []
@@ -133,9 +183,9 @@ if train:
     with h5py.File("Training Data/18-08PolicyOutputs.h5", 'r') as hf:
         outputs = hf["Outputs"][:]
         print(len(outputs))
-    trainPolicyNetwork(boards, outputs, loadDirectory="18051810-POLICY.pt",
-                 saveDirectory="18051810-POLICY.pt", EPOCHS=2,
-                 BATCH_SIZE=128, LR=0.01)
+    trainPolicyNetwork(boards, outputs, loadDirectory="New Networks/18011810-POLICY.pt",
+                 saveDirectory="New Networks/18011810-POLICY.pt", EPOCHS=2,
+                 BATCH_SIZE=64, LR=0.001)
 
     boards = []
     outputs = []
@@ -146,9 +196,9 @@ if train:
     with h5py.File("Training Data/18-09PolicyOutputs.h5", 'r') as hf:
         outputs = hf["Outputs"][:]
         print(len(outputs))
-    trainPolicyNetwork(boards, outputs, loadDirectory="18051810-POLICY.pt",
-                 saveDirectory="18051810-POLICY.pt", EPOCHS=2,
-                 BATCH_SIZE=128, LR=0.01)
+    trainPolicyNetwork(boards, outputs, loadDirectory="New Networks/18011810-POLICY.pt",
+                 saveDirectory="New Networks/18011810-POLICY.pt", EPOCHS=2,
+                 BATCH_SIZE=64, LR=0.001)
 
     boards = []
     outputs = []
@@ -159,9 +209,9 @@ if train:
     with h5py.File("Training Data/18-10PolicyOutputs.h5", 'r') as hf:
         outputs = hf["Outputs"][:]
         print(len(outputs))
-    trainPolicyNetwork(boards, outputs, loadDirectory="18051810-POLICY.pt",
-                 saveDirectory="18051810-POLICY.pt", EPOCHS=2,
-                 BATCH_SIZE=128, LR=0.01)
+    trainPolicyNetwork(boards, outputs, loadDirectory="New Networks/18011810-POLICY.pt",
+                 saveDirectory="New Networks/18011810-POLICY.pt", EPOCHS=2,
+                 BATCH_SIZE=64, LR=0.001)
 
     boards = []
     outputs = []

@@ -68,7 +68,7 @@ class MCTS():
     # - win count, number of times visited, and neural network evaluation
     # This is helpful because we get to use numpy stuffs.
 
-    def __init__(self, directory1, directory2):
+    def __init__(self, directory1, directory2, depth):
 
         self.dictionary = {
             # 'string' = n position. Let this string be the FEN of the position.
@@ -86,6 +86,7 @@ class MCTS():
         except:
             print("Network not found!")
         self.nameOfNetwork = "policy:"+directory1[0:-3]+";value:"+directory2[0:-3]
+        self.DEPTH_VALUE = depth
 
     # This adds information into the MCTS database
 
@@ -159,7 +160,7 @@ class MCTS():
             tempBoard.updateNumpyBoards()
 
         depth = 0
-        while tempBoard.result == 2 and depth < 4:
+        while tempBoard.result == 2 and depth < self.DEPTH_VALUE:
             depth += 1
             position = tempBoard.boardToString()
             if position not in self.dictionary:
@@ -271,12 +272,11 @@ class MCTS():
             if printPGN:
                 PGN.headers["Result"] = "1/2-1/2"
         if tempBoard.result == 2:  # game isn't played to very end
-            winRate = np.amax(ValueEvaluation.moveValueEvaluations(ActionToArray.legalMovesForState(tempBoard.arrayBoard, tempBoard.board),
-                                                               tempBoard, self.valueNet))
-            # if depth is divisible by two then win rate is of opponent
+            winRate = ValueEvaluation.positionEval(tempBoard, self.valueNet)
+            # tempBoard.printBoard()
+            # print(ActionToArray.legalMovesForState(tempBoard.arrayBoard, tempBoard.board))
+            # if depth is not divisible by two then win rate is of opponent
             if depth % 2 == 0:
-                winRate = 1-winRate
-                print(winRate)
                 if tempBoard.plies % 2 == 0:
                     # this means that we are evaluating white
                     for i in range(len(whiteStateSeen)):
@@ -290,7 +290,7 @@ class MCTS():
                     for j in range(len(blackStateSeen)):
                         blackStateWin.append(blackStateSeen[j] * winRate)
             else:
-                print(winRate)
+                winRate = 1-winRate
                 if tempBoard.plies % 2 == 1:
                     # this means that we are evaluating white
                     for i in range(len(whiteStateSeen)):
@@ -360,10 +360,10 @@ class MCTS():
             self.printSize()
             #"""
             print(self.childrenMoveNames[self.dictionary[sim.boardToString()]])
-            print(self.childrenStateWin[self.dictionary[sim.boardToString()]])
+            #print(self.childrenStateWin[self.dictionary[sim.boardToString()]])
             print(self.childrenStateSeen[self.dictionary[sim.boardToString()]])
-            print(self.childrenPolicyEval[self.dictionary[sim.boardToString()]])
-            print(self.childrenValueEval[self.dictionary[sim.boardToString()]])
+            #print(self.childrenPolicyEval[self.dictionary[sim.boardToString()]])
+            print((self.childrenValueEval[self.dictionary[sim.boardToString()]]))
             print("Playout:", np.sum(self.childrenStateSeen[self.dictionary[sim.boardToString()]]))
             #"""
 
@@ -378,21 +378,31 @@ class MCTS():
         PGN.headers["Black"] = "Network: " + self.nameOfNetwork
         PGN.headers["Variant"] = "Crazyhouse"
 
-        whiteParentState = np.zeros(1)
-        whiteStateSeen = []
-        whiteStateWin = []
-        whiteStateNames = []
-
-        blackParentState = np.zeros(1)
-        blackStateSeen = []
-        blackStateWin = []
-        blackStateNames = []
-
         sim = ChessEnvironment()
         while sim.result == 2:
-            if playouts > 0:
-                self.trainingPlayoutsFromPosition(playouts, sim)
+            if playouts == 0:
+                position = sim.boardToString()
+                if position not in self.dictionary:
+                    state = torch.from_numpy(sim.boardToState())
+                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
+                    testSet = MyDataset(state, nullAction)
+                    generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
+                    with torch.no_grad():
+                        for images, labels in generatePredic:
+                            outputs = self.policyNet(images)
+                            self.dictionary[sim.boardToString()] = len(self.dictionary)
+                            policy = ActionToArray.moveEvaluations(ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                                       sim.board),
+                                                                               sim.arrayBoard, outputs)
+                            self.childrenPolicyEval.append(policy)
+                            self.childrenMoveNames.append(ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                                       sim.board))
+                directory = self.dictionary[sim.boardToString()]
+                index = np.argmax(noiseEvals(self.childrenPolicyEval[directory], 3.0 / (6 * ((sim.plies // 2) + 1))))
+                move = self.childrenMoveNames[directory][index]
+                moveNames = self.childrenMoveNames[directory]
             else:
+                self.trainingPlayoutsFromPosition(playouts, sim)
                 position = sim.boardToString()
                 if position not in self.dictionary:
                     state = torch.from_numpy(sim.boardToState())
@@ -406,41 +416,21 @@ class MCTS():
                                                    ActionToArray.legalMovesForState(sim.arrayBoard,
                                                                                     sim.board),
                                                    sim.arrayBoard, outputs, sim)
-            directory = self.dictionary[sim.boardToString()]
-            index = np.argmax(
-                PUCT_Algorithm(self.childrenStateWin[directory], self.childrenStateSeen[directory], 2**0.5,
-                               # 0.25-0.30 guarantees diversity
-                               np.sum(self.childrenStateSeen[directory]),
-                               self.childrenValueEval[directory],
-                               noiseEvals(self.childrenPolicyEval[directory], 2.1 / (7 * ((sim.plies // 2) + 1))))
-            )
-            #print(index)
-            move = self.childrenMoveNames[directory][index]
-            moveNames = self.childrenMoveNames[directory]
-
+                directory = self.dictionary[sim.boardToString()]
+                index = np.argmax(
+                                PUCT_Algorithm(self.childrenStateWin[directory], self.childrenStateSeen[directory], 2**0.5,
+                                               # 0.25-0.30 guarantees diversity
+                                               np.sum(self.childrenStateSeen[directory]),
+                                               self.childrenValueEval[directory],
+                                               noiseEvals(self.childrenPolicyEval[directory], 2.1 / (7 * ((sim.plies // 2) + 1))))
+                            )
+                move = self.childrenMoveNames[directory][index]
+                moveNames = self.childrenMoveNames[directory]
             actionVector = np.zeros(len(self.childrenMoveNames[directory]))
             actionVector[index] = 1
 
-            if sim.plies == 0:
-                whiteParentState = sim.boardToState()
-                whiteStateSeen.append(actionVector)
-                whiteStateNames.append(moveNames)
-            if sim.plies == 1:
-                blackParentState = sim.boardToState()
-                blackStateSeen.append(actionVector)
-                blackStateNames.append(moveNames)
-            if sim.plies % 2 == 0 and sim.plies != 0:
-                whiteParentState = np.concatenate((whiteParentState, sim.boardToState()))
-                whiteStateSeen.append(actionVector)
-                whiteStateNames.append(moveNames)
-            if sim.plies % 2 == 1 and sim.plies != 1:
-                blackParentState = np.concatenate((blackParentState, sim.boardToState()))
-                blackStateSeen.append(actionVector)
-                blackStateNames.append(moveNames)
-
             sim.makeMove(move)
             sim.gameResult()
-            #print(sim.board)
 
             if sim.plies == 1:
                 node = PGN.add_variation(chess.Move.from_uci(move))
@@ -449,35 +439,14 @@ class MCTS():
 
         if sim.result == 1:
             PGN.headers["Result"] = "1-0"
-            for i in range(len(whiteStateSeen)):
-                whiteStateWin.append(whiteStateSeen[i])
-            for j in range(len(blackStateSeen)):
-                blackStateWin.append(blackStateSeen[j] * 0)
         if sim.result == 0:
             PGN.headers["Result"] = "1/2-1/2"
-            for i in range(len(whiteStateSeen)):
-                whiteStateWin.append(whiteStateSeen[i] * 0.5)
-            for j in range(len(blackStateSeen)):
-                blackStateWin.append(blackStateSeen[j] * 0.5)
         if sim.result == -1:
             PGN.headers["Result"] = "0-1"
-            for i in range(len(whiteStateSeen)):
-                whiteStateWin.append(whiteStateSeen[i] * 0)
-            for j in range(len(blackStateSeen)):
-                blackStateWin.append(blackStateSeen[j])
-        if sim.result == 2:
-            for i in range(len(whiteStateSeen)):
-                whiteStateWin.append(whiteStateSeen[i] * 1)
-            for j in range(len(blackStateSeen)):
-                blackStateWin.append(blackStateSeen[j] * 1)
-
-        parentStates = np.concatenate((whiteParentState, blackParentState))
-        statesWin = whiteStateWin + blackStateWin
-        statesNames = whiteStateNames + blackStateNames
 
         print(PGN)
 
-        return parentStates, statesWin, statesNames
+        return PGN
 
     def simulateCompetitiveGame(self, playouts):
 
@@ -533,114 +502,10 @@ class MCTS():
 
         print(PGN)
 
-    def createTrainingGames(self, numberOfGames, playouts):
-        trainingParentStates = np.zeros(1)
-        trainingStatesWin = []
-        trainingStatesName = []
+    def createTrainingGames(self, numberOfGames, playouts, saveDir):
 
         for i in range(numberOfGames):
-            newParentStates, \
-            newStatesWin, \
-            newStatesName = self.simulateTrainingGame(playouts, round=str(int(i + 1)))
-
-            if i == 0:  # if nothing has been added yet
-                trainingParentStates = newParentStates
-                trainingStatesWin = newStatesWin
-                trainingStatesName = newStatesName
-
-            if i != 0:
-                # in the past, we checked if information was in dataset. It is not necessary.
-                """
-                removeDirectories = []
-                for k in range(len(trainingParentStates)):
-                    for j in range(len(newParentStates)):
-                        if np.sum((abs(trainingParentStates[k].flatten() - newParentStates[j].flatten()))) == 0:
-                            # If information is already in dataset, edit existing data
-                            trainingStatesWin[k] = trainingStatesWin[k] + newStatesWin[j]
-                            trainingStatesSeen[k] = trainingStatesSeen[k] + newStatesSeen[j]
-                            removeDirectories.append(j)
-                removeDirectories.sort()
-                while len(removeDirectories) > 0:
-                    index = removeDirectories.pop()
-                    newParentStates = np.delete(newParentStates, index, axis=0)
-                    del newStatesSeen[index]
-                    del newStatesWin[index]
-                    del newStatesName[index]
-                    """
-
-                trainingParentStates = np.concatenate((trainingParentStates, newParentStates), axis=0)
-                trainingStatesWin = trainingStatesWin + newStatesWin
-                trainingStatesName = trainingStatesName + newStatesName
-
-        """
-         # Create win percentage for all moves:
-         for j in range(len(trainingStatesWin)):  # length of tSW and tSS should be the same
-            newEntry = np.divide(trainingStatesWin[j], trainingStatesSeen[j], out=np.zeros_like(trainingStatesWin[j]),
-                                 where=trainingStatesSeen[j] != 0)
-            trainingWinPercentages.append(newEntry)
-        """
-
-        # return the information. trainingWinPercentages has to be converted to a numpy array of correct shape!
-        print("Size of Training Material: ", len(trainingParentStates))
-        # print(len(trainingWinPercentages))
-        print(len(trainingStatesName))
-        print(len(trainingParentStates))
-        print(trainingParentStates.shape)
-
-        # now, for each trainingWinPercentages and trainingStatesName, convert this into an output that the NN can train on.
-
-        trainingParentActions = np.zeros(1)
-
-        # create output for nn
-        for k in range(len(trainingStatesWin)):
-            print(k, "positions out of", len(trainingStatesWin), "analyzed.")
-            actionTaken = np.zeros((1, 4504))
-            # find the board position when move was played.
-            blankBoard = [[" ", " ", " ", " ", " ", " ", " ", " "],  # 0 - 7
-                          [" ", " ", " ", " ", " ", " ", " ", " "],  # 8 - 15
-                          [" ", " ", " ", " ", " ", " ", " ", " "],  # 16 - 23
-                          [" ", " ", " ", " ", " ", " ", " ", " "],  # 24 - 31
-                          [" ", " ", " ", " ", " ", " ", " ", " "],  # 32 - 39
-                          [" ", " ", " ", " ", " ", " ", " ", " "],  # 40 - 47
-                          [" ", " ", " ", " ", " ", " ", " ", " "],  # 48 - 55
-                          [" ", " ", " ", " ", " ", " ", " ", " "]]  # 56 - 63
-            for i in range(64):
-                pieces = "PNBRQKpnbrqk"
-                for j in range(len(pieces)):
-                    if trainingParentStates[k].flatten()[(j * 64) + i] == 1:
-                        blankBoard[i // 8][i % 8] = pieces[j]
-
-            for l in range(len(trainingStatesName[k])):
-                # this checks for any errors
-                if np.sum(ActionToArray.moveArray(trainingStatesName[k][l], blankBoard)) == 0:
-                    print("ERROR")
-
-                if l == 0:
-                    actionTaken = ActionToArray.moveArray(trainingStatesName[k][l], blankBoard) \
-                                  * trainingStatesWin[k][l]
-                else:
-                    additionalAction = ActionToArray.moveArray(trainingStatesName[k][l], blankBoard) \
-                                       * trainingStatesWin[k][l]
-                    actionTaken = actionTaken + additionalAction
-
-            if k == 0:
-                trainingParentActions = actionTaken
-            else:
-                trainingParentActions = np.concatenate((trainingParentActions, actionTaken), axis=0)
-
-        """
-        Somewhere in here, we need to create a logit function for the output.
-        The x/1.0002+0.0001 ensures that we don't have values of infinity, 
-        without affecting the error rates by much.
-        
-        However, this will not be used yet as this creates difficulties
-        when training.
-        
-        """
-        # trainingParentActions = (trainingParentActions / 1.0002) + 0.0001
-        # trainingParentActions = np.log((trainingParentActions/(1-trainingParentActions)))
-
-        return trainingParentStates, trainingParentActions
-
-# in the future, the number of playouts at a position can be dependent on how many possible moves there are
-# this way, resources are allocated and used when most necessary.
+            PGN = self.simulateTrainingGame(playouts, round=str(int(i + 1)))
+            PGN = str(PGN)
+            with open(saveDir, 'a') as fout:
+                fout.write(PGN+"\n\n")
