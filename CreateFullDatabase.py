@@ -23,7 +23,7 @@ listOfMoves = []
 listOfResults = []
 for i in range(0,1): #len(pgnGames)):
     pgn = open(pgnGames[i])
-    for k in range(165000):  # 190,000 assures all games are looked at.
+    for k in range(190000):  # 190,000 assures all games are looked at.
         try:
             game = chess.pgn.read_game(pgn)
             whiteElo = int(game.headers["WhiteElo"])
@@ -114,11 +114,11 @@ print(valueOutputs.shape)
 print(policyOutputs.shape)
 
 
-with h5py.File('Training Data/18-11Inputs.h5', 'w') as hf:
+with h5py.File('Training Data/17-12Inputs.h5', 'w') as hf:
     hf.create_dataset("Inputs", data=inputs, compression='gzip', compression_opts=9)
-with h5py.File('Training Data/18-11PolicyOutputs.h5', 'w') as hf:
+with h5py.File('Training Data/17-12PolicyOutputs.h5', 'w') as hf:
     hf.create_dataset("Outputs", data=policyOutputs, compression='gzip', compression_opts=9)
-with h5py.File('Training Data/18-11ValueOutputs.h5', 'w') as hf:
+with h5py.File('Training Data/17-12ValueOutputs.h5', 'w') as hf:
     hf.create_dataset("Outputs", data=valueOutputs, compression='gzip', compression_opts=9)
 
 

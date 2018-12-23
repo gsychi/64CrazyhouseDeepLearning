@@ -89,6 +89,7 @@ def trainValueNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
 train = True
 if train:
 
+    """
     with h5py.File("Training Data/18-01Inputs.h5", 'r') as hf:
         boards = hf["Inputs"][:]
         print(len(boards))
@@ -101,6 +102,7 @@ if train:
 
     boards = []
     outputs = []
+    """
 
     with h5py.File("Training Data/18-02Inputs.h5", 'r') as hf:
         boards = hf["Inputs"][:]

@@ -12,10 +12,10 @@ import h5py
 def validateNetwork(loadDirectory):
 
     with h5py.File('Training Data/18-11PolicyOutputs.h5', 'r') as hf:
-        actions = hf["Outputs"][:]
+        actions = hf["Outputs"][0:100000]
         print(len(actions))
     with h5py.File('Training Data/18-11Inputs.h5', 'r') as hf:
-        inputs = hf["Inputs"][:]
+        inputs = hf["Inputs"][0:100000]
         print(len(inputs))
     actions = torch.from_numpy(actions)
     data = PolicyDataset(inputs, actions)
@@ -47,7 +47,7 @@ def validateNetwork(loadDirectory):
 
 validate = True
 if validate:
-    validateNetwork("New Networks/18011810-POLICY.pt")
+    validateNetwork("New Networks/18011810-ARCH10X128-POLICY.pt")
 
 
 

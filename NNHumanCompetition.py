@@ -194,7 +194,6 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
 
     print(PGN)
 
-
-# Final Models/v8-1803to1806.pt
-network = MCTS('New Networks/18011810-ckpt11-POLICY.pt', 'New Networks/18011810-VALUE.pt', 3)
-NetworkCompetitionWhite(network, 0)
+# PLAY!
+network = MCTS('New Networks/18011810-ARCH10X128-POLICY.pt', 'New Networks/18011810-VALUE.pt', 3)
+NetworkCompetitionBlack(network, 0)
