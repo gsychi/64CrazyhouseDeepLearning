@@ -43,13 +43,8 @@ def validateNetwork(loadDirectory):
             # labels = labels.data
             correct += (predicted == labels).sum().item()
 
-            print('Test Accuracy of the model on', total, 'test positions: {} %'.format(100 * correct / total))
+            print('Test Accuracy of the model on', total, 'test positions: {:.4f} %'.format(100 * correct / total))
 
 validate = True
 if validate:
     validateNetwork("New Networks/18011810-ARCH10X128-POLICY.pt")
-
-
-
-
-

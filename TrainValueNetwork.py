@@ -17,13 +17,9 @@ def trainValueNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
 
-    data = ValueDataset(boards, outputs)  # use answers instead of actions when choosing CEL
+    data = ValueDataset(boards, outputs)
 
     trainLoader = torch.utils.data.DataLoader(dataset=data, batch_size=BATCH_SIZE, shuffle=True)
-    # to create a prediction, create a new dataset with input of the states, and output should just be np.zeros()
-
-    # this is a convolutional neural network
-    #model = ChessConvNet(OUTPUT_ARRAY_LEN).double()
 
     # this is a residual network
     model = ChessResNet.ValueResNet().double()
@@ -34,10 +30,6 @@ def trainValueNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
         print("Pretrained NN model not found!")
 
     criterion = nn.MSELoss()  # MSELoss // PoissonNLLLoss //
-
-    # criterion = nn.CrossEntropyLoss()
-    #  use this if you want to train from argmax values. This trains faster, but seems
-    #  to be less accurate.
 
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)  # , weight_decay=0.00001)
     total_step = len(trainLoader)
@@ -89,7 +81,6 @@ def trainValueNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
 train = True
 if train:
 
-    """
     with h5py.File("Training Data/18-01Inputs.h5", 'r') as hf:
         boards = hf["Inputs"][:]
         print(len(boards))
@@ -102,7 +93,6 @@ if train:
 
     boards = []
     outputs = []
-    """
 
     with h5py.File("Training Data/18-02Inputs.h5", 'r') as hf:
         boards = hf["Inputs"][:]

@@ -159,7 +159,7 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
     sim = ChessEnvironment()
     while sim.result == 2:
         print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.valueNet))
-        noiseVal = 3.0 /(10*(sim.plies//2 + 1))
+        noiseVal = 3.0 / (10*(sim.plies//2 + 1))
         if sim.plies % 2 == 1:
             if playouts > 0:
                 bestNet.competitivePlayoutsFromPosition(playouts, sim)
@@ -299,6 +299,6 @@ def bestNetworkTest(bestNet, testingNet, games, playouts, clearAfterEachRound=Fa
 
 testing = True
 if testing:
-    best = MCTS("New Networks/18011810-ckpt2-POLICY.pt", "Old Networks/18011805-VALUE.pt", 8)
-    newNet = MCTS("New Networks/18011810-ARCH10X128-POLICY.pt", "Old Networks/18011805-VALUE.pt", 8)
-    print(bestNetworkTest(best, newNet, 1000, 0))
+    best = MCTS("New Networks/18011810-ckpt8-POLICY.pt", "New Networks/18011810-VALUE.pt", 8)
+    newNet = MCTS("New Networks/18011810-ckpt9-POLICY.pt", "New Networks/18011810-VALUE.pt", 8)
+    print(bestNetworkTest(best, newNet, 100, 0))

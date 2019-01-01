@@ -357,14 +357,14 @@ class MCTS():
                          bCap=tempBoard.blackCaptivePieces, noise=False, actuallyAPawn=tempBoard.actuallyAPawn,
                          printPGN=False)
 
-            self.printSize()
+            #self.printSize()
             #"""
-            print(self.childrenMoveNames[self.dictionary[sim.boardToString()]])
+            #print(self.childrenMoveNames[self.dictionary[sim.boardToString()]])
             #print(self.childrenStateWin[self.dictionary[sim.boardToString()]])
-            print(self.childrenStateSeen[self.dictionary[sim.boardToString()]])
+            #print(self.childrenStateSeen[self.dictionary[sim.boardToString()]])
             #print(self.childrenPolicyEval[self.dictionary[sim.boardToString()]])
-            print((self.childrenValueEval[self.dictionary[sim.boardToString()]]))
-            print("Playout:", np.sum(self.childrenStateSeen[self.dictionary[sim.boardToString()]]))
+            #print((self.childrenValueEval[self.dictionary[sim.boardToString()]]))
+            #print("Playout:", np.sum(self.childrenStateSeen[self.dictionary[sim.boardToString()]]))
             #"""
 
     def simulateTrainingGame(self, playouts, round="1"):

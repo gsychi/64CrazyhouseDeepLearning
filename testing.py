@@ -1,11 +1,9 @@
-import h5py
+import torch
 import numpy as np
+import torch.nn as nn
+import torch.utils.data as data_utils
+from ChessConvNet import ChessConvNet
+from PolicyDataset import PolicyDataset
+import ChessResNet
+import h5py
 
-#with h5py.File('Training Data/17-03masterOutputs.h5', 'r') as hf:
-            #outputs = hf["Outputs"][1371435:]
-
-outputs = np.load("Training Data/Full Data/bigOutputsArgmax(17-03)-(18-10).npy")[1371435:]
-outputs2 = np.load("Training Data/Full Data/bigOutputsArgmax(17-04)-(18-10).npy")
-
-for i in range(len(outputs)):
-    print(outputs[i]==outputs2[i])

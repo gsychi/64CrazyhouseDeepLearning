@@ -3,7 +3,7 @@ import numpy as np
 import torch.nn as nn
 import torch.utils.data as data_utils
 from ChessConvNet import ChessConvNet
-from TrainingDataset import TrainingDataset
+from PolicyDataset import PolicyDataset
 import ChessResNet
 import h5py
 
@@ -18,7 +18,7 @@ def validateEnsembleNetwork():
         inputs = hf["Inputs"][:]
         print(len(inputs))
     actions = torch.from_numpy(actions)
-    data = TrainingDataset(inputs, actions)
+    data = PolicyDataset(inputs, actions)
 
     testLoader = torch.utils.data.DataLoader(dataset=data, batch_size=16, shuffle=False)
     # to create a prediction, create a new dataset with input of the states, and output should just be np.zeros()

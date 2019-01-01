@@ -43,6 +43,17 @@ class ChessEnvironment():
         self.stateFEN = chess.STARTING_FEN  # FEN of starting position
         self.gameStatus = "Game is in progress."
 
+    def arrayBoardUpdate(self):
+        # update boards
+        for i in range(8):
+            for j in range(8):
+                if self.board.piece_at(8*i+j) != None:
+                    self.arrayBoard[i][j] = self.board.piece_at(8*i+j).symbol()
+                else:
+                    self.arrayBoard[i][j] = ' '
+        # update pockets
+
+
     def boardToFEN(self):
         self.stateFEN = self.board.fen()
         return self.stateFEN
@@ -343,3 +354,5 @@ class ChessEnvironment():
 
         # perhaps work on adding 1s for spaces....
         return np.reshape(np.concatenate((self.allBoards, captiveToBinary)), (1, 15, 8, 8))
+
+

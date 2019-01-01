@@ -82,8 +82,11 @@ def NetworkCompetitionWhite(bestNet, playouts, round="1"):
             legal = False
             while not legal:
                 move = input("Enter move: ")
-                if chess.Move.from_uci(move) in sim.board.legal_moves:
-                    legal = True
+                if len(move) == 4 or len(move) == 5:
+                    if chess.Move.from_uci(move) in sim.board.legal_moves:
+                        legal = True
+                    else:
+                        print("Illegal move! Try again:")
                 else:
                     print("Illegal move! Try again:")
             print(move)
@@ -117,11 +120,10 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
     PGN.headers["Black"] = "Network: " + bestNet.nameOfNetwork
     PGN.headers["Variant"] = "Crazyhouse"
 
-
     sim = ChessEnvironment()
     while sim.result == 2:
         print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.valueNet))
-        noiseVal = 0.0 /(10*(sim.plies//2 + 1))
+        noiseVal = 0.0 / (10*(sim.plies//2 + 1))
         if sim.plies % 2 == 1:
             if playouts > 0:
                 bestNet.competitivePlayoutsFromPosition(playouts, sim)
@@ -170,8 +172,11 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
             legal = False
             while not legal:
                 move = input("Enter move: ")
-                if chess.Move.from_uci(move) in sim.board.legal_moves:
-                    legal = True
+                if len(move) == 4 or len(move) == 5:
+                    if chess.Move.from_uci(move) in sim.board.legal_moves:
+                        legal = True
+                    else:
+                        print("Illegal move! Try again:")
                 else:
                     print("Illegal move! Try again:")
             print(move)
@@ -195,5 +200,5 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
     print(PGN)
 
 # PLAY!
-network = MCTS('New Networks/18011810-ARCH10X128-POLICY.pt', 'New Networks/18011810-VALUE.pt', 3)
-NetworkCompetitionBlack(network, 0)
+network = MCTS('New Networks/18011810-ckpt8-POLICY.pt', 'New Networks/18011810-VALUE.pt', 3)
+NetworkCompetitionWhite(network, 0)

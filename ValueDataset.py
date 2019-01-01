@@ -12,10 +12,8 @@ class ValueDataset(torch.utils.data.Dataset):
         self.features = inputs
         self.targets = outputs
 
-
     def __getitem__(self, index):
-        return self.features[index], np.expand_dims(self.targets[index],axis=0)
-
+        return self.features[index], np.expand_dims(self.targets[index], axis=0)
 
     def __len__(self):
         return len(self.features)

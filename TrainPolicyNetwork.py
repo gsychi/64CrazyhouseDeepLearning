@@ -2,7 +2,6 @@ import torch
 import numpy as np
 import torch.nn as nn
 import torch.utils.data as data_utils
-from ChessConvNet import ChessConvNet
 from PolicyDataset import PolicyDataset
 import ChessResNet
 import h5py
@@ -11,19 +10,16 @@ import h5py
 # if it's not imported, accuracy will never be 100%, so it will just output the trained network after 10,000 epochs.
 def trainPolicyNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
                  loadDirectory='none.pt',
-                 saveDirectory='network1.pt', OUTPUT_ARRAY_LEN=4504):
+                 saveDirectory='network1.pt'):
 
     outputs = torch.from_numpy(outputs)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
 
-    data = PolicyDataset(boards, outputs)  # use answers instead of actions when choosing CEL
+    data = PolicyDataset(boards, outputs)
 
     trainLoader = torch.utils.data.DataLoader(dataset=data, batch_size=BATCH_SIZE, shuffle=True)
     # to create a prediction, create a new dataset with input of the states, and output should just be np.zeros()
-
-    # this is a convolutional neural network
-    #model = ChessConvNet(OUTPUT_ARRAY_LEN).double()
 
     # this is a residual network
     model = ChessResNet.PolicyResNetMain().double()
@@ -34,7 +30,6 @@ def trainPolicyNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
         print("Pretrained NN model not found!")
 
     criterion = nn.PoissonNLLLoss()  # MSELoss // PoissonNLLLoss //
-
 
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)  # , weight_decay=0.00001)
     total_step = len(trainLoader)
@@ -76,7 +71,7 @@ def trainPolicyNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
 
                 if (i + 1) % 1 == 0:
                     print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'
-                          .format(epoch + 1, EPOCHS, i + 1, total_step, loss.item()))
+                          .format(epoch + 1, EPOCHS, i + 1, total_step, 100*loss.item()))
                 if (i + 1) % 200 == 0:
                     torch.save(model, saveDirectory)
 
@@ -85,58 +80,6 @@ def trainPolicyNetwork(boards, outputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
 
 train = True
 if train:
-
-    with h5py.File("Training Data/18-01Inputs.h5", 'r') as hf:
-        boards = hf["Inputs"][:]
-        print(len(boards))
-    with h5py.File("Training Data/18-01PolicyOutputs.h5", 'r') as hf:
-        outputs = hf["Outputs"][:]
-        print(len(outputs))
-    trainPolicyNetwork(boards, outputs, loadDirectory="New Networks/18011810-ARCH10X128-POLICY.pt.pt",
-                 saveDirectory="New Networks/18011810-ARCH10X128-POLICY.pt", EPOCHS=1,
-                 BATCH_SIZE=64, LR=0.001)
-
-    boards = []
-    outputs = []
-
-    with h5py.File("Training Data/18-02Inputs.h5", 'r') as hf:
-        boards = hf["Inputs"][:]
-        print(len(boards))
-    with h5py.File("Training Data/18-02PolicyOutputs.h5", 'r') as hf:
-        outputs = hf["Outputs"][:]
-        print(len(outputs))
-    trainPolicyNetwork(boards, outputs, loadDirectory="New Networks/18011810-ARCH10X128-POLICY.pt",
-                 saveDirectory="New Networks/18011810-ARCH10X128-POLICY.pt", EPOCHS=1,
-                 BATCH_SIZE=64, LR=0.001)
-
-    boards = []
-    outputs = []
-
-    with h5py.File("Training Data/18-03Inputs.h5", 'r') as hf:
-        boards = hf["Inputs"][:]
-        print(len(boards))
-    with h5py.File("Training Data/18-03PolicyOutputs.h5", 'r') as hf:
-        outputs = hf["Outputs"][:]
-        print(len(outputs))
-    trainPolicyNetwork(boards, outputs, loadDirectory="New Networks/18011810-ARCH10X128-POLICY.pt",
-                 saveDirectory="New Networks/18011810-ARCH10X128-POLICY.pt", EPOCHS=1,
-                 BATCH_SIZE=64, LR=0.001)
-
-    boards = []
-    outputs = []
-
-    with h5py.File("Training Data/18-04Inputs.h5", 'r') as hf:
-        boards = hf["Inputs"][:]
-        print(len(boards))
-    with h5py.File("Training Data/18-04PolicyOutputs.h5", 'r') as hf:
-        outputs = hf["Outputs"][:]
-        print(len(outputs))
-    trainPolicyNetwork(boards, outputs, loadDirectory="New Networks/18011810-ARCH10X128-POLICY.pt",
-                 saveDirectory="New Networks/18011810-ARCH10X128-POLICY.pt", EPOCHS=1,
-                 BATCH_SIZE=64, LR=0.001)
-
-    boards = []
-    outputs = []
 
     with h5py.File("Training Data/18-05Inputs.h5", 'r') as hf:
         boards = hf["Inputs"][:]
