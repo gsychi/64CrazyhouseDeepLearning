@@ -42,11 +42,13 @@ Start off by downloading the repository through terminal...
 
 ## How does this program work?
 
+You can learn more about the training checkpoints, parameters, and others on the [wiki](https://github.com/FTdiscovery/64CrazyhouseDeepLearning/wiki)!
 
-
-## Additional Code Information
+## Future Goals
 
 I plan on writing the engine for UCI Compatibility. The current barebones are written on UCICommunication.py, and will be worked upon once the policy and value networks are trained.
+
+## Additional Code Information
 
 ### Input Representation
 The input for the neural network is a basic (raw) representation of the board. It is an array of 960 values (15 planes of 8×8 boards), which determines the player turn, position of each piece type, captive pieces held by a player, and whether the piece is a promotion. The last part is relevant since promoted pieces can only be placed down as pawns after being captured.
