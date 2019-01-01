@@ -40,13 +40,13 @@ Start off by downloading the repository through terminal...
     
 ... or by downloading the ZIP file on the top right hand corner.
 
-## Creating a Supervised Learning (SL) Based Model
+## How does this program work?
 
-The Supervised Learning is trained on games on lichess.org, all of which can be found on https://database.lichess.org/ .
 
-[more coming soon]
 
 ## Additional Code Information
+
+I plan on writing the engine for UCI Compatibility. The current barebones are written on UCICommunication.py, and will be worked upon once the policy and value networks are trained.
 
 ### Input Representation
 The input for the neural network is a basic (raw) representation of the board. It is an array of 960 values (15 planes of 8×8 boards), which determines the player turn, position of each piece type, captive pieces held by a player, and whether the piece is a promotion. The last part is relevant since promoted pieces can only be placed down as pawns after being captured.
