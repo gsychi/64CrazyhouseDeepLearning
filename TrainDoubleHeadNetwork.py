@@ -47,7 +47,7 @@ def trainDoubleHeadNetwork(boards, policyOutputs, valueOutputs, EPOCHS=1, BATCH_
                 # Forward pass
                 outputPolicy, outputValue = model(images)
 
-                policyLoss = policyCrit(outputPolicy, policyLabels)*1000
+                policyLoss = policyCrit(outputPolicy, policyLabels)*4000
                 valueLoss = valueCrit(outputValue, valueLabels)
                 totalLoss = policyLoss + valueLoss
 
@@ -58,7 +58,7 @@ def trainDoubleHeadNetwork(boards, policyOutputs, valueOutputs, EPOCHS=1, BATCH_
 
                 if (i + 1) % 1 == 0:
                     print('Epoch [{}/{}], Step [{}/{}], Policy Loss: {:.4f}, Value Loss: {:.4f}'
-                          .format(epoch + 1, EPOCHS, i + 1, total_step, policyLoss.item(), valueLoss.item()))
+                          .format(epoch + 1, EPOCHS, i + 1, total_step, policyLoss.item()/4, valueLoss.item()))
                 if (i + 1) % 100 == 0:
                     # find predicted labels
                     values = np.exp((model(images)[0].data.detach().numpy()))
@@ -93,7 +93,7 @@ if train:
         value = hf["Outputs"][:]
         print(len(value))
     trainDoubleHeadNetwork(boards, policy, value, loadDirectory="",
-                 saveDirectory="New Networks/1712-small-finalnet.pt", EPOCHS=1,
+                 saveDirectory="New Networks/1712-smallnet.pt", EPOCHS=1,
                  BATCH_SIZE=64, LR=0.001)
 
     boards = []

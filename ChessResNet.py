@@ -57,7 +57,7 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_kernels, value_net=False, two_heads=False, p_planes=2, v_planes=2):
+    def __init__(self, block, num_blocks, num_kernels, p_planes=2, v_planes=2):
         super(ResNet, self).__init__()
         self.in_planes = 15
         self.policy_planes = p_planes
@@ -70,15 +70,20 @@ class ResNet(nn.Module):
         self.layer2 = self._make_layer(block, num_kernels[1], num_blocks[1], stride=1)
         self.layer3 = self._make_layer(block, num_kernels[2], num_blocks[2], stride=1)
         self.layer4 = self._make_layer(block, num_kernels[3], num_blocks[3], stride=1)
-        self.finalLayer = nn.Sequential(
+        self.finalLayerPolicy = nn.Sequential(
             nn.Conv2d(num_kernels[3], self.policy_planes, kernel_size=1, stride=1, padding=0),  # 64, 1
             nn.BatchNorm2d(self.policy_planes),
-            nn.ReLU()
+            nn.PReLU()
             )
         self.policyLinear = nn.Linear(64*self.policy_planes*block.expansion, 4504)
+
+
+        self.finalLayerValue = nn.Sequential(
+            nn.Conv2d(num_kernels[3], self.value_planes, kernel_size=1, stride=1, padding=0),  # 64, 1
+            nn.BatchNorm2d(self.value_planes),
+            nn.PReLU()
+            )
         self.valueLinear = nn.Linear(64*self.value_planes*block.expansion, 1)
-        self.tanh = value_net
-        self.policy_and_value = two_heads
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
@@ -94,45 +99,20 @@ class ResNet(nn.Module):
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
-        out = self.finalLayer(out)
-        out = out.view(out.size(0), -1)
-        if not self.policy_and_value:
-            if self.tanh:
-                out = F.tanh(self.valueLinear(out))
-            else:
-                out = F.log_softmax(self.policyLinear(out))
-            return out
-        else:
-            out1 = F.log_softmax(self.policyLinear(out))
-            out2 = F.tanh(self.valueLinear(out))
-            return out1, out2
+        # POLICY OUTPUT
+        out1 = self.finalLayerPolicy(out)
+        out1 = out1.view(out1.size(0), -1)
+        out1 = F.log_softmax(self.policyLinear(out1))
+
+        # VALUE OUTPUT
+        out2 = self.finalLayerValue(out)
+        out2 = out2.view(out2.size(0), -1)
+        out2 = F.tanh(self.valueLinear(out2))
+        return out1, out2
 
 def ResNetDoubleHead():
-    return ResNet(BasicBlock, [2,2,2,2], [256,256,256,256], two_heads=True, p_planes=4, v_planes=2)
+    return ResNet(BasicBlock, [2,2,2,2], [256,256,256,256], p_planes=4, v_planes=2)
 
 def ResNetDoubleHeadSmall():
-    return ResNet(BasicBlock, [2,2,2,2], [32,32,32,32], two_heads=True, p_planes=1, v_planes=1)
+    return ResNet(BasicBlock, [1,1,1,2], [32,32,32,32], p_planes=1, v_planes=1)
 
-
-def ValueResNet():
-    return ResNet(BasicBlock, [2,2,2,4], [128,128,128,128], value_net=True)
-
-def PolicyResNetMain():
-    return ResNet(BasicBlock, [2,2,2,4], [128,128,128,128])
-
-def PolicyResNetSmall():
-    return ResNet(BasicBlock, [2,2,2,4], [32,32,32,32])
-
-def test():
-    net = ValueResNet()
-    y = net(torch.randn(1,15,8,8))
-    print(y.size())
-    print(y.detach().numpy())
-
-    net = PolicyResNetMain()
-    y = net(torch.randn(1,15,8,8))
-    print(y.size())
-    print(y.detach().numpy())
-    print(np.sum(y.detach().numpy(), axis=1))
-
-#test()

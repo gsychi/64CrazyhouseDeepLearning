@@ -4,6 +4,7 @@ import datetime
 import numpy as np
 from ChessEnvironment import ChessEnvironment
 from MyDataset import MyDataset
+from DoubleHeadDataset import DoubleHeadDataset
 import ActionToArray
 import ChessConvNet
 import torch
@@ -32,7 +33,7 @@ def NetworkCompetitionWhite(bestNet, playouts, round="1"):
 
     sim = ChessEnvironment()
     while sim.result == 2:
-        print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.valueNet))
+        print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.neuralNet))
         noiseVal = 0.0 / (10 * (sim.plies // 2 + 1))
         if sim.plies % 2 == 0:
             if playouts > 0:
@@ -41,13 +42,13 @@ def NetworkCompetitionWhite(bestNet, playouts, round="1"):
                 position = sim.boardToString()
                 if position not in bestNet.dictionary:
                     state = torch.from_numpy(sim.boardToState())
-                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
-                    testSet = MyDataset(state, nullAction)
+                    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
+                    testSet = DoubleHeadDataset(state, nullAction, nullAction)
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
-                        for images, labels in generatePredic:
-                            bestNet.policyNet.eval()
-                            outputs = bestNet.policyNet(images)
+                        for images, labels1, labels2 in generatePredic:
+                            bestNet.neuralNet.eval()
+                            outputs = bestNet.neuralNet(images)[0]
                             if playouts > 0:
                                 bestNet.addPositionToMCTS(sim.boardToString(),
                                                       ActionToArray.legalMovesForState(sim.arrayBoard,
@@ -122,7 +123,7 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
 
     sim = ChessEnvironment()
     while sim.result == 2:
-        print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.valueNet))
+        print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.neuralNet))
         noiseVal = 0.0 / (10*(sim.plies//2 + 1))
         if sim.plies % 2 == 1:
             if playouts > 0:
@@ -131,13 +132,13 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
                 position = sim.boardToString()
                 if position not in bestNet.dictionary:
                     state = torch.from_numpy(sim.boardToState())
-                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
-                    testSet = MyDataset(state, nullAction)
+                    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
+                    testSet = DoubleHeadDataset(state, nullAction, nullAction)
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
-                        for images, labels in generatePredic:
-                            bestNet.policyNet.eval()
-                            outputs = bestNet.policyNet(images)
+                        for images, labels1, labels2 in generatePredic:
+                            bestNet.neuralNet.eval()
+                            outputs = bestNet.neuralNet(images)[0]
                             if playouts > 0:
                                 bestNet.addPositionToMCTS(sim.boardToString(),
                                               ActionToArray.legalMovesForState(sim.arrayBoard,
@@ -200,5 +201,5 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
     print(PGN)
 
 # PLAY!
-network = MCTS('New Networks/18011810-ckpt8-POLICY.pt', 'New Networks/18011810-VALUE.pt', 3)
+network = MCTS('New Networks/1712-finalnet.pt', 3)
 NetworkCompetitionWhite(network, 0)

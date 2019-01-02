@@ -25,6 +25,7 @@ import ChessConvNet
 import torch
 import torch.nn as nn
 import torch.utils.data as data_utils
+from DoubleHeadDataset import DoubleHeadDataset
 import ValueEvaluation
 
 # Creates a list of zeros hmmm...
@@ -68,7 +69,7 @@ class MCTS():
     # - win count, number of times visited, and neural network evaluation
     # This is helpful because we get to use numpy stuffs.
 
-    def __init__(self, directory1, directory2, depth):
+    def __init__(self, directory, depth):
 
         self.dictionary = {
             # 'string' = n position. Let this string be the FEN of the position.
@@ -79,13 +80,11 @@ class MCTS():
         self.childrenPolicyEval = []  # a 2D list, each directory contains numpy array
         self.childrenValueEval = []  # a 2D list, each directory contains numpy array
         try:
-            self.policyNet = torch.load(directory1)
-            self.policyNet.eval()
-            self.valueNet = torch.load(directory2)
-            self.valueNet.eval()
+            self.neuralNet = torch.load(directory)
+            self.neuralNet.eval()
         except:
             print("Network not found!")
-        self.nameOfNetwork = "policy:"+directory1[0:-3]+";value:"+directory2[0:-3]
+        self.nameOfNetwork = directory[0:-3]
         self.DEPTH_VALUE = depth
 
     # This adds information into the MCTS database
@@ -121,7 +120,7 @@ class MCTS():
         policy = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction)
         self.childrenPolicyEval.append(policy)
 
-        value = ValueEvaluation.moveValueEvaluations(legalMoves, actualBoard, self.valueNet)
+        value = ValueEvaluation.moveValueEvaluations(legalMoves, actualBoard, self.neuralNet)
         self.childrenValueEval.append(value)
 
     def playout(self, round,
@@ -166,12 +165,12 @@ class MCTS():
             if position not in self.dictionary:
                 # Create a new entry in the tree, if the state is not seen before.
                 state = torch.from_numpy(tempBoard.boardToState())
-                nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
-                testSet = MyDataset(state, nullAction)
+                nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
+                testSet = DoubleHeadDataset(state, nullAction, nullAction)
                 generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                 with torch.no_grad():
-                    for images, labels in generatePredic:
-                        outputs = self.policyNet(images)
+                    for images, labels1, labels2 in generatePredic:
+                        outputs = self.neuralNet(images)[0]
                         self.addPositionToMCTS(tempBoard.boardToString(),
                                                ActionToArray.legalMovesForState(tempBoard.arrayBoard,
                                                                                 tempBoard.board),
@@ -272,7 +271,7 @@ class MCTS():
             if printPGN:
                 PGN.headers["Result"] = "1/2-1/2"
         if tempBoard.result == 2:  # game isn't played to very end
-            winRate = ValueEvaluation.positionEval(tempBoard, self.valueNet)
+            winRate = ValueEvaluation.positionEval(tempBoard, self.neuralNet)
             # tempBoard.printBoard()
             # print(ActionToArray.legalMovesForState(tempBoard.arrayBoard, tempBoard.board))
             # if depth is not divisible by two then win rate is of opponent
@@ -384,12 +383,12 @@ class MCTS():
                 position = sim.boardToString()
                 if position not in self.dictionary:
                     state = torch.from_numpy(sim.boardToState())
-                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
-                    testSet = MyDataset(state, nullAction)
+                    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
+                    testSet = DoubleHeadDataset(state, nullAction, nullAction)
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
-                        for images, labels in generatePredic:
-                            outputs = self.policyNet(images)
+                        for images, labels1, labels2 in generatePredic:
+                            outputs = self.neuralNet(images)[0]
                             self.dictionary[sim.boardToString()] = len(self.dictionary)
                             policy = ActionToArray.moveEvaluations(ActionToArray.legalMovesForState(sim.arrayBoard,
                                                                                        sim.board),
@@ -406,12 +405,12 @@ class MCTS():
                 position = sim.boardToString()
                 if position not in self.dictionary:
                     state = torch.from_numpy(sim.boardToState())
-                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
-                    testSet = MyDataset(state, nullAction)
+                    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
+                    testSet = DoubleHeadDataset(state, nullAction, nullAction)
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
-                        for images, labels in generatePredic:
-                            outputs = self.policyNet(images)
+                        for images, labels1, labels2 in generatePredic:
+                            outputs = self.neuralNet(images)[0]
                             self.addPositionToMCTS(sim.boardToString(),
                                                    ActionToArray.legalMovesForState(sim.arrayBoard,
                                                                                     sim.board),

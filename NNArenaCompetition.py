@@ -18,6 +18,7 @@ import chess
 import MCTSCrazyhouse
 import time
 import ValueEvaluation
+from DoubleHeadDataset import DoubleHeadDataset
 
 def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
     score = 0
@@ -33,7 +34,7 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
 
     sim = ChessEnvironment()
     while sim.result == 2:
-        print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.valueNet))
+        #print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.neuralNet))
         noiseVal = 3.0 / (10 * (sim.plies // 2 + 1))
         if sim.plies % 2 == 0:
             if playouts > 0:
@@ -42,13 +43,13 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
                 position = sim.boardToString()
                 if position not in bestNet.dictionary:
                     state = torch.from_numpy(sim.boardToState())
-                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
-                    testSet = MyDataset(state, nullAction)
+                    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
+                    testSet = DoubleHeadDataset(state, nullAction, nullAction)
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
-                        for images, labels in generatePredic:
-                            bestNet.policyNet.eval()
-                            outputs = bestNet.policyNet(images)
+                        for images, labels1, labels2 in generatePredic:
+                            bestNet.neuralNet.eval()
+                            outputs = bestNet.neuralNet(images)[0]
                             if playouts > 0:
                                 bestNet.addPositionToMCTS(sim.boardToString(),
                                                       ActionToArray.legalMovesForState(sim.arrayBoard,
@@ -76,7 +77,7 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
             move = bestNet.childrenMoveNames[directory][index]
             if chess.Move.from_uci(move) not in sim.board.legal_moves:
                 move = ActionToArray.legalMovesForState(sim.arrayBoard, sim.board)[0]
-            print(move)
+            #print(move)
             sim.makeMove(move)
             sim.gameResult()
         elif sim.plies % 2 == 1:
@@ -86,13 +87,13 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
                 position = sim.boardToString()
                 if position not in testingNet.dictionary:
                     state = torch.from_numpy(sim.boardToState())
-                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
-                    testSet = MyDataset(state, nullAction)
+                    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
+                    testSet = DoubleHeadDataset(state, nullAction, nullAction)
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
-                        for images, labels in generatePredic:
-                            testingNet.policyNet.eval()
-                            outputs = testingNet.policyNet(images)
+                        for images, labels1, labels2 in generatePredic:
+                            testingNet.neuralNet.eval()
+                            outputs = testingNet.neuralNet(images)[0]
                             if playouts > 0:
                                 testingNet.addPositionToMCTS(sim.boardToString(),
                                                          ActionToArray.legalMovesForState(sim.arrayBoard,
@@ -121,7 +122,7 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
             move = testingNet.childrenMoveNames[directory][index]
             if chess.Move.from_uci(move) not in sim.board.legal_moves:
                 move = ActionToArray.legalMovesForState(sim.arrayBoard, sim.board)[0]
-            print(move)
+            #print(move)
             sim.makeMove(move)
             sim.gameResult()
 
@@ -130,7 +131,7 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
         else:
             node = node.add_variation(chess.Move.from_uci(move))
 
-        print(sim.board)
+        #print(sim.board)
 
     if sim.result == 1:
         PGN.headers["Result"] = "1-0"
@@ -158,7 +159,7 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
 
     sim = ChessEnvironment()
     while sim.result == 2:
-        print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.valueNet))
+        #print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.neuralNet))
         noiseVal = 3.0 / (10*(sim.plies//2 + 1))
         if sim.plies % 2 == 1:
             if playouts > 0:
@@ -167,13 +168,13 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
                 position = sim.boardToString()
                 if position not in bestNet.dictionary:
                     state = torch.from_numpy(sim.boardToState())
-                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
-                    testSet = MyDataset(state, nullAction)
+                    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
+                    testSet = DoubleHeadDataset(state, nullAction, nullAction)
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
-                        for images, labels in generatePredic:
-                            bestNet.policyNet.eval()
-                            outputs = bestNet.policyNet(images)
+                        for images, labels1, labels2 in generatePredic:
+                            bestNet.neuralNet.eval()
+                            outputs = bestNet.neuralNet(images)[0]
                             if playouts > 0:
                                 bestNet.addPositionToMCTS(sim.boardToString(),
                                               ActionToArray.legalMovesForState(sim.arrayBoard,
@@ -201,7 +202,7 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
             move = bestNet.childrenMoveNames[directory][index]
             if chess.Move.from_uci(move) not in sim.board.legal_moves:
                 move = ActionToArray.legalMovesForState(sim.arrayBoard, sim.board)[0]
-            print(move)
+            #print(move)
             sim.makeMove(move)
             sim.gameResult()
         elif sim.plies % 2 == 0:
@@ -211,13 +212,13 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
                 position = sim.boardToString()
                 if position not in testingNet.dictionary:
                     state = torch.from_numpy(sim.boardToState())
-                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
-                    testSet = MyDataset(state, nullAction)
+                    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
+                    testSet = DoubleHeadDataset(state, nullAction, nullAction)
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
-                        for images, labels in generatePredic:
-                            testingNet.policyNet.eval()
-                            outputs = testingNet.policyNet(images)
+                        for images, labels1, labels2 in generatePredic:
+                            testingNet.neuralNet.eval()
+                            outputs = testingNet.neuralNet(images)[0]
                             if playouts > 0:
                                 testingNet.addPositionToMCTS(sim.boardToString(),
                                               ActionToArray.legalMovesForState(sim.arrayBoard,
@@ -246,7 +247,7 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
             move = testingNet.childrenMoveNames[directory][index]
             if chess.Move.from_uci(move) not in sim.board.legal_moves:
                 move = ActionToArray.legalMovesForState(sim.arrayBoard, sim.board)[0]
-            print(move)
+            #print(move)
             sim.makeMove(move)
             sim.gameResult()
 
@@ -255,7 +256,7 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
         else:
             node = node.add_variation(chess.Move.from_uci(move))
 
-        print(sim.board)
+        #print(sim.board)
 
     if sim.result == 1:
         PGN.headers["Result"] = "1-0"
@@ -299,6 +300,6 @@ def bestNetworkTest(bestNet, testingNet, games, playouts, clearAfterEachRound=Fa
 
 testing = True
 if testing:
-    best = MCTS("New Networks/18011810-ckpt9-POLICY.pt", "New Networks/18011810-VALUE.pt", 8)
-    newNet = MCTS("New Networks/18011810-ckpt9-POLICY.pt", "New Networks/18011810-VALUE.pt", 8)
+    best = MCTS("New Networks/1712-smallnet.pt", 8)
+    newNet = MCTS("New Networks/1712-smallnet.pt", 8)
     print(bestNetworkTest(best, newNet, 10, 0))

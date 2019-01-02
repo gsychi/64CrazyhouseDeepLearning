@@ -20,7 +20,7 @@ def validateNetwork(loadDirectory):
     actions = torch.from_numpy(actions)
     data = PolicyDataset(inputs, actions)
 
-    testLoader = torch.utils.data.DataLoader(dataset=data, batch_size=16, shuffle=False)
+    testLoader = torch.utils.data.DataLoader(dataset=data, batch_size=128, shuffle=False)
     # to create a prediction, create a new dataset with input of the states, and output should just be np.zeros()
 
     try:
@@ -36,7 +36,8 @@ def validateNetwork(loadDirectory):
         for images, labels in testLoader:
             images = images.to(device)
             labels = labels.to(device)
-            outputs = model(images)
+            outputs = torch.exp(model(images)[0])
+            #print(np.amax(outputs.numpy()))
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             _, labels = torch.max(labels.data, 1)  # for poisson nll loss
@@ -47,4 +48,4 @@ def validateNetwork(loadDirectory):
 
 validate = True
 if validate:
-    validateNetwork("New Networks/18011810-ARCH10X128-POLICY.pt")
+    validateNetwork("New Networks/1712-finalnet.pt")

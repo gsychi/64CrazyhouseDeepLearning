@@ -4,11 +4,12 @@ import torch
 from MyDataset import MyDataset
 import copy
 import ActionToArray
+from DoubleHeadDataset import DoubleHeadDataset
 
 def moveValueEvaluation(move, board, network):
 
     # import the network
-    valueNet = network
+    neuralNet = network
 
     tempBoard = copy.deepcopy(board)
 
@@ -28,13 +29,13 @@ def moveValueEvaluation(move, board, network):
     # evalBoard.printBoard()
     state = evalBoard.boardToState()
 
-    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
-    testSet = MyDataset(state, nullAction)
+    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
+    testSet = DoubleHeadDataset(state, nullAction, nullAction)
     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
     with torch.no_grad():
-        for images, labels in generatePredic:
-            valueNet.eval()
-            output = (valueNet(images).numpy())[0][0]
+        for images, labels1, labels2 in generatePredic:
+            neuralNet.eval()
+            output = (neuralNet(images)[1].numpy())[0][0]
 
     # so far, output gives a winning probability from -1 to 1, 1 for white, -1 for black. We want to scale this to
     # a value between 0 and 1.
@@ -63,7 +64,7 @@ def moveValueEvaluations(legalMoves, board, network):
 def objectivePositionEval(board, network):
 
     # import the network
-    valueNet = network
+    neuralNet = network
 
     tempBoard = copy.deepcopy(board)
 
@@ -80,13 +81,13 @@ def objectivePositionEval(board, network):
     # evalBoard.printBoard()
     state = evalBoard.boardToState()
 
-    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
-    testSet = MyDataset(state, nullAction)
+    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
+    testSet = DoubleHeadDataset(state, nullAction, nullAction)
     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
     with torch.no_grad():
-        for images, labels in generatePredic:
-            valueNet.eval()
-            output = (valueNet(images).numpy())[0][0]
+        for images, labels1, labels2 in generatePredic:
+            neuralNet.eval()
+            output = (neuralNet(images)[1].numpy())[0][0]
 
     # so far, output gives a winning probability from -1 to 1, 1 for white, -1 for black. We want to scale this to
     # a value between 0 and 1.
@@ -105,7 +106,7 @@ def objectivePositionEval(board, network):
 def positionEval(board, network):
 
     # import the network
-    valueNet = network
+    neuralNet = network
 
     tempBoard = copy.deepcopy(board)
 
@@ -122,13 +123,13 @@ def positionEval(board, network):
     # evalBoard.printBoard()
     state = evalBoard.boardToState()
 
-    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
-    testSet = MyDataset(state, nullAction)
+    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
+    testSet = DoubleHeadDataset(state, nullAction, nullAction)
     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
     with torch.no_grad():
-        for images, labels in generatePredic:
-            valueNet.eval()
-            output = (valueNet(images).numpy())[0][0]
+        for images, labels1, labels2 in generatePredic:
+            neuralNet.eval()
+            output = (neuralNet(images)[1].numpy())[0][0]
 
     # so far, output gives a winning probability from -1 to 1, 1 for white, -1 for black. We want to scale this to
     # a value between 0 and 1.
@@ -153,8 +154,7 @@ if testing:
     hi.printBoard()
     moves = ActionToArray.legalMovesForState(hi.arrayBoard, hi.board)
     print(moves)
-    network = torch.load("18011802-VALUE.pt")
-    network.eval()
+    network = torch.load("New Networks/1712-finalnet.pt")
     evaluations = moveValueEvaluations(moves, hi, network)
     print(evaluations)
     eval = positionEval(hi, network)
