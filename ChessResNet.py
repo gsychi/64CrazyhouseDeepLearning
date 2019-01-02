@@ -57,10 +57,12 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_kernels, num_classes=4504, value_net=False):
+    def __init__(self, block, num_blocks, num_kernels, value_net=False, two_heads=False, p_planes=2, v_planes=2):
         super(ResNet, self).__init__()
         self.in_planes = 15
-        self.policy_planes = 2
+        self.policy_planes = p_planes
+        self.value_planes = v_planes
+
 
         self.conv1 = nn.Conv2d(15, 15, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(15)
@@ -73,8 +75,10 @@ class ResNet(nn.Module):
             nn.BatchNorm2d(self.policy_planes),
             nn.ReLU()
             )
-        self.linear = nn.Linear(64*self.policy_planes*block.expansion, num_classes)
+        self.policyLinear = nn.Linear(64*self.policy_planes*block.expansion, 4504)
+        self.valueLinear = nn.Linear(64*self.value_planes*block.expansion, 1)
         self.tanh = value_net
+        self.policy_and_value = two_heads
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
@@ -92,15 +96,26 @@ class ResNet(nn.Module):
         out = self.layer4(out)
         out = self.finalLayer(out)
         out = out.view(out.size(0), -1)
-        if self.tanh:
-            out = F.tanh(self.linear(out))
+        if not self.policy_and_value:
+            if self.tanh:
+                out = F.tanh(self.valueLinear(out))
+            else:
+                out = F.log_softmax(self.policyLinear(out))
+            return out
         else:
-            out = F.log_softmax(self.linear(out))
-        return out
+            out1 = F.log_softmax(self.policyLinear(out))
+            out2 = F.tanh(self.valueLinear(out))
+            return out1, out2
+
+def ResNetDoubleHead():
+    return ResNet(BasicBlock, [2,2,2,2], [256,256,256,256], two_heads=True, p_planes=4, v_planes=2)
+
+def ResNetDoubleHeadSmall():
+    return ResNet(BasicBlock, [2,2,2,2], [32,32,32,32], two_heads=True, p_planes=1, v_planes=1)
 
 
 def ValueResNet():
-    return ResNet(BasicBlock, [2,2,2,4], [128,128,128,128], num_classes=1, value_net=True)
+    return ResNet(BasicBlock, [2,2,2,4], [128,128,128,128], value_net=True)
 
 def PolicyResNetMain():
     return ResNet(BasicBlock, [2,2,2,4], [128,128,128,128])

@@ -10,8 +10,8 @@ import torch.nn.functional as F
 from ChessEnvironment import ChessEnvironment
 import os
 
-networkName = "Checkpoint 9 Weights"
-model = torch.load("New Networks/18011810-ckpt9-POLICY.pt")
+networkName = "Checkpoint 1 Weights"
+model = torch.load("New Networks/18011810-ckpt1-POLICY.pt")
 init_layer = model.conv1.weight.data.numpy().reshape((225, 3, 3))
 
 
