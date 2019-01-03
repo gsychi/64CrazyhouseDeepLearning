@@ -24,7 +24,10 @@ def validateNetwork(loadDirectory):
     # to create a prediction, create a new dataset with input of the states, and output should just be np.zeros()
 
     try:
-        model = torch.load(loadDirectory)
+        checkpoint = torch.load(loadDirectory)
+        model = ChessResNet.ResNetDoubleHeadSmall().double()
+        model.load_state_dict(checkpoint['model_state_dict'])
+        model.eval()
     except:
         print("Pretrained NN model not found!")
 
@@ -48,4 +51,4 @@ def validateNetwork(loadDirectory):
 
 validate = True
 if validate:
-    validateNetwork("New Networks/1712-finalnet.pt")
+    validateNetwork("New Networks/smallnet.pt")

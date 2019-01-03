@@ -21,6 +21,7 @@ import time
 from ChessEnvironment import ChessEnvironment
 from MyDataset import MyDataset
 import ActionToArray
+import ChessResNet
 import ChessConvNet
 import torch
 import torch.nn as nn
@@ -79,11 +80,15 @@ class MCTS():
         self.childrenStateWin = []  # a 2D list, each directory contains numpy array
         self.childrenPolicyEval = []  # a 2D list, each directory contains numpy array
         self.childrenValueEval = []  # a 2D list, each directory contains numpy array
+        self.neuralNet = ChessResNet.ResNetDoubleHeadSmall().double()
+
         try:
-            self.neuralNet = torch.load(directory)
+            checkpoint = torch.load(directory)
+            self.neuralNet.load_state_dict(checkpoint['model_state_dict'])
             self.neuralNet.eval()
         except:
             print("Network not found!")
+
         self.nameOfNetwork = directory[0:-3]
         self.DEPTH_VALUE = depth
 
