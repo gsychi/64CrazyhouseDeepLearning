@@ -105,8 +105,8 @@ if train:
     with h5py.File("Training Data/18-01ValueOutputs.h5", 'r') as hf:
         value = hf["Outputs"][:]
         print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
+    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/small.pt",
+                           saveDirectory="New Networks/small.pt", EPOCHS=1,
                            BATCH_SIZE=64, LR=0.001)
 
     boards = []
@@ -121,8 +121,8 @@ if train:
     with h5py.File("Training Data/18-02ValueOutputs.h5", 'r') as hf:
         value = hf["Outputs"][:]
         print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
+    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/small.pt",
+                           saveDirectory="New Networks/small.pt", EPOCHS=1,
                            BATCH_SIZE=64, LR=0.001)
 
     boards = []
@@ -137,8 +137,8 @@ if train:
     with h5py.File("Training Data/18-03ValueOutputs.h5", 'r') as hf:
         value = hf["Outputs"][:]
         print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
+    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/small.pt",
+                           saveDirectory="New Networks/small.pt", EPOCHS=1,
                            BATCH_SIZE=64, LR=0.001)
 
     boards = []
@@ -153,8 +153,8 @@ if train:
     with h5py.File("Training Data/18-04ValueOutputs.h5", 'r') as hf:
         value = hf["Outputs"][:]
         print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
+    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/small.pt",
+                           saveDirectory="New Networks/small.pt", EPOCHS=1,
                            BATCH_SIZE=64, LR=0.001)
 
     boards = []
@@ -169,8 +169,8 @@ if train:
     with h5py.File("Training Data/18-05ValueOutputs.h5", 'r') as hf:
         value = hf["Outputs"][:]
         print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
+    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/small.pt",
+                           saveDirectory="New Networks/small.pt", EPOCHS=1,
                            BATCH_SIZE=64, LR=0.001)
 
     boards = []
@@ -185,8 +185,8 @@ if train:
     with h5py.File("Training Data/18-06ValueOutputs.h5", 'r') as hf:
         value = hf["Outputs"][:]
         print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
+    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/small.pt",
+                           saveDirectory="New Networks/small.pt", EPOCHS=1,
                            BATCH_SIZE=64, LR=0.001)
 
     boards = []
@@ -201,8 +201,8 @@ if train:
     with h5py.File("Training Data/18-07ValueOutputs.h5", 'r') as hf:
         value = hf["Outputs"][:]
         print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
+    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/small.pt",
+                           saveDirectory="New Networks/small.pt", EPOCHS=1,
                            BATCH_SIZE=64, LR=0.001)
 
     boards = []
@@ -217,8 +217,8 @@ if train:
     with h5py.File("Training Data/18-08ValueOutputs.h5", 'r') as hf:
         value = hf["Outputs"][:]
         print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
+    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/small.pt",
+                           saveDirectory="New Networks/small.pt", EPOCHS=1,
                            BATCH_SIZE=64, LR=0.001)
 
     boards = []
@@ -233,8 +233,8 @@ if train:
     with h5py.File("Training Data/18-09ValueOutputs.h5", 'r') as hf:
         value = hf["Outputs"][:]
         print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
+    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/small.pt",
+                           saveDirectory="New Networks/small.pt", EPOCHS=1,
                            BATCH_SIZE=64, LR=0.001)
 
     boards = []
@@ -249,8 +249,8 @@ if train:
     with h5py.File("Training Data/18-10ValueOutputs.h5", 'r') as hf:
         value = hf["Outputs"][:]
         print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
+    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/small.pt",
+                           saveDirectory="New Networks/small.pt", EPOCHS=1,
                            BATCH_SIZE=64, LR=0.001)
 
     boards = []

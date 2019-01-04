@@ -9,11 +9,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from ChessEnvironment import ChessEnvironment
 import os
+import ChessResNet
 
 networkName = "Checkpoint 1 Weights"
-model = torch.load("New Networks/18011810-ckpt1-POLICY.pt")
+model = ChessResNet.ResNetDoubleHead()
+model.load_state_dict(torch.load("New Networks/weights-ckpt1.pt"))
 init_layer = model.conv1.weight.data.numpy().reshape((225, 3, 3))
-
 
 # WE HAVE 20 BLOCKS! oops.
 blocks = []
@@ -33,10 +34,6 @@ blocks.append(model.layer4[0].conv1.weight.data.numpy())
 blocks.append(model.layer4[0].conv2.weight.data.numpy())
 blocks.append(model.layer4[1].conv1.weight.data.numpy())
 blocks.append(model.layer4[1].conv2.weight.data.numpy())
-blocks.append(model.layer4[2].conv1.weight.data.numpy())
-blocks.append(model.layer4[2].conv2.weight.data.numpy())
-blocks.append(model.layer4[3].conv1.weight.data.numpy())
-blocks.append(model.layer4[3].conv2.weight.data.numpy())
 
 
 # PRINT FIRST LAYER OF CONVOLUTIONS
@@ -59,7 +56,7 @@ for h in range(len(blocks)):
     for i in range(15):
         plt.figure(figsize=(10, 10))
         for idx, filt in enumerate(blocks[h]):
-            plt.subplot(8, 16, idx + 1)
+            plt.subplot(16, 16, idx + 1)
             plt.imshow(filt[i, :, :], cmap="gray")
             title = "Kernels in Block " + str(int(h+1)) + ", Part " + str(int(i+1))
             plt.gcf().canvas.set_window_title(title)

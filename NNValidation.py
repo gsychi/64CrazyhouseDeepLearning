@@ -25,7 +25,7 @@ def validateNetwork(loadDirectory):
 
     try:
         checkpoint = torch.load(loadDirectory)
-        model = ChessResNet.ResNetDoubleHeadSmall().double()
+        model = ChessResNet.ResNetDoubleHead().double()
         model.load_state_dict(checkpoint['model_state_dict'])
         model.eval()
     except:

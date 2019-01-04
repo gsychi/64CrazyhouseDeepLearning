@@ -1,6 +1,7 @@
 #!/usr/local/bin/python3.6
 import numpy as np
 from ChessEnvironment import ChessEnvironment
+from DoubleHeadDataset import DoubleHeadDataset
 from MyDataset import MyDataset
 import ActionToArray
 import ChessConvNet
@@ -22,7 +23,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 print(dir_path)
 
 board = ChessEnvironment()
-model = MCTS('/Users/gordon/Documents/CrazyhouseRL/New Networks/18011810-ARCH10X128-POLICY.pt', '/Users/gordon/Documents/CrazyhouseRL/New Networks/18011810-VALUE.pt', 3)
+model = MCTS('/Users/gordon/Documents/CrazyhouseRL/New Networks/smallnet.pt', 3)
 playouts = 0
 
 while True:
@@ -76,13 +77,13 @@ while True:
                 position = board.boardToString()
                 if position not in model.dictionary:
                     state = torch.from_numpy(board.boardToState())
-                    nullAction = torch.from_numpy(np.zeros((1, 4504)))  # this will not be used, is only a filler
-                    testSet = MyDataset(state, nullAction)
+                    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
+                    testSet = DoubleHeadDataset(state, nullAction, nullAction)
                     generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
                     with torch.no_grad():
-                        for images, labels in generatePredic:
-                            model.policyNet.eval()
-                            outputs = model.policyNet(images)
+                        for images, labels1, labels2 in generatePredic:
+                            model.neuralNet.eval()
+                            outputs = model.neuralNet(images)[0]
                             if playouts > 0:
                                 model.addPositionToMCTS(board.boardToString(),
                                               ActionToArray.legalMovesForState(board.arrayBoard,
@@ -110,7 +111,7 @@ while True:
         if chess.Move.from_uci(move) not in board.board.legal_moves:
             move = ActionToArray.legalMovesForState(board.arrayBoard, board.board)[0]
         print("bestmove " + move)
-        print("info depth 1 score cp", str(int(1000*round(ValueEvaluation.objectivePositionEval(board, model.valueNet), 3))), "time 1 nodes 1 nps 1 pv", move)
+        print("info depth 1 score cp", str(int(1000*round(ValueEvaluation.objectivePositionEval(board, model.neuralNet), 3))), "time 1 nodes 1 nps 1 pv", move)
 
         board.makeMove(move)
         board.gameResult()

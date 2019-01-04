@@ -63,13 +63,14 @@ class ResNet(nn.Module):
         self.policy_planes = p_planes
         self.value_planes = v_planes
 
-
         self.conv1 = nn.Conv2d(15, 15, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(15)
         self.layer1 = self._make_layer(block, num_kernels[0], num_blocks[0], stride=1)
         self.layer2 = self._make_layer(block, num_kernels[1], num_blocks[1], stride=1)
         self.layer3 = self._make_layer(block, num_kernels[2], num_blocks[2], stride=1)
         self.layer4 = self._make_layer(block, num_kernels[3], num_blocks[3], stride=1)
+
+        # policy head
         self.finalLayerPolicy = nn.Sequential(
             nn.Conv2d(num_kernels[3], self.policy_planes, kernel_size=1, stride=1, padding=0),  # 64, 1
             nn.BatchNorm2d(self.policy_planes),
@@ -77,7 +78,7 @@ class ResNet(nn.Module):
             )
         self.policyLinear = nn.Linear(64*self.policy_planes*block.expansion, 4504)
 
-
+        # value head
         self.finalLayerValue = nn.Sequential(
             nn.Conv2d(num_kernels[3], self.value_planes, kernel_size=1, stride=1, padding=0),  # 64, 1
             nn.BatchNorm2d(self.value_planes),
@@ -99,6 +100,7 @@ class ResNet(nn.Module):
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
+
         # POLICY OUTPUT
         out1 = self.finalLayerPolicy(out)
         out1 = out1.view(out1.size(0), -1)
@@ -107,12 +109,12 @@ class ResNet(nn.Module):
         # VALUE OUTPUT
         out2 = self.finalLayerValue(out)
         out2 = out2.view(out2.size(0), -1)
-        out2 = F.tanh(self.valueLinear(out2))
+        out2 = torch.tanh(self.valueLinear(out2))
         return out1, out2
 
 def ResNetDoubleHead():
-    return ResNet(BasicBlock, [2,2,2,2], [256,256,256,256], p_planes=4, v_planes=2)
+    return ResNet(BasicBlock, [2,2,2,2], [256,256,256,256], p_planes=2, v_planes=8)
 
 def ResNetDoubleHeadSmall():
-    return ResNet(BasicBlock, [1,1,1,2], [32,32,32,32], p_planes=1, v_planes=1)
+    return ResNet(BasicBlock, [1,1,1,2], [32,32,32,32], p_planes=1, v_planes=4)
 

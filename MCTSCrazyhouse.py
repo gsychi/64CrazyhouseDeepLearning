@@ -80,7 +80,7 @@ class MCTS():
         self.childrenStateWin = []  # a 2D list, each directory contains numpy array
         self.childrenPolicyEval = []  # a 2D list, each directory contains numpy array
         self.childrenValueEval = []  # a 2D list, each directory contains numpy array
-        self.neuralNet = ChessResNet.ResNetDoubleHeadSmall().double()
+        self.neuralNet = ChessResNet.ResNetDoubleHead().double()
 
         try:
             checkpoint = torch.load(directory)

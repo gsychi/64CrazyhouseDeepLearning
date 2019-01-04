@@ -15,12 +15,12 @@ import copy
 import chess.variant
 import chess.pgn
 import chess
+import chess.svg
 import MCTSCrazyhouse
 import time
 import ValueEvaluation
 
 def NetworkCompetitionWhite(bestNet, playouts, round="1"):
-    score = 0
     PGN = chess.pgn.Game()
     PGN.headers["Event"] = "Neural Network Comparison Test"
     PGN.headers["Site"] = "Cozy Computer Lounge"
@@ -33,7 +33,6 @@ def NetworkCompetitionWhite(bestNet, playouts, round="1"):
 
     sim = ChessEnvironment()
     while sim.result == 2:
-        print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.neuralNet))
         noiseVal = 0.0 / (10 * (sim.plies // 2 + 1))
         if sim.plies % 2 == 0:
             if playouts > 0:
@@ -76,7 +75,19 @@ def NetworkCompetitionWhite(bestNet, playouts, round="1"):
             move = bestNet.childrenMoveNames[directory][index]
             if chess.Move.from_uci(move) not in sim.board.legal_moves:
                 move = ActionToArray.legalMovesForState(sim.arrayBoard, sim.board)[0]
+
+
+            # PRINT WIN PROBABILITY W/ MCTS?
+            print("-----")
             print(move)
+            print("Win Probability: {:.4f} %".format(100*ValueEvaluation.positionEval(sim, bestNet.neuralNet)))
+            if playouts > 0 and bestNet.childrenStateSeen[directory][index] > 0:
+                mctsWinRate = 100*bestNet.childrenStateWin[directory][index]/bestNet.childrenStateSeen[directory][index]
+                print("MCTS Win Probability: {:.4f} %".format(mctsWinRate))
+                totalWinRate = (100*ValueEvaluation.positionEval(sim, bestNet.neuralNet)+mctsWinRate)/2
+                print("Total Win Probability: {:.4f} %".format(totalWinRate))
+            print("-----")
+
             sim.makeMove(move)
             sim.gameResult()
         elif sim.plies % 2 == 1:
@@ -100,6 +111,11 @@ def NetworkCompetitionWhite(bestNet, playouts, round="1"):
             node = node.add_variation(chess.Move.from_uci(move))
 
         print(sim.board)
+        print("WHITE POCKET")
+        print(sim.whiteCaptivePieces)
+        print("BLACK POCKET")
+        print(sim.blackCaptivePieces)
+        
 
     if sim.result == 1:
         PGN.headers["Result"] = "1-0"
@@ -111,7 +127,6 @@ def NetworkCompetitionWhite(bestNet, playouts, round="1"):
     print(PGN)
 
 def NetworkCompetitionBlack(bestNet, playouts, round="1"):
-    score = 0
     PGN = chess.pgn.Game()
     PGN.headers["Event"] = "Neural Network Comparison Test"
     PGN.headers["Site"] = "Cozy Computer Lounge"
@@ -123,7 +138,6 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
 
     sim = ChessEnvironment()
     while sim.result == 2:
-        print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.neuralNet))
         noiseVal = 0.0 / (10*(sim.plies//2 + 1))
         if sim.plies % 2 == 1:
             if playouts > 0:
@@ -166,7 +180,19 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
             move = bestNet.childrenMoveNames[directory][index]
             if chess.Move.from_uci(move) not in sim.board.legal_moves:
                 move = ActionToArray.legalMovesForState(sim.arrayBoard, sim.board)[0]
+
+
+            # PRINT WIN PROBABILITY W/ MCTS?
+            print("-----")
             print(move)
+            print("Win Probability: {:.4f} %".format(100*ValueEvaluation.positionEval(sim, bestNet.neuralNet)))
+            if playouts > 0 and bestNet.childrenStateSeen[directory][index]>0:
+                mctsWinRate = 100*bestNet.childrenStateWin[directory][index]/bestNet.childrenStateSeen[directory][index]
+                print("MCTS Win Probability: {:.4f} %".format(mctsWinRate))
+                totalWinRate = (100*ValueEvaluation.positionEval(sim, bestNet.neuralNet)+mctsWinRate)/2
+                print("Total Win Probability: {:.4f} %".format(totalWinRate))
+            print("-----")
+
             sim.makeMove(move)
             sim.gameResult()
         elif sim.plies % 2 == 0:
@@ -190,6 +216,11 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
             node = node.add_variation(chess.Move.from_uci(move))
 
         print(sim.board)
+        print("WHITE POCKET")
+        print(sim.whiteCaptivePieces)
+        print("BLACK POCKET")
+        print(sim.blackCaptivePieces)
+        
 
     if sim.result == 1:
         PGN.headers["Result"] = "1-0"
@@ -201,5 +232,5 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
     print(PGN)
 
 # PLAY!
-network = MCTS('New Networks/smallnet.pt', 3)
-NetworkCompetitionWhite(network, 0)
+network = MCTS('New Networks/smallnet.pt', 2)
+NetworkCompetitionWhite(network, 80)
