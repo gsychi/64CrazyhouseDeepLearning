@@ -6,6 +6,7 @@ import torch.utils.data as data_utils
 from ChessConvNet import ChessConvNet
 import ActionToArray
 import chess.pgn
+import copy
 
 class ChessEnvironment():
 
@@ -48,10 +49,23 @@ class ChessEnvironment():
         for i in range(8):
             for j in range(8):
                 if self.board.piece_at(8*i+j) != None:
-                    self.arrayBoard[i][j] = self.board.piece_at(8*i+j).symbol()
+                    self.arrayBoard[7-i][j] = self.board.piece_at(8*i+j).symbol()
                 else:
-                    self.arrayBoard[i][j] = ' '
+                    self.arrayBoard[7-i][j] = ' '
+
         # update pockets
+        whitePocket = list(str(self.board.pockets[0]))
+        blackPocket = list(str(self.board.pockets[1]))
+        for i in range(len(whitePocket)):
+            index = "pnbrq".find(whitePocket[i])
+            self.whiteCaptivePieces[index] += 1
+        for j in range(len(blackPocket)):
+            index = "pnbrq".find(blackPocket[j])
+            self.blackCaptivePieces[index] += 1
+
+
+
+
 
 
     def boardToFEN(self):
@@ -279,7 +293,8 @@ class ChessEnvironment():
 
     def printBoard(self):
         print(self.board)
-        print(self.arrayBoard)
+        for i in range(8):
+            print(self.arrayBoard[i])
         print(self.whiteCaptivePieces)
         print(self.blackCaptivePieces)
 

@@ -29,7 +29,9 @@ playouts = 0
 while True:
     command = input("")
     if command == "uci":
-        print("id name 64\nid author Gordon Chi\nuciok")
+        print("id name 64\nid author Gordon Chi")
+        print("option name UCI_Variant type combo default crazyhouse var crazyhouse")
+        print("uciok")
     elif command.startswith("setoption"):
         settings = command[10:]
         if settings.__contains__("playouts"):
@@ -48,17 +50,29 @@ while True:
     elif command.startswith("position"):
         command = command[9:]
         if command.__contains__("startpos"):
+            command = command[9:]
             board = ChessEnvironment()
+            if command.__contains__("moves"):
+                # these are all the moves
+                moves = command[6:].split(" ")
+                for i in range(len(moves)):
+                    board.makeMove(moves[i])
+                #print(board.board)
+
         if command.__contains__("fen"):
             command = command[4:]
-            #board.board = chess.Board(command)
-            #board.arrayBoardUpdate()
-            #board.updateNumpyBoards()
+            board = ChessEnvironment()
+            board.board.set_fen(command)
+            board.arrayBoardUpdate()
+            board.updateNumpyBoards()
 
     elif command.startswith("position"):
-        if command.__contains__("startpos "):
+        print("YAY")
+        if command.__contains__("startpos"):
+            print("ASDHJKASHDJKH")
             command = command[9:]
-            # add fen
+            print("SDFJ")
+            print(command)
         if command.__contains__("moves"):
             command = command[6:]
             while len(command)>0:
@@ -70,7 +84,7 @@ while True:
 
     # make a move
     elif command.startswith("go"):
-        noiseVal = 0.0 / (10 * (board.plies // 2 + 1))
+        noiseVal = 3.0 / (10 * (board.plies // 2 + 1))
         if playouts > 0:
                 model.competitivePlayoutsFromPosition(playouts, board)
         else:
@@ -114,6 +128,7 @@ while True:
         print("info depth 1 score cp", str(int(1000*round(ValueEvaluation.objectivePositionEval(board, model.neuralNet), 3))), "time 1 nodes 1 nps 1 pv", move)
 
         board.makeMove(move)
+        print(board.board)
         board.gameResult()
 
 

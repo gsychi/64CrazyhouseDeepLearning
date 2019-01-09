@@ -300,6 +300,6 @@ def bestNetworkTest(bestNet, testingNet, games, playouts, clearAfterEachRound=Fa
 
 testing = True
 if testing:
-    best = MCTS("New Networks/smallnet.pt", 8)
-    newNet = MCTS("New Networks/smallnet.pt", 8)
+    best = MCTS("New Networks/smallnet.pt", 4)
+    newNet = MCTS("New Networks/smallnet.pt", 4)
     print(bestNetworkTest(best, newNet, 10, 0))

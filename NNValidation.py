@@ -20,8 +20,7 @@ def validateNetwork(loadDirectory):
     actions = torch.from_numpy(actions)
     data = PolicyDataset(inputs, actions)
 
-    testLoader = torch.utils.data.DataLoader(dataset=data, batch_size=128, shuffle=False)
-    # to create a prediction, create a new dataset with input of the states, and output should just be np.zeros()
+    testLoader = torch.utils.data.DataLoader(dataset=data, batch_size=16, shuffle=False)
 
     try:
         checkpoint = torch.load(loadDirectory)
