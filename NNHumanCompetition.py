@@ -232,5 +232,5 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
     print(PGN)
 
 # PLAY!
-network = MCTS('New Networks/smallnet.pt', 6)
-NetworkCompetitionBlack(network, 0)
+network = MCTS('New Networks/smallnet.pt', 4)
+NetworkCompetitionWhite(network, 10)

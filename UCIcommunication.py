@@ -23,7 +23,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 print(dir_path)
 
 board = ChessEnvironment()
-model = MCTS('/Users/gordon/Documents/CrazyhouseRL/New Networks/smallnet.pt', 3)
+model = MCTS('/Users/gordon/Documents/CrazyhouseRL/New Networks/smallnet.pt', 2)
 playouts = 0
 
 while True:
@@ -60,27 +60,24 @@ while True:
                 #print(board.board)
 
         if command.__contains__("fen"):
-            command = command[4:]
+            moveWordIndex = command.find("moves")
+            notFromStarting = False
+            if moveWordIndex == -1:
+                command = command[4:]
+            else:
+                notFromStarting = True
+                moves = command[moveWordIndex+6:].split(" ")
+                command = command[4:moveWordIndex]
+            print(command)
+            if notFromStarting:
+                print(moves)
             board = ChessEnvironment()
             board.board.set_fen(command)
+            if notFromStarting:
+                for i in range(len(moves)):
+                        board.makeMove(moves[i])
             board.arrayBoardUpdate()
             board.updateNumpyBoards()
-
-    elif command.startswith("position"):
-        print("YAY")
-        if command.__contains__("startpos"):
-            print("ASDHJKASHDJKH")
-            command = command[9:]
-            print("SDFJ")
-            print(command)
-        if command.__contains__("moves"):
-            command = command[6:]
-            while len(command)>0:
-                # check where next ' ' is.
-                indice = command.index(' ')
-                move = command[0:indice]
-                board.makeMove(move)
-                command = command[indice+1:]
 
     # make a move
     elif command.startswith("go"):

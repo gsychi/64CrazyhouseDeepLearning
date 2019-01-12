@@ -18,16 +18,24 @@ import ActionToArray
 import pathlib
 import h5py
 
-pgnGames = list(pathlib.Path('lichessdatabase').glob('*.pgn'))
+pgnGames = list(pathlib.Path('stockfishdatabase').glob('*.pgn'))
 listOfMoves = []
 listOfResults = []
-for i in range(0,1): #len(pgnGames)):
-    pgn = open(pgnGames[i])
-    for k in range(190000):  # 190,000 assures all games are looked at.
+for g in range(0, 4): #len(pgnGames)):
+    pgn = open(pgnGames[g])
+    listOfMoves = []
+    for k in range(40000):  # 190,000 assures all games are looked at.
         try:
             game = chess.pgn.read_game(pgn)
-            whiteElo = int(game.headers["WhiteElo"])
-            blackElo = int(game.headers["BlackElo"])
+
+            # used for lichess database
+            #whiteElo = int(game.headers["WhiteElo"])
+            #blackElo = int(game.headers["BlackElo"])
+
+            # used for stockfish database
+            whiteElo = 4000
+            blackElo = 4000
+
             result = str(game.headers["Result"])
             if result == "1-0":
                 result = 1
@@ -48,77 +56,73 @@ for i in range(0,1): #len(pgnGames)):
                     singleGame.append(move.uci())
                 listOfMoves.append(singleGame)
                 listOfResults.append(result)
-                print(pgnGames[i])
+                print(pgnGames[g])
                 # print(listOfResults)
         except:
             print("", end="")
 
-f = open("Training Data/201805games2000.txt", "w+")
-for i in range(len(listOfMoves)):
-    print(listOfMoves[i], ",")
-    f.write(str(listOfMoves[i])+",\n")
-f.close()
+    inList = []
+    outList = []
+    actionList = []
 
+    for j in range(len(listOfMoves)):
+        board = ChessEnvironment()
+        for i in range(len(listOfMoves[j])):
+            state = board.boardToState()
+            value = listOfResults[j]
+            action = ActionToArray.moveArray(listOfMoves[j][i], board.arrayBoard)
+            for k in range(320, 384):
+                action[0][k] = 0
+            if board.board.legal_moves.count() != len(ActionToArray.legalMovesForState(board.arrayBoard, board.board)):
+                print("ERROR!")
 
-inList = []
-outList = []
-actionList = []
+            # make move
+            board.makeMove(listOfMoves[j][i])
 
-for j in range(len(listOfMoves)):
-    board = ChessEnvironment()
-    for i in range(len(listOfMoves[j])):
-        state = board.boardToState()
-        value = listOfResults[j]
-        action = ActionToArray.moveArray(listOfMoves[j][i], board.arrayBoard)
-        for k in range(320, 384):
-            action[0][k] = 0
-        if board.board.legal_moves.count() != len(ActionToArray.legalMovesForState(board.arrayBoard, board.board)):
-            print("ERROR!")
+            # add to database
+            inList.append(state)
+            outList.append(value)
+            actionList.append(np.argmax(action))
 
-        # make move
-        board.makeMove(listOfMoves[j][i])
+        print(board.board)
+        board.gameResult()
+        print(board.gameStatus)
+        print(len(inList))
+        print(len(outList))
+        print(len(actionList))
+        print(str(int(j + 1)), "out of ", len(listOfMoves), "parsed.")
 
-        # add to database
-        inList.append(state)
-        outList.append(value)
-        actionList.append(np.argmax(action))
+    # all games are parsed, now convert list into array
+    inputs = np.zeros((len(inList), 15, 8, 8))
+    valueOutputs = np.zeros(len(outList))
+    policyOutputs = np.zeros(len(actionList))
 
-    print(board.board)
-    board.gameResult()
-    print(board.gameStatus)
-    print(len(inList))
-    print(len(outList))
-    print(len(actionList))
-    print(str(int(j + 1)), "out of ", len(listOfMoves), "parsed.")
+    i = 0
+    while len(outList) > 0:
+        inputs[i] = inList[len(inList)-1][0]
+        valueOutputs[i] = outList[len(outList)-1]
+        policyOutputs[i] = actionList[len(actionList)-1]
+        inList.pop()
+        outList.pop()
+        actionList.pop()
+        i += 1
 
-# all games are parsed, now convert list into array
-inputs = np.zeros((len(inList), 15, 8, 8))
-valueOutputs = np.zeros(len(outList))
-policyOutputs = np.zeros(len(actionList))
+    print(valueOutputs)
+    print(policyOutputs)
 
-i = 0
-while len(outList) > 0:
-    inputs[i] = inList[len(inList)-1][0]
-    valueOutputs[i] = outList[len(outList)-1]
-    policyOutputs[i] = actionList[len(actionList)-1]
-    inList.pop()
-    outList.pop()
-    actionList.pop()
-    i += 1
+    print(inputs.shape)
+    print(valueOutputs.shape)
+    print(policyOutputs.shape)
 
-print(valueOutputs)
-print(policyOutputs)
+    saveName = 'Training Data/stockfishDataset' + str(g)+'.h5'
 
-print(inputs.shape)
-print(valueOutputs.shape)
-print(policyOutputs.shape)
+    with h5py.File(saveName, 'w') as hf:
+        hf.create_dataset("Inputs", data=inputs, compression='gzip', compression_opts=9)
+        hf.create_dataset("Policy Outputs", data=policyOutputs, compression='gzip', compression_opts=9)
+        hf.create_dataset("Value Outputs", data=valueOutputs, compression='gzip', compression_opts=9)
 
-
-with h5py.File('Training Data/17-12Inputs.h5', 'w') as hf:
-    hf.create_dataset("Inputs", data=inputs, compression='gzip', compression_opts=9)
-with h5py.File('Training Data/17-12PolicyOutputs.h5', 'w') as hf:
-    hf.create_dataset("Outputs", data=policyOutputs, compression='gzip', compression_opts=9)
-with h5py.File('Training Data/17-12ValueOutputs.h5', 'w') as hf:
-    hf.create_dataset("Outputs", data=valueOutputs, compression='gzip', compression_opts=9)
+    inputs = []
+    valueOutputs = []
+    policyOutputs = []
 
 
