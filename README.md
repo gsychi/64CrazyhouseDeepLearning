@@ -44,10 +44,6 @@ Start off by downloading the repository through terminal...
 
 You can learn more about the training checkpoints, parameters, and others on the [wiki](https://github.com/FTdiscovery/64CrazyhouseDeepLearning/wiki)!
 
-## Future Goals
-
-I plan on writing the engine for UCI Compatibility. The current barebones are written on UCICommunication.py, and will be worked upon once the policy and value networks are trained.
-
 ## Additional Code Information
 
 ### Input Representation
@@ -70,6 +66,7 @@ In total, the action is represented by an array of (5+1+56+8) x (8×8) + 3×8 = 
 
 ## Sample Games
 
+The engine is now UCI Compatible and online on https://lichess.org/@/SixtyFourEngine! It is strongest on faster time controls, since it is playing only on intuition.
 
 ### Self Play Games
 
@@ -81,13 +78,6 @@ GAME 2: 1. e4 Nc6 2. Nc3 Nf6 3. Nf3 d5 4. exd5 Nxd5 5. Bc4 e6 6. O-O Nb6 7. Bb5 
 
 
 GAME 3: 1. e4 Nc6 2. Nc3 Nf6 3. Nf3 d5 4. exd5 Nxd5 5. d4 e6 6. Bb5 Bb4 7. Bd2 Bxc3 8. bxc3 N@e4 9. @b2 Nxd2 10. Qxd2 B@h5 11. O-O-O O-O 12. Kb1 @g4 13. Ng5 Bg6 14. Nxf7 Rxf7 15. Bxc6 bxc6 16. N@h6+ gxh6 17. Qxh6 Rf6 18. N@e7+ Kh8 19. B@g7# 1-0
-
-### Wins against Humans
-
-GAME 4: 1. e4 Nf6 2. e5 d5 3. d4 Ne4 4. f3 Bf5 5. fxe4 dxe4 6. Bc4 e6 7. Nc3 Qh4+ { White resigns. } 0-1
-
-GAME 5: 1. e4 e5 2. Nf3 Nc6 3. Bc4 d6 4. Nc3 Be7 5. d4 exd4 6. Nxd4 Nxd4 7. Qxd4 P@h3 8. Bxf7+ Kxf7 9. Qd5+ B@e6 10. Qh5+ g6 11. Qf3+ Nf6 12. N@g5+ Kg7 13. P@h6+ Kxh6 14. Nxe6+ g5 15. Bxg5+ Kg6 16. Qf5+ Kf7 17. Nxd8+ Bxd8 18. B@d5+ P@e6 19. Bxe6+ Bxe6 20. Qxe6+ Kxe6 21. P@f5+ Kf7 22. P@e6+ { Black resigns. } 1-0
-
 
 
 ## Contributors
