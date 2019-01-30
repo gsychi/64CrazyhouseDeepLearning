@@ -50,19 +50,7 @@ You can learn more about the training checkpoints, parameters, and others on the
 The input for the neural network is a basic (raw) representation of the board. It is an array of 960 values (15 planes of 8×8 boards), which determines the player turn, position of each piece type, captive pieces held by a player, and whether the piece is a promotion. The last part is relevant since promoted pieces can only be placed down as pawns after being captured.
 
 ### Output Representation
-The output for the neural network is a 1D representation of multiple move planes (8×8 boards). Here they are as followed:
-
-The first five planes represent the possible squares in which a given piece should be placed (pawn, knight, bishop, rook, queen).
-
-The next plane represents the piece that should be picked up from the board.
-
-The next 56 planes represent the possible queen moves. There are 8 planes for each direction (N, NE, E, SE, S, SW, W, NW), and 7 planes for how far a piece can move (1-7). This is used to map all moves made by a pawn, bishop, rook, queen, and king.
-
-The next 8 planes represent the possible knight moves (2F1L, 2F1R, 1F2L, 1F2R, 1B2L, 1B2R, 2B1L, 2B1R). This is used to map moves made by a knight.
-
-Last, we have 3 planes of 8×1 boards, which determine the column in which a pawn is being underpromoted. Each plane denotes a different promotion (rook, bishop, knight).
-
-In total, the action is represented by an array of (5+1+56+8) x (8×8) + 3×8 = 4504 values.
+The output for the neural network is a 1D representation of multiple move planes (8×8 boards). The current action is represented by an array of (5+1+56+8) x (8×8) + 3×8 = 4504 values but is currently being edited and tested to work with a vector of 2864 values (deleting 1640 useless planes). This can still be theoretically edited.
 
 ## Sample Games
 
