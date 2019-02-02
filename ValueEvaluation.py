@@ -1,10 +1,12 @@
 import numpy as np
 from ChessEnvironment import ChessEnvironment
 import torch
-from MyDataset import MyDataset
 import copy
 import ActionToArray
 from DoubleHeadDataset import DoubleHeadDataset
+import ChessResNet
+import time
+import threading
 
 def moveValueEvaluation(move, board, network):
 
@@ -56,10 +58,73 @@ def moveValueEvaluation(move, board, network):
     return output
 
 def moveValueEvaluations(legalMoves, board, network):
-    evaluations = np.zeros(len(legalMoves))
-    for i in range(len(evaluations)):
-        evaluations[i] = moveValueEvaluation(legalMoves[i], board, network)
-    return evaluations
+    evaluation = np.zeros(len(legalMoves))
+
+    class myThread(threading.Thread):
+        def __init__(self, move, board, network, index):
+            threading.Thread.__init__(self)
+            self.move = move
+            self.board = board
+            self.network = network
+            self.index = index
+
+        def run(self):
+
+            # import the network
+            neuralNet = network
+
+            tempBoard = copy.deepcopy(self.board)
+
+            # import the game board
+            evalBoard = ChessEnvironment()
+            evalBoard.arrayBoard = tempBoard.arrayBoard
+            evalBoard.board = tempBoard.board
+            evalBoard.plies = tempBoard.plies
+            evalBoard.whiteCaptivePieces = tempBoard.whiteCaptivePieces
+            evalBoard.blackCaptivePieces = tempBoard.blackCaptivePieces
+            evalBoard.actuallyAPawn = tempBoard.actuallyAPawn
+            evalBoard.updateNumpyBoards()
+
+            # make temporary move
+            evalBoard.makeMove(self.move)
+
+            state = evalBoard.boardToState()
+
+            nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
+            testSet = DoubleHeadDataset(state, nullAction, nullAction)
+            generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
+            with torch.no_grad():
+                for images, labels1, labels2 in generatePredic:
+                    neuralNet.eval()
+                    output = (neuralNet(images)[1].numpy())[0][0]
+
+            # so far, output gives a winning probability from -1 to 1, 1 for white, -1 for black. We want to scale this to
+            # a value between 0 and 1.
+            output = (output / 2) + 0.5
+
+            # now we have an evaluation from 0 to 1. Now we have to scale this to a probability
+            # for either black or white depending on who moves next.
+            turn = evalBoard.plies % 2
+
+            # if plies is divisible by 2, then black has just moved, which means that
+            # our evaluation should be for black. If plies is not, then white has just moved,
+            # which means that our evaluation should be for white.
+            if turn == 0:
+                output = 1 - output
+
+            # now, let's return our evaluation
+            evaluation[self.index] = output
+
+    threads = []
+    for i in range(len(legalMoves)):
+        t = myThread(legalMoves[i], board, network, i)
+        threads.append(t)
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    return evaluation
 
 def objectivePositionEval(board, network):
 
@@ -150,15 +215,16 @@ def positionEval(board, network):
 testing = False
 if testing:
     hi = ChessEnvironment()
-
-    hi.printBoard()
     moves = ActionToArray.legalMovesForState(hi.arrayBoard, hi.board)
     print(moves)
-    network = torch.load("New Networks/1712-finalnet.pt")
+    checkpoint = torch.load('New Networks/smallnet.pt')
+    network = ChessResNet.ResNetDoubleHead().double()
+    network.load_state_dict(checkpoint['model_state_dict'])
+    start = time.time()
     evaluations = moveValueEvaluations(moves, hi, network)
     print(evaluations)
-    eval = positionEval(hi, network)
-    print(eval)
+    end=time.time()
+    print(end-start)
 
 
 

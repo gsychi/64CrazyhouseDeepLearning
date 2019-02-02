@@ -12,19 +12,18 @@ import numpy as np
 import torch.nn as nn
 import torch.utils.data as data_utils
 from ChessEnvironment import ChessEnvironment
-from ChessConvNet import ChessConvNet
-from MyDataset import MyDataset
 import ActionToArray
 import pathlib
 import h5py
+import json
 
 pgnGames = list(pathlib.Path('stockfishdatabase').glob('*.pgn'))
 listOfMoves = []
 listOfResults = []
-for g in range(0, 4): #len(pgnGames)):
+for g in range(1): #len(pgnGames)):
     pgn = open(pgnGames[g])
     listOfMoves = []
-    for k in range(40000):  # 190,000 assures all games are looked at.
+    for k in range(100):  # 190,000 assures all games are looked at.
         try:
             game = chess.pgn.read_game(pgn)
 
@@ -68,11 +67,10 @@ for g in range(0, 4): #len(pgnGames)):
     for j in range(len(listOfMoves)):
         board = ChessEnvironment()
         for i in range(len(listOfMoves[j])):
-            state = board.boardToState()
+            #state = ActionToArray.boardToInt(board.boardToState())
+            state = ActionToArray.boardToBinaryArray(board.boardToState())
             value = listOfResults[j]
             action = ActionToArray.moveArray(listOfMoves[j][i], board.arrayBoard)
-            for k in range(320, 384):
-                action[0][k] = 0
             if board.board.legal_moves.count() != len(ActionToArray.legalMovesForState(board.arrayBoard, board.board)):
                 print("ERROR!")
 
@@ -92,21 +90,22 @@ for g in range(0, 4): #len(pgnGames)):
         print(len(actionList))
         print(str(int(j + 1)), "out of ", len(listOfMoves), "parsed.")
 
-    # all games are parsed, now convert list into array
-    inputs = np.zeros((len(inList), 15, 8, 8))
+    # all games are parsed, now convert list into array for outputs
+    inputs = np.zeros((len(inList), 15))
     valueOutputs = np.zeros(len(outList))
     policyOutputs = np.zeros(len(actionList))
 
     i = 0
-    while len(outList) > 0:
-        inputs[i] = inList[len(inList)-1][0]
+    while len(inList) > 0:
+        inputs[i] = inList[len(inList)-1]
         valueOutputs[i] = outList[len(outList)-1]
         policyOutputs[i] = actionList[len(actionList)-1]
-        inList.pop()
         outList.pop()
         actionList.pop()
+        inList.pop()
         i += 1
 
+    print(inputs)
     print(valueOutputs)
     print(policyOutputs)
 
@@ -114,15 +113,22 @@ for g in range(0, 4): #len(pgnGames)):
     print(valueOutputs.shape)
     print(policyOutputs.shape)
 
-    saveName = 'Training Data/stockfishDataset' + str(g)+'.h5'
+
+    # save outputs!
+    saveName = 'Training Data/[experiment]StockfishOutputs.h5'
 
     with h5py.File(saveName, 'w') as hf:
-        hf.create_dataset("Inputs", data=inputs, compression='gzip', compression_opts=9)
-        hf.create_dataset("Policy Outputs", data=policyOutputs, compression='gzip', compression_opts=9)
-        hf.create_dataset("Value Outputs", data=valueOutputs, compression='gzip', compression_opts=9)
+        hf.create_dataset("Policy Outputs", data=policyOutputs, compression='gzip', compression_opts=5)
+        hf.create_dataset("Value Outputs", data=valueOutputs, compression='gzip', compression_opts=5)
+
+
+    saveName = 'Training Data/[experiment]StockfishInputs[binaryConverted].h5'
+
+    with h5py.File(saveName, 'w') as hf:
+        #dtype = h5py.special_dtype(vlen=str)
+        hf.create_dataset("Inputs", data=inputs, compression='gzip', compression_opts=9) #dtype=dtype,
 
     inputs = []
     valueOutputs = []
     policyOutputs = []
-
 

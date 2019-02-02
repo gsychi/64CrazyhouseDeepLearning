@@ -4,7 +4,9 @@ This is quite an important function, as it maps each action that the computer ch
 import numpy as np
 import chess.variant
 import copy
+import time
 from scipy.interpolate import interp1d
+from ChessEnvironment import ChessEnvironment
 
 def legalMovesFromSquare(directory2, board, pythonChessBoard):
 
@@ -190,27 +192,29 @@ def moveablePiecesPenalty(board, pythonChessBoard):
                 moveablePieces[i][j] = -100000
     return moveablePieces
 
-# move is a string, turns into array. pick-up square should have value 2 instead of 1.
-def moveArray(move, board, notArrayToString=True):
+# move is a string, turns into array.
+def moveArray(move, board):
+    #start = time.time()
     placedPlane = np.zeros((5, 8, 8))  # pawn, knight, bishop, rook, queen.
-    pickUpPlane = np.zeros((8, 8))
     movePlane = np.zeros((8, 7, 8, 8))  # direction (N, NE, E, SE, S, SW, W, NW), squares.
     knightMovePlane = np.zeros((8, 8, 8))  # direction ([1, 2],[2, 1],[2, -1],[1, -2],[-1, -2],[-2, -1],[-2, 1],[-1, 2])
-    underPromotion = np.zeros((3, 8))  # this can be a 8x8 plane, but for now we will not. Knight, Bishop, Rook
+    underPromotion = np.zeros((9, 8))  # this can be a 8x8 plane, but for now we will not. Knight, Bishop, Rook
 
     if "PRNBQ".find(move[0]) == -1:
         #print("MOVE TO ARRAY: NORMAL MOVE")
         rowNames = "abcdefgh"
-        if notArrayToString:
-            pickUpPlane[8 - int(move[1])][int(rowNames.find(move[0]))] = 1
-
         # identify how far the piece has moved, and how far it will be moving.
         if "PBRQK".find(board[8 - int(move[1])][int(rowNames.find(move[0]))].upper()) != -1:
             # print("its a", board[8 - int(move[1])][int(rowNames.find(move[0]))])
             if len(move) == 5:
                 directory = "nbr".find(move[4].lower())  # .lower() just in case
                 if directory != -1:
-                    underPromotion[directory][int(rowNames.find(move[2]))] = 1
+                    if move[0] == move[2]:
+                        underPromotion[directory][int(rowNames.find(move[2]))] = 1
+                    elif move[0] > move[2]:
+                        underPromotion[3+directory][int(rowNames.find(move[2]))] = 1
+                    elif move[2] > move[0]:
+                        underPromotion[6+directory][int(rowNames.find(move[2]))] = 1
                 else:
                     if int(move[3]) == 8:  # white queen promotion
                         columnMovement = int(rowNames.find(move[2])) - int(
@@ -264,8 +268,8 @@ def moveArray(move, board, notArrayToString=True):
             print("not legal move")  # don't do anything
         else:
             # print("its a knight")
-            rowMovement = int(move[3]) - int(move[1])  # positive = north, negative = south [NORTH = 0, SOUTH = 4]
-            columnMovement = int(rowNames.find(move[2])) - int(
+            columnMovement = int(move[3]) - int(move[1])  # positive = north, negative = south [NORTH = 0, SOUTH = 4]
+            rowMovement = int(rowNames.find(move[2])) - int(
                 rowNames.find(move[0]))  # positive = east, negative = west [EAST = +1, WEST = -1]
             directory = 999
             if rowMovement == 1:
@@ -294,15 +298,231 @@ def moveArray(move, board, notArrayToString=True):
         rowNames = "abcdefgh"
         placedPlane["PNBRQ".find(move[0])][8 - int(move[3])][int(rowNames.find(move[2]))] = 1
 
+    """
+    REMOVE REDUNDANT SQUARES...
+    STILL IN EDITING.
+    """
     # return the result.
     placedPlane = placedPlane.flatten()
-    pickUpPlane = pickUpPlane.flatten()
+    placedPlane = np.concatenate((placedPlane[8:56], placedPlane[64:320]), axis=None)
     movePlane = movePlane.flatten()
+    # keep NW corner
+    movePlane = movePlane[0:(64*7*7)+64*6+1]
+    movePlane = np.concatenate((movePlane[:((64*7*7)+64*5)], movePlane[(64*7*7)+(64*5)+0], movePlane[(64*7*7)+(64*5)+1],
+                                movePlane[(64*7*7)+(64*5)+8], movePlane[(64*7*7)+(64*5)+9],
+                                movePlane[((64*7*7)+64*6):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*7)+64*4)], movePlane[(64*7*7)+(64*4)+0],
+                                movePlane[(64*7*7)+(64*4)+1], movePlane[(64*7*7)+(64*4)+2],
+                                movePlane[(64*7*7)+(64*4)+8], movePlane[(64*7*7)+(64*4)+9],
+                                movePlane[(64*7*7)+(64*4)+10], movePlane[(64*7*7)+(64*4)+16],
+                                movePlane[(64*7*7)+(64*4)+17], movePlane[(64*7*7)+(64*4)+18],
+                                movePlane[((64*7*7)+64*5):]), axis=None)
+
+    # remove unnecessary parts of west moves
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*6)+57], movePlane[((64*7*6)+64*6)+64:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*6)+49], movePlane[((64*7*6)+64*6)+56:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*6)+41], movePlane[((64*7*6)+64*6)+48:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*6)+33], movePlane[((64*7*6)+64*6)+40:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*6)+25], movePlane[((64*7*6)+64*6)+32:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*6)+17], movePlane[((64*7*6)+64*6)+24:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*6)+9], movePlane[((64*7*6)+64*6)+16:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*6)+1], movePlane[((64*7*6)+64*6)+8:]), axis=None)
+
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*5)+58], movePlane[((64*7*6)+64*5)+64:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*5)+50], movePlane[((64*7*6)+64*5)+56:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*5)+42], movePlane[((64*7*6)+64*5)+48:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*5)+34], movePlane[((64*7*6)+64*5)+40:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*5)+26], movePlane[((64*7*6)+64*5)+32:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*5)+18], movePlane[((64*7*6)+64*5)+24:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*5)+10], movePlane[((64*7*6)+64*5)+16:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*5)+2], movePlane[((64*7*6)+64*5)+8:]), axis=None)
+
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*4)+59], movePlane[((64*7*6)+64*4)+64:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*4)+51], movePlane[((64*7*6)+64*4)+56:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*4)+43], movePlane[((64*7*6)+64*4)+48:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*4)+35], movePlane[((64*7*6)+64*4)+40:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*4)+27], movePlane[((64*7*6)+64*4)+32:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*4)+19], movePlane[((64*7*6)+64*4)+24:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*4)+11], movePlane[((64*7*6)+64*4)+16:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*4)+3], movePlane[((64*7*6)+64*4)+8:]), axis=None)
+
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*3)+60], movePlane[((64*7*6)+64*3)+64:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*3)+52], movePlane[((64*7*6)+64*3)+56:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*3)+44], movePlane[((64*7*6)+64*3)+48:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*3)+36], movePlane[((64*7*6)+64*3)+40:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*3)+28], movePlane[((64*7*6)+64*3)+32:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*3)+20], movePlane[((64*7*6)+64*3)+24:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*3)+12], movePlane[((64*7*6)+64*3)+16:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*3)+4], movePlane[((64*7*6)+64*3)+8:]), axis=None)
+
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*2)+61], movePlane[((64*7*6)+64*2)+64:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*2)+53], movePlane[((64*7*6)+64*2)+56:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*2)+45], movePlane[((64*7*6)+64*2)+48:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*2)+37], movePlane[((64*7*6)+64*2)+40:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*2)+29], movePlane[((64*7*6)+64*2)+32:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*2)+21], movePlane[((64*7*6)+64*2)+24:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*2)+13], movePlane[((64*7*6)+64*2)+16:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*2)+5], movePlane[((64*7*6)+64*2)+8:]), axis=None)
+
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*1)+62], movePlane[((64*7*6)+64*1)+64:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*1)+54], movePlane[((64*7*6)+64*1)+56:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*1)+46], movePlane[((64*7*6)+64*1)+48:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*1)+38], movePlane[((64*7*6)+64*1)+40:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*1)+30], movePlane[((64*7*6)+64*1)+32:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*1)+22], movePlane[((64*7*6)+64*1)+24:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*1)+14], movePlane[((64*7*6)+64*1)+16:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*1)+6], movePlane[((64*7*6)+64*1)+8:]), axis=None)
+
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*0)+63], movePlane[((64*7*6)+64*0)+64:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*0)+55], movePlane[((64*7*6)+64*0)+56:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*0)+47], movePlane[((64*7*6)+64*0)+48:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*0)+39], movePlane[((64*7*6)+64*0)+40:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*0)+31], movePlane[((64*7*6)+64*0)+32:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*0)+23], movePlane[((64*7*6)+64*0)+24:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*0)+15], movePlane[((64*7*6)+64*0)+16:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*6)+64*0)+7], movePlane[((64*7*6)+64*0)+8:]), axis=None)
+
+
+    # keep SW corner
+    movePlane = np.concatenate((movePlane[:((64*7*5)+64*6)], movePlane[(64*7*5)+64*6+56], movePlane[64*7*6:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*5)+64*5)], movePlane[(64*7*5)+(64*5)+48], movePlane[(64*7*5)+(64*5)+49],
+                                movePlane[(64*7*5)+(64*5)+56], movePlane[(64*7*5)+(64*5)+57],
+                                movePlane[((64*7*5)+64*6):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*5)+64*4)], movePlane[(64*7*5)+(64*4)+40],
+                                movePlane[(64*7*5)+(64*4)+41], movePlane[(64*7*5)+(64*4)+42],
+                                movePlane[(64*7*5)+(64*4)+48], movePlane[(64*7*5)+(64*4)+49],
+                                movePlane[(64*7*5)+(64*4)+50], movePlane[(64*7*5)+(64*4)+56],
+                                movePlane[(64*7*5)+(64*4)+57], movePlane[(64*7*5)+(64*4)+58],
+                                movePlane[((64*7*5)+64*5):]), axis=None)
+
+    # remove unnecessary parts of south moves
+    movePlane = np.concatenate((movePlane[:((64*7*4)+64*6)], movePlane[((64*7*4)+64*6)+56:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*4)+64*5)], movePlane[((64*7*4)+64*5)+48:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*4)+64*4)], movePlane[((64*7*4)+64*4)+40:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*4)+64*3)], movePlane[((64*7*4)+64*3)+32:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*4)+64*2)], movePlane[((64*7*4)+64*2)+24:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*4)+64*1)], movePlane[((64*7*4)+64*1)+16:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*4)+64*0)], movePlane[((64*7*4)+64*0)+8:]), axis=None)
+
+    # keep SE corner
+    movePlane = np.concatenate((movePlane[:((64*7*3)+64*6)], movePlane[(64*7*4)-1:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*3)+64*5)], movePlane[(64*7*3)+(64*5)+54], movePlane[(64*7*3)+(64*5)+55],
+                                movePlane[(64*7*3)+(64*5)+62], movePlane[(64*7*3)+(64*5)+63],
+                                movePlane[((64*7*3)+64*6):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*3)+64*4)], movePlane[(64*7*3)+(64*4)+45],
+                                movePlane[(64*7*3)+(64*4)+46], movePlane[(64*7*3)+(64*4)+47],
+                                movePlane[(64*7*3)+(64*4)+53], movePlane[(64*7*3)+(64*4)+54],
+                                movePlane[(64*7*3)+(64*4)+55], movePlane[(64*7*3)+(64*4)+61],
+                                movePlane[(64*7*3)+(64*4)+62], movePlane[(64*7*3)+(64*4)+63],
+                                movePlane[((64*7*3)+64*5):]), axis=None)
+
+    # remove unnecessary parts of east moves
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*6)+56], movePlane[((64*7*2)+64*6)+63:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*6)+48], movePlane[((64*7*2)+64*6)+55:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*6)+40], movePlane[((64*7*2)+64*6)+47:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*6)+32], movePlane[((64*7*2)+64*6)+39:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*6)+24], movePlane[((64*7*2)+64*6)+31:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*6)+16], movePlane[((64*7*2)+64*6)+23:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*6)+8], movePlane[((64*7*2)+64*6)+15:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*6)+0], movePlane[((64*7*2)+64*6)+7:]), axis=None)
+
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*5)+56], movePlane[((64*7*2)+64*5)+62:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*5)+48], movePlane[((64*7*2)+64*5)+54:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*5)+40], movePlane[((64*7*2)+64*5)+46:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*5)+32], movePlane[((64*7*2)+64*5)+38:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*5)+24], movePlane[((64*7*2)+64*5)+30:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*5)+16], movePlane[((64*7*2)+64*5)+22:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*5)+8], movePlane[((64*7*2)+64*5)+14:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*5)+0], movePlane[((64*7*2)+64*5)+6:]), axis=None)
+
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*4)+56], movePlane[((64*7*2)+64*4)+61:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*4)+48], movePlane[((64*7*2)+64*4)+53:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*4)+40], movePlane[((64*7*2)+64*4)+45:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*4)+32], movePlane[((64*7*2)+64*4)+37:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*4)+24], movePlane[((64*7*2)+64*4)+29:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*4)+16], movePlane[((64*7*2)+64*4)+21:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*4)+8], movePlane[((64*7*2)+64*4)+13:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*4)+0], movePlane[((64*7*2)+64*4)+5:]), axis=None)
+
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*3)+56], movePlane[((64*7*2)+64*3)+60:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*3)+48], movePlane[((64*7*2)+64*3)+52:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*3)+40], movePlane[((64*7*2)+64*3)+44:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*3)+32], movePlane[((64*7*2)+64*3)+36:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*3)+24], movePlane[((64*7*2)+64*3)+28:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*3)+16], movePlane[((64*7*2)+64*3)+20:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*3)+8], movePlane[((64*7*2)+64*3)+12:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*3)+0], movePlane[((64*7*2)+64*3)+4:]), axis=None)
+
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*2)+56], movePlane[((64*7*2)+64*2)+59:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*2)+48], movePlane[((64*7*2)+64*2)+51:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*2)+40], movePlane[((64*7*2)+64*2)+43:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*2)+32], movePlane[((64*7*2)+64*2)+35:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*2)+24], movePlane[((64*7*2)+64*2)+27:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*2)+16], movePlane[((64*7*2)+64*2)+19:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*2)+8], movePlane[((64*7*2)+64*2)+11:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*2)+0], movePlane[((64*7*2)+64*2)+3:]), axis=None)
+
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*1)+56], movePlane[((64*7*2)+64*1)+58:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*1)+48], movePlane[((64*7*2)+64*1)+50:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*1)+40], movePlane[((64*7*2)+64*1)+42:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*1)+32], movePlane[((64*7*2)+64*1)+34:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*1)+24], movePlane[((64*7*2)+64*1)+26:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*1)+16], movePlane[((64*7*2)+64*1)+18:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*1)+8], movePlane[((64*7*2)+64*1)+10:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*1)+0], movePlane[((64*7*2)+64*1)+2:]), axis=None)
+
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*0)+56], movePlane[((64*7*2)+64*0)+57:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*0)+48], movePlane[((64*7*2)+64*0)+49:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*0)+40], movePlane[((64*7*2)+64*0)+41:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*0)+32], movePlane[((64*7*2)+64*0)+33:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*0)+24], movePlane[((64*7*2)+64*0)+25:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*0)+16], movePlane[((64*7*2)+64*0)+17:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*0)+8], movePlane[((64*7*2)+64*0)+9:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*2)+64*0)+0], movePlane[((64*7*2)+64*0)+1:]), axis=None)
+
+    # keep NE corner
+    movePlane = np.concatenate((movePlane[:((64*7*1)+64*6)], movePlane[(64*7*1)+64*6+7], movePlane[64*7*2:]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*1)+64*5)], movePlane[(64*7*1)+(64*5)+6], movePlane[(64*7*1)+(64*5)+7],
+                                movePlane[(64*7*1)+(64*5)+14], movePlane[(64*7*1)+(64*5)+15],
+                                movePlane[((64*7*1)+64*6):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*1)+64*4)], movePlane[(64*7*1)+(64*4)+5],
+                                movePlane[(64*7*1)+(64*4)+6], movePlane[(64*7*1)+(64*4)+7],
+                                movePlane[(64*7*1)+(64*4)+13], movePlane[(64*7*1)+(64*4)+14],
+                                movePlane[(64*7*1)+(64*4)+15], movePlane[(64*7*1)+(64*4)+21],
+                                movePlane[(64*7*1)+(64*4)+22], movePlane[(64*7*1)+(64*4)+23],
+                                movePlane[((64*7*1)+64*5):]), axis=None)
+
+    # remove unnecessary parts of north moves
+    movePlane = np.concatenate((movePlane[:(64*6)+8], movePlane[(64*6)+64:]), axis=None)
+    movePlane = np.concatenate((movePlane[:(64*5)+16], movePlane[(64*5)+64:]), axis=None)
+    movePlane = np.concatenate((movePlane[:(64*4)+24], movePlane[(64*4)+64:]), axis=None)
+    movePlane = np.concatenate((movePlane[:(64*3)+32], movePlane[(64*3)+64:]), axis=None)
+    movePlane = np.concatenate((movePlane[:(64*2)+40], movePlane[(64*2)+64:]), axis=None)
+    movePlane = np.concatenate((movePlane[:(64*1)+48], movePlane[(64*1)+64:]), axis=None)
+    movePlane = np.concatenate((movePlane[:(64*0)+56], movePlane[(64*0)+64:]), axis=None)
+
     knightMovePlane = knightMovePlane.flatten()
+    # direction ([1, 2],[2, 1],[2, -1],[1, -2],[-1, -2],[-2, -1],[-2, 1],[-1, 2])
+
+    # removing unnecessary north/south squares for knight moves
+    knightMovePlane = knightMovePlane[0:(64*7)+48]
+    knightMovePlane = np.concatenate((knightMovePlane[:(64*6)+56], knightMovePlane[(64*6)+64:]), axis=None)
+    knightMovePlane = np.concatenate((knightMovePlane[:(64*5)], knightMovePlane[(64*5)+8:]), axis=None)
+    knightMovePlane = np.concatenate((knightMovePlane[:(64*4)], knightMovePlane[(64*4)+16:]), axis=None)
+    knightMovePlane = np.concatenate((knightMovePlane[:(64*3)], knightMovePlane[(64*3)+16:]), axis=None)
+    knightMovePlane = np.concatenate((knightMovePlane[:(64*2)], knightMovePlane[(64*2)+8:]), axis=None)
+    knightMovePlane = np.concatenate((knightMovePlane[:(64*1)+56], knightMovePlane[(64*1)+64:]), axis=None)
+    knightMovePlane = np.concatenate((knightMovePlane[:(64*0)+48], knightMovePlane[(64*0)+64:]), axis=None)
+
+    # removing unnecessary east/west squares for knight moves
+
     underPromotion = underPromotion.flatten()
-    moveToArray = np.concatenate((placedPlane, pickUpPlane, movePlane, knightMovePlane, underPromotion))
-    # ARRAY IS 4504 ENTRIES LONG
-    return moveToArray.reshape((1, 4504))
+    moveToArray = np.concatenate((placedPlane, movePlane, knightMovePlane, underPromotion))
+    #end = time.time()
+    #print(end-start)
+    if np.sum(moveToArray) != 1:
+        print("error")
+    return moveToArray.reshape((1, 2768))
 
 def placementPieceAvailable(captivePieces):
     newArray = [0, 0, 0, 0, 0]
@@ -311,143 +531,13 @@ def placementPieceAvailable(captivePieces):
             newArray[i] = 1
     return newArray
 
-# turns array into string! yay
-def moveArrayToString(array, board, pythonChessBoard, whiteCaptivePieces, blackCaptivePieces, plies):
-
-    # extract individual planes, and then reshape them.
-    placedPlane = array[0, 0:64 * 5].reshape((5, 8, 8))
-    pickUpPlane = array[0, 64 * 5:(64 * 5) + (64 * 1)].reshape((8, 8))
-    movePlane = array[0, 64 * 6:(64 * 6) + (8 * 7 * 8 * 8)].reshape((8, 7, 8, 8))
-    knightMovePlane = array[0, (64 * 6) + (8 * 7 * 8 * 8):(64 * 6) + (8 * 7 * 8 * 8) + (8 * 8 * 8)].reshape((8, 8, 8))
-    underPromotion = array[0, -24:].reshape(3, 8)
-
-    # Start off by looking at the placedPlane and pickUpPlane and find out what is the highest value. For
-    # placedPlane, we look at all legal places to drop each piece for each plane, and find out what is highest.
-    # For pickUpPlane, we look at all the places in which there is a piece, and find out which piece has the highest
-    # pick up score.
-
-    wherePiecesAre = np.zeros((8, 8))
-    for i in range(8):
-        for j in range(8):
-            if board[i][j] == " ":
-                wherePiecesAre[i][j] = 0
-            else:
-                wherePiecesAre[i][j] = 1
-    canPlace = 1 - wherePiecesAre
-    pawnLegality = np.zeros((8, 8))
-    for i in range(8):
-        for j in range(8):
-            if i == 0 or i == 7:
-                pawnLegality[i][j] = 0
-            else:
-                pawnLegality[i][j] = 1
-
-    pawnCanPlace = (canPlace + pawnLegality) - 1
-    # +1 OCCURS ONLY WHEN cannotPlace and pawnLegality both output value 1. 0 if it's illegal.
-    for i in range(8):
-        for j in range(8):
-            if pawnCanPlace[i][j] == -1:
-                pawnCanPlace[i][j] = 0
-
-    whiteCaptivePieces = placementPieceAvailable(whiteCaptivePieces)
-    blackCaptivePieces = placementPieceAvailable(blackCaptivePieces)
-
-    if plies % 2 == 0:
-        placingLegal = np.concatenate(((pawnCanPlace.flatten() * whiteCaptivePieces[0]),
-                                       (canPlace.flatten() * whiteCaptivePieces[1]),
-                                       (canPlace.flatten() * whiteCaptivePieces[2]),
-                                       (canPlace.flatten() * whiteCaptivePieces[3]),
-                                       (canPlace.flatten() * whiteCaptivePieces[4])
-                                       ))
-    else:
-        placingLegal = np.concatenate(((pawnCanPlace.flatten() * blackCaptivePieces[0]),
-                                       (canPlace.flatten() * blackCaptivePieces[1]),
-                                       (canPlace.flatten() * blackCaptivePieces[2]),
-                                       (canPlace.flatten() * blackCaptivePieces[3]),
-                                       (canPlace.flatten() * blackCaptivePieces[4])
-                                       ))
-
-    #need to use deep copy
-    illegalPenalty = copy.deepcopy(placingLegal)
-    for i in range(len(illegalPenalty)):
-        if illegalPenalty[i] == 0:
-            illegalPenalty[i] = -1000000
-        else:
-            illegalPenalty[i] = 0
-
-
-    #print("Highest Placed Value:")
-    directory1 = np.argmax(((array[0, 0:64*5]*placingLegal)+illegalPenalty).reshape(1, 64*5), axis=1)[0]
-    maxPlaced = ((array[0, 0:64*5]*placingLegal)+illegalPenalty).reshape(1, 64*5)[0, directory1]
-    #print(maxPlaced)
-
-    # Computer must pick up a piece that can move.
-    #print("Highest Pick-Up Piece Value:")
-    directory2 = np.argmax((array[0, 64*5:64*6]*moveablePieces(board, pythonChessBoard).flatten()).reshape(1, 64)
-                           + moveablePiecesPenalty(board, pythonChessBoard).flatten(), axis=1)[0]
-    maxPickUp = pickUpPlane[directory2//8][directory2 % 8]
-    #print(maxPickUp)
-
-
-
-    # identify the square, the action, and the piece that is being moved.
-    rowNames = "abcdefgh"
-
-    if maxPlaced > maxPickUp:
-        #print("NN evaluates placement of piece over normal move.")
-        possiblePieces = "PNBRQ"
-        piecePlaced = possiblePieces[directory1 // 64]
-        initialRow = rowNames[directory1 % 8]
-        initialCol = str(8 - ((directory1 % 64) // 8))
-        move = (piecePlaced + "@" + initialRow + initialCol)
-        #print("MOVE:")
-        #print(move)
-
-        # move this above maxPickUp > maxPlaced.
-        # there needs to be a check for legality...and if it is unfulfilled, then
-        # pickup another piece.
-        if chess.Move.from_uci(move) in pythonChessBoard.legal_moves:
-            return move
-        else:
-            # should just play a random legal move.
-            maxPlaced = -1
-            maxPickUp = 1
-
-    if maxPickUp >= maxPlaced:
-        #print("NN evaluates normal move over placement of piece.")
-
-        # now, we return a list of legal moves.
-        searchPossibilities = legalMovesFromSquare(directory2, board, pythonChessBoard)
-        #print(len(searchPossibilities))
-        #print("Possible Moves: ", searchPossibilities)
-        #print(pythonChessBoard.legal_moves)
-
-        # Then, find where the move should be on the array, and argmax all the possible moves.
-
-        if len(searchPossibilities) > 0:
-            bestMove = searchPossibilities[0]    # need to get the score for the move as well
-            bestMoveScore = array[0][np.argmax(moveArray(searchPossibilities[0], board, False))]
-            #print(bestMoveScore)
-            if len(searchPossibilities) > 1:
-                for i in range(1, len(searchPossibilities)):
-                    # find a better move...?
-                    newSearch = searchPossibilities[i]
-                    newSearchScore = array[0][np.argmax(moveArray(searchPossibilities[i], board, False))]
-                    #print(newSearchScore)
-                    if newSearchScore > bestMoveScore:
-                        bestMove = newSearch
-                        bestMoveScore = newSearchScore
-        else:
-            return '0000'
-        return bestMove
-
 def moveEvaluation(move, board, prediction):
 
-    prediction = prediction.numpy().flatten()
+    prediction = prediction.detach().numpy().flatten()
     prediction = np.exp(prediction)
     move = moveArray(move, board).flatten()
-    for i in range(320, 384):
-        move[i] = 0
+    if np.sum(move) != 1:
+        print("error")
     evaluate = (move * prediction)
     finalEval = np.sum(evaluate)
 
@@ -474,26 +564,60 @@ def sortEvals(moveNames, scores):
 
     return moveNames
 
+def boardToInt(state):
+    state = state.flatten()
+    string = "0"*960
+    for i in range(len(state)):
+        if state[i] == 1:
+            string = string[0:i]+"1"+string[i+1:960]
+    return string
+
+# Instead of boardToInt which saves the board into a string of 960 0s and 1s,
+# this attempts to save the board into an array of 15 values.
+def boardToBinaryArray(state):
+    board = np.zeros(15)
+    state = state.flatten()
+    string = "0"*960
+    for i in range(len(state)):
+        if state[i] == 1:
+            string = string[0:i]+"1"+string[i+1:960]
+    for j in range(15):
+        binaryPlaneString = string[64*j:64*j+64]
+        binaryPlaneNumber = int(binaryPlaneString, 2)
+        board[j] = binaryPlaneNumber
+    return board
+
+def binaryArrayToBoard(array):
+    string = ""
+    for i in range(15): #array should be of length 15
+        string = string + ("{:064b}".format(int(array[i])))
+    inArray = np.zeros(960)
+    for i in range(960):
+        inArray[i] = int(string[i])
+    inArray = np.reshape(inArray, (15, 8, 8))
+    return inArray
+
+
+
+
 
 testing = False
 if testing:
-    testingBoard = [["r", "n", "b", "q", "k", "b", "n", "r"],  # 0 - 7
-                    ["p", "p", "p", "p", " ", "p", "p", "p"],  # 8 - 15
-                    [" ", " ", " ", " ", " ", " ", " ", " "],  # 16 - 23
-                    [" ", " ", " ", " ", "p", " ", " ", " "],  # 24 - 31
-                    [" ", " ", " ", " ", "P", " ", " ", " "],  # 32 - 39
-                    [" ", " ", " ", " ", " ", "Q", " ", " "],  # 40 - 47
-                    ["P", "P", "P", "P", " ", "P", "P", "P"],  # 48 - 55
-                    ["R", "N", "B", " ", "K", "B", "N", "R"]]  # 56 - 63
 
-    whiteCaptivePieces = [0, 0, 0, 0, 0]
-    blackCaptivePieces = [0, 0, 0, 0, 0]
+    board = ChessEnvironment()
+    board.makeMove("e2e4")
+    board.makeMove("d7d5")
+    board.makeMove("e4d5")
+    save = boardToBinaryArray(board.boardToState())
+    recovered = binaryArrayToBoard(save)
+    print(recovered)
+    recovered=recovered.flatten()
+    actual = board.boardToState().flatten()
 
-    pythonBoard = chess.variant.CrazyhouseBoard()
-    pythonBoard.push(chess.Move.from_uci("e2e4"))
-    pythonBoard.push(chess.Move.from_uci("e7e5"))
-    pythonBoard.push(chess.Move.from_uci("d1f3"))
-    plies = 3
+    for i in range(960):
+        if recovered[i] != actual[i]:
+            print("erroneous")
 
-    A_MOVE = moveArray("f8a3", testingBoard)
-    #print(A_MOVE)
+
+    #print(np.argmax(moveArray("a8a1", ChessEnvironment().arrayBoard)))
+    #print(np.argmax(moveArray("d8d1", ChessEnvironment().arrayBoard)))

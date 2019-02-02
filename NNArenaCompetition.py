@@ -3,7 +3,6 @@ import datetime
 
 import numpy as np
 from ChessEnvironment import ChessEnvironment
-from MyDataset import MyDataset
 import ActionToArray
 import ChessConvNet
 import torch
@@ -29,13 +28,13 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
     PGN.headers["Round"] = round
     PGN.headers["White"] = "Network: " + bestNet.nameOfNetwork
     PGN.headers["Black"] = "Network: " + testingNet.nameOfNetwork
-    PGN.headers["Variant"] = "Crazyhouse"
+    PGN.headers["Variant"] = "crazyhouse"
 
 
     sim = ChessEnvironment()
     while sim.result == 2:
         #print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.neuralNet))
-        noiseVal = 3.0 / (10 * (sim.plies // 2 + 1))
+        noiseVal = 4.0 / (8 * (sim.plies // 2 + 1))
         if sim.plies % 2 == 0:
             if playouts > 0:
                 bestNet.competitivePlayoutsFromPosition(playouts, sim)
@@ -49,7 +48,10 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
                     with torch.no_grad():
                         for images, labels1, labels2 in generatePredic:
                             bestNet.neuralNet.eval()
+                            #start = time.time()
                             outputs = bestNet.neuralNet(images)[0]
+                            #end = time.time()
+                            #print(end-start)
                             if playouts > 0:
                                 bestNet.addPositionToMCTS(sim.boardToString(),
                                                       ActionToArray.legalMovesForState(sim.arrayBoard,
@@ -154,13 +156,13 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
     PGN.headers["Round"] = round
     PGN.headers["White"] = "Network: " + testingNet.nameOfNetwork
     PGN.headers["Black"] = "Network: " + bestNet.nameOfNetwork
-    PGN.headers["Variant"] = "Crazyhouse"
+    PGN.headers["Variant"] = "crazyhouse"
 
 
     sim = ChessEnvironment()
     while sim.result == 2:
         #print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.neuralNet))
-        noiseVal = 3.0 / (10*(sim.plies//2 + 1))
+        noiseVal = 4.0 / (8*(sim.plies//2 + 1))
         if sim.plies % 2 == 1:
             if playouts > 0:
                 bestNet.competitivePlayoutsFromPosition(playouts, sim)
@@ -258,6 +260,7 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
 
         #print(sim.board)
 
+
     if sim.result == 1:
         PGN.headers["Result"] = "1-0"
         score = 1
@@ -300,6 +303,6 @@ def bestNetworkTest(bestNet, testingNet, games, playouts, clearAfterEachRound=Fa
 
 testing = True
 if testing:
-    best = MCTS("New Networks/smallnet.pt", 4)
-    newNet = MCTS("New Networks/smallnet.pt", 4)
-    print(bestNetworkTest(best, newNet, 10, 0))
+    best = MCTS("New Networks/(MCTS)(6X128|4|8)(fake)64fish.pt", 6)
+    newNet = MCTS("New Networks/(MCTS)(6X128|4|8)(V1)64fish.pt", 6)
+    print(bestNetworkTest(best, newNet, 200, 0))

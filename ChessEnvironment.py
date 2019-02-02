@@ -1,10 +1,11 @@
+import time
+
 import chess.variant
 import torch
 import numpy as np
 import torch.nn as nn
 import torch.utils.data as data_utils
 from ChessConvNet import ChessConvNet
-import ActionToArray
 import chess.pgn
 import copy
 
@@ -54,6 +55,8 @@ class ChessEnvironment():
                     self.arrayBoard[7-i][j] = ' '
 
         # update pockets
+        self.whiteCaptivePieces = [0, 0, 0, 0, 0]
+        self.blackCaptivePieces = [0, 0, 0, 0, 0]
         whitePocket = list(str(self.board.pockets[0]))
         blackPocket = list(str(self.board.pockets[1]))
         for i in range(len(whitePocket)):
@@ -62,10 +65,6 @@ class ChessEnvironment():
         for j in range(len(blackPocket)):
             index = "pnbrq".find(blackPocket[j])
             self.blackCaptivePieces[index] += 1
-
-
-
-
 
 
     def boardToFEN(self):
@@ -97,7 +96,8 @@ class ChessEnvironment():
             castling = castling[0:2] + '10'
         if self.board.has_queenside_castling_rights(chess.BLACK):
             castling = castling[0:3] + '1'
-        return state + captive + castling + turn
+
+        return state + captive + castling + turn + str(self.plies)
 
     def gameResult(self):
         if self.board.is_insufficient_material():
@@ -106,7 +106,7 @@ class ChessEnvironment():
         if self.board.is_stalemate():
             self.result = 0
             self.gameStatus = "Draw."
-        if self.board.can_claim_draw():
+        if self.board.is_fivefold_repetition():  # have to check for 3 fold soon
             self.result = 0
             self.gameStatus = "Draw."
         if self.board.is_checkmate():
@@ -168,126 +168,30 @@ class ChessEnvironment():
                                                  ))
 
     def makeMove(self, move):
-        if chess.Move.from_uci(move) not in self.board.legal_moves:
-            print(move)
-            print("Illegal Move!")
-            print(self.board)
-            print(self.arrayBoard)
-
-            # make some random move
-            legalMoves = ActionToArray.legalMovesForState(self.arrayBoard, self.board)
-            illegalMove = True
-            while illegalMove:
-                for i in range(len(legalMoves)):
-                    if chess.Move.from_uci(legalMoves[i]) in self.board.legal_moves:
-                        move = legalMoves[i]
-                        illegalMove = False
         if chess.Move.from_uci(move) in self.board.legal_moves:
             self.board.push(chess.Move.from_uci(move))
-            # update numpy board too - split the move and find coordinates! see old chess java work.
-            rowNames = "abcdefgh"
-            if move[1] != "@":
-                initialRow = 8 - int(move[1])  # for e2d4, move[1] returns 2
-            else:
-                initialRow = 0
-            initialCol = int(rowNames.find(move[0]))  # for e2d4, move[1] returns e
-            finalRow = 8 - int(move[3])  # for e2d4, move[3] returns 4
-            finalCol = int(rowNames.find(move[2]))  # for e2d4, move[2] returns d
-            # SPECIAL MOVE 1: CASTLING. MAKE SURE THAT THE PIECE IN QUESTION IS A KING!!!
-            if move == "e1g1" and self.arrayBoard[7][4] == "K" and self.arrayBoard[7][7] == "R":
-                self.arrayBoard[7][4] = " "
-                self.arrayBoard[7][7] = " "
-                self.arrayBoard[7][5] = "R"
-                self.arrayBoard[7][6] = "K"
-            elif move == "e8g8" and self.arrayBoard[0][4] == "k" and self.arrayBoard[0][7] == "r":
-                self.arrayBoard[0][4] = " "
-                self.arrayBoard[0][7] = " "
-                self.arrayBoard[0][5] = "R"
-                self.arrayBoard[0][6] = "K"
-            elif move == "e8c8" and self.arrayBoard[0][4] == "k" and self.arrayBoard[0][0] == "r":
-                self.arrayBoard[0][0] = " "
-                self.arrayBoard[0][1] = " "
-                self.arrayBoard[0][4] = " "
-                self.arrayBoard[0][2] = "K"
-                self.arrayBoard[0][3] = "R"
-            elif move == "e1c1" and self.arrayBoard[7][4] == "K" and self.arrayBoard[7][0] == "R":
-                self.arrayBoard[7][0] = " "
-                self.arrayBoard[7][1] = " "
-                self.arrayBoard[7][4] = " "
-                self.arrayBoard[7][2] = "K"
-                self.arrayBoard[7][3] = "R"
-            # SPECIAL MOVE 2: EN PASSANT
-            # check if the capture square is empty and there is a pawn on the same row but different column
-            # white en passant
-            elif self.arrayBoard[initialRow][initialCol] == "P" and self.arrayBoard[initialRow][finalCol] == "p" and \
-                    self.arrayBoard[finalRow][finalCol] == " ":
-                # print("WHITE EN PASSANT")
-                self.arrayBoard[initialRow][initialCol] = " "
-                self.arrayBoard[finalRow][finalCol] = "P"
-                self.arrayBoard[initialRow][finalCol] = " "
-                self.whiteCaptivePieces[0] += 1
-            # black en passant
-            elif self.arrayBoard[initialRow][initialCol] == "p" and self.arrayBoard[initialRow][finalCol] == "P" and \
-                    self.arrayBoard[finalRow][finalCol] == " ":
-                # print("BLACK EN PASSANT")
-                self.arrayBoard[initialRow][initialCol] = " "
-                self.arrayBoard[finalRow][finalCol] = "p"
-                self.arrayBoard[initialRow][finalCol] = " "
-                self.blackCaptivePieces[0] += 1
-            elif "PRNBQ".find(move[0]) == -1:
-                # update the board
-                temp = self.arrayBoard[finalRow][finalCol]
-                self.arrayBoard[finalRow][finalCol] = self.arrayBoard[initialRow][initialCol]
-                self.arrayBoard[initialRow][initialCol] = " "
 
-                # move around the actuallyAPawn stuff too.
-                wasAPawn = self.actuallyAPawn[finalRow][finalCol]
-                self.actuallyAPawn[finalRow][finalCol] = self.actuallyAPawn[initialRow][initialCol]
-                self.actuallyAPawn[initialRow][initialCol] = 0
+            # update boards
+            for i in range(8):
+                for j in range(8):
+                    if self.board.piece_at(8*i+j) != None:
+                        self.arrayBoard[7-i][j] = self.board.piece_at(8*i+j).symbol()
+                    else:
+                        self.arrayBoard[7-i][j] = ' '
 
-                # this is for promotion
-                if len(move) == 5:
-                    if self.plies % 2 == 0:
-                        self.arrayBoard[finalRow][finalCol] = move[4].upper()
-                    if self.plies % 2 == 1:
-                        self.arrayBoard[finalRow][finalCol] = move[4].lower()
-                    self.actuallyAPawn[finalRow][finalCol] = 1
+                # update pockets
+                self.whiteCaptivePieces = [0, 0, 0, 0, 0]
+                self.blackCaptivePieces = [0, 0, 0, 0, 0]
+                whitePocket = list(str(self.board.pockets[0]))
+                blackPocket = list(str(self.board.pockets[1]))
 
-                # add pieces to captured area
-                if wasAPawn == 0:  # 0 means it is normal.
-                    whiteCaptured = "pnbrq".find(temp)
-                    blackCaptured = "PNBRQ".find(temp)
-                    if whiteCaptured > -1:
-                        self.whiteCaptivePieces[whiteCaptured] += 1
-                    if blackCaptured > -1:
-                        self.blackCaptivePieces[blackCaptured] += 1
-                if wasAPawn == 1:  # 1 means that the piece in question was once a pawn.
-                    if self.plies % 2 == 0:
-                        self.whiteCaptivePieces[0] += 1
-                    if self.plies % 2 == 1:
-                        self.blackCaptivePieces[0] += 1
+                for k in range(len(whitePocket)):
+                    index = "pnbrq".find(whitePocket[k])
+                    self.whiteCaptivePieces[index] += 1
+                for m in range(len(blackPocket)):
+                    index = "pnbrq".find(blackPocket[m])
+                    self.blackCaptivePieces[index] += 1
 
-            else:
-                # this is when a captured piece is put back on the board
-
-                # update the captive pieces
-                placed = "PNBRQ".find(move[0])
-                if self.plies % 2 == 0:
-                    self.whiteCaptivePieces[placed] -= 1
-                if self.plies % 2 == 1:
-                    self.blackCaptivePieces[placed] -= 1
-
-                # update the board.
-                rowNames = "abcdefgh"
-                placedRow = 8 - int(move[3])
-                placedCol = int(rowNames.find(move[2]))
-
-                if self.plies % 2 == 0:
-                    self.arrayBoard[placedRow][placedCol] = move[0]
-                if self.plies % 2 == 1:
-                    self.arrayBoard[placedRow][placedCol] = move[0].lower()
-
-            # once everything is done, update move count
             self.updateNumpyBoards()
             self.plies += 1
 

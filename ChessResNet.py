@@ -76,7 +76,7 @@ class ResNet(nn.Module):
             nn.BatchNorm2d(self.policy_planes),
             nn.PReLU()
             )
-        self.policyLinear = nn.Linear(64*self.policy_planes*block.expansion, 4504)
+        self.policyLinear = nn.Linear(64*self.policy_planes*block.expansion, 2768)
 
         # value head
         self.finalLayerValue = nn.Sequential(
@@ -113,7 +113,7 @@ class ResNet(nn.Module):
         return out1, out2
 
 def ResNetDoubleHead():
-    return ResNet(BasicBlock, [2,2,2,2], [256,256,256,256], p_planes=2, v_planes=8)
+    return ResNet(BasicBlock, [2,2,1,1], [128,128,128,128], p_planes=4, v_planes=8)
 
 def ResNetDoubleHeadSmall():
     return ResNet(BasicBlock, [1,1,1,2], [32,32,32,32], p_planes=1, v_planes=4)

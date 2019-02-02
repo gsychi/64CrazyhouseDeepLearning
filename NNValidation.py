@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.utils.data as data_utils
 from ChessConvNet import ChessConvNet
 from PolicyDataset import PolicyDataset
+from DoubleHeadDataset import DoubleHeadTrainingDataset
 import ChessResNet
 import h5py
 
@@ -11,21 +12,21 @@ import h5py
 # if it's not imported, accuracy will never be 100%, so it will just output the trained network after 10,000 epochs.
 def validateNetwork(loadDirectory):
 
-    with h5py.File('Training Data/18-11PolicyOutputs.h5', 'r') as hf:
-        actions = hf["Outputs"][0:100000]
+    with h5py.File('Training Data/[experiment]StockfishOutputs.h5', 'r') as hf:
+        actions = hf["Policy Outputs"][:]
         print(len(actions))
-    with h5py.File('Training Data/18-11Inputs.h5', 'r') as hf:
-        inputs = hf["Inputs"][0:100000]
+    with h5py.File('Training Data/[experiment]StockfishInputs[binaryConverted].h5', 'r') as hf:
+        inputs = hf["Inputs"][:]
         print(len(inputs))
     actions = torch.from_numpy(actions)
-    data = PolicyDataset(inputs, actions)
+    data = DoubleHeadTrainingDataset(inputs, actions, actions)
 
     testLoader = torch.utils.data.DataLoader(dataset=data, batch_size=16, shuffle=False)
 
     try:
-        checkpoint = torch.load(loadDirectory)
+        network = torch.load(loadDirectory)
         model = ChessResNet.ResNetDoubleHead().double()
-        model.load_state_dict(checkpoint['model_state_dict'])
+        model.load_state_dict(network)
         model.eval()
     except:
         print("Pretrained NN model not found!")
@@ -35,19 +36,17 @@ def validateNetwork(loadDirectory):
     with torch.no_grad():
         correct = 0
         total = 0
-        for images, labels in testLoader:
+        for images, labels, irrelevant in testLoader:
             images = images.to(device)
             labels = labels.to(device)
             outputs = torch.exp(model(images)[0])
-            #print(np.amax(outputs.numpy()))
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
-            _, labels = torch.max(labels.data, 1)  # for poisson nll loss
-            # labels = labels.data
+            _, labels = torch.max(labels.data, 1)
             correct += (predicted == labels).sum().item()
 
             print('Test Accuracy of the model on', total, 'test positions: {:.4f} %'.format(100 * correct / total))
 
 validate = True
 if validate:
-    validateNetwork("New Networks/smallnet.pt")
+    validateNetwork("New Networks/(MCTS)(6X128|4|8)(V1)64fish.pt")

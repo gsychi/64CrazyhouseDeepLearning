@@ -4,21 +4,24 @@ import torch.nn as nn
 import torch.utils.data as data_utils
 from ChessConvNet import ChessConvNet
 import ChessResNet
-from DoubleHeadDataset import DoubleHeadDataset
+from DoubleHeadDataset import DoubleHeadTrainingDataset
 import h5py
 
 
 # inputs and outputs are numpy arrays. This method of checking accuracy only works with imported games.
 # if it's not imported, accuracy will never be 100%, so it will just output the trained network after 10,000 epochs.
 def trainDoubleHeadNetwork(boards, policyOutputs, valueOutputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
-                           loadDirectory='none.pt',
-                           saveDirectory='network1.pt'):
+                           loadDirectory='none.pt', saveDirectory='network1.pt'):
+
+    policyLossHistory = []
+    valueLossHistory = []
+
     policyOutputs = torch.from_numpy(policyOutputs)
     valueOutputs = torch.from_numpy(valueOutputs)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
 
-    data = DoubleHeadDataset(boards, policyOutputs, valueOutputs)
+    data = DoubleHeadTrainingDataset(boards, policyOutputs, valueOutputs)
 
     trainLoader = torch.utils.data.DataLoader(dataset=data, batch_size=BATCH_SIZE, shuffle=True)
 
@@ -27,7 +30,7 @@ def trainDoubleHeadNetwork(boards, policyOutputs, valueOutputs, EPOCHS=1, BATCH_
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 
     try:
-        checkpoint = torch.load(saveDirectory)
+        checkpoint = torch.load(loadDirectory)
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         totalLoss = checkpoint['loss']
@@ -55,6 +58,9 @@ def trainDoubleHeadNetwork(boards, policyOutputs, valueOutputs, EPOCHS=1, BATCH_
                 valueLoss = valueCrit(outputValue, valueLabels)
                 totalLoss = policyLoss + valueLoss
 
+                policyLossHistory.append(policyLoss.detach().numpy())
+                valueLossHistory.append(valueLoss.detach().numpy())
+
                 # Backward and optimize
                 optimizer.zero_grad()
                 totalLoss.backward()
@@ -80,163 +86,62 @@ def trainDoubleHeadNetwork(boards, policyOutputs, valueOutputs, EPOCHS=1, BATCH_
 
                     print("Correct:", (predicted == actual).sum())
                 if (i + 1) % 200 == 0:
+                    # Save Model
                     torch.save({
                         'model_state_dict': model.state_dict(),
                         'optimizer_state_dict': optimizer.state_dict(),
                         'loss': totalLoss,
                     }, saveDirectory)
 
+                    # Save Loss History
+                    outF = open("Network Logs/policyLossHistory.txt", "w")
+                    for k in range(len(policyLossHistory)):
+                        # write line to output file
+                        outF.write(str(policyLossHistory[k]))
+                        outF.write("\n")
+                    outF.close()
+                    outF = open("Network Logs/valueLossHistory.txt", "w")
+                    for l in range(len(valueLossHistory)):
+                        # write line to output file
+                        outF.write(str(valueLossHistory[l]))
+                        outF.write("\n")
+                    outF.close()
+
+
     print("Updated!")
+    # Save Model
     torch.save({
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'loss': totalLoss,
     }, saveDirectory)
 
+    # Save Loss History
+    outF = open("Network Logs/policyLossHistory.txt", "w")
+    for m in range(len(policyLossHistory)):
+        # write line to output file
+        outF.write(str(policyLossHistory[m]))
+        outF.write("\n")
+    outF.close()
+    outF = open("Network Logs/valueLossHistory.txt", "w")
+    for n in range(len(valueLossHistory)):
+        # write line to output file
+        outF.write(str(valueLossHistory[n]))
+        outF.write("\n")
+    outF.close()
+
+
 
 train = True
 if train:
 
-    with h5py.File("Training Data/18-02Inputs.h5", 'r') as hf:
+    with h5py.File("Training Data/StockfishInputs[960String].h5", 'r') as hf:
         boards = hf["Inputs"][:]
         print(len(boards))
-    with h5py.File("Training Data/18-02PolicyOutputs.h5", 'r') as hf:
-        policy = hf["Outputs"][:]
-        print(len(policy))
-    with h5py.File("Training Data/18-02ValueOutputs.h5", 'r') as hf:
-        value = hf["Outputs"][:]
+    with h5py.File("Training Data/StockfishOutputs.h5", 'r') as hf:
+        policy = hf["Policy Outputs"][:]
+        value = hf["Value Outputs"][:]
         print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
-                           BATCH_SIZE=64, LR=0.001)
-
-    boards = []
-    outputs = []
-
-    with h5py.File("Training Data/18-03Inputs.h5", 'r') as hf:
-        boards = hf["Inputs"][:]
-        print(len(boards))
-    with h5py.File("Training Data/18-03PolicyOutputs.h5", 'r') as hf:
-        policy = hf["Outputs"][:]
-        print(len(policy))
-    with h5py.File("Training Data/18-03ValueOutputs.h5", 'r') as hf:
-        value = hf["Outputs"][:]
-        print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
-                           BATCH_SIZE=64, LR=0.001)
-
-    boards = []
-    outputs = []
-
-    with h5py.File("Training Data/18-04Inputs.h5", 'r') as hf:
-        boards = hf["Inputs"][:]
-        print(len(boards))
-    with h5py.File("Training Data/18-04PolicyOutputs.h5", 'r') as hf:
-        policy = hf["Outputs"][:]
-        print(len(policy))
-    with h5py.File("Training Data/18-04ValueOutputs.h5", 'r') as hf:
-        value = hf["Outputs"][:]
-        print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
-                           BATCH_SIZE=64, LR=0.001)
-
-    boards = []
-    outputs = []
-
-    with h5py.File("Training Data/18-05Inputs.h5", 'r') as hf:
-        boards = hf["Inputs"][:]
-        print(len(boards))
-    with h5py.File("Training Data/18-05PolicyOutputs.h5", 'r') as hf:
-        policy = hf["Outputs"][:]
-        print(len(policy))
-    with h5py.File("Training Data/18-05ValueOutputs.h5", 'r') as hf:
-        value = hf["Outputs"][:]
-        print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
-                           BATCH_SIZE=64, LR=0.001)
-
-    boards = []
-    outputs = []
-
-    with h5py.File("Training Data/18-06Inputs.h5", 'r') as hf:
-        boards = hf["Inputs"][:]
-        print(len(boards))
-    with h5py.File("Training Data/18-06PolicyOutputs.h5", 'r') as hf:
-        policy = hf["Outputs"][:]
-        print(len(policy))
-    with h5py.File("Training Data/18-06ValueOutputs.h5", 'r') as hf:
-        value = hf["Outputs"][:]
-        print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
-                           BATCH_SIZE=64, LR=0.001)
-
-    boards = []
-    outputs = []
-
-    with h5py.File("Training Data/18-07Inputs.h5", 'r') as hf:
-        boards = hf["Inputs"][:]
-        print(len(boards))
-    with h5py.File("Training Data/18-07PolicyOutputs.h5", 'r') as hf:
-        policy = hf["Outputs"][:]
-        print(len(policy))
-    with h5py.File("Training Data/18-07ValueOutputs.h5", 'r') as hf:
-        value = hf["Outputs"][:]
-        print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
-                           BATCH_SIZE=64, LR=0.001)
-
-    boards = []
-    outputs = []
-
-    with h5py.File("Training Data/18-08Inputs.h5", 'r') as hf:
-        boards = hf["Inputs"][:]
-        print(len(boards))
-    with h5py.File("Training Data/18-08PolicyOutputs.h5", 'r') as hf:
-        policy = hf["Outputs"][:]
-        print(len(policy))
-    with h5py.File("Training Data/18-08ValueOutputs.h5", 'r') as hf:
-        value = hf["Outputs"][:]
-        print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
-                           BATCH_SIZE=64, LR=0.001)
-
-    boards = []
-    outputs = []
-
-    with h5py.File("Training Data/18-09Inputs.h5", 'r') as hf:
-        boards = hf["Inputs"][:]
-        print(len(boards))
-    with h5py.File("Training Data/18-09PolicyOutputs.h5", 'r') as hf:
-        policy = hf["Outputs"][:]
-        print(len(policy))
-    with h5py.File("Training Data/18-09ValueOutputs.h5", 'r') as hf:
-        value = hf["Outputs"][:]
-        print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
-                           BATCH_SIZE=64, LR=0.001)
-
-    boards = []
-    outputs = []
-
-    with h5py.File("Training Data/18-10Inputs.h5", 'r') as hf:
-        boards = hf["Inputs"][:]
-        print(len(boards))
-    with h5py.File("Training Data/18-10PolicyOutputs.h5", 'r') as hf:
-        policy = hf["Outputs"][:]
-        print(len(policy))
-    with h5py.File("Training Data/18-10ValueOutputs.h5", 'r') as hf:
-        value = hf["Outputs"][:]
-        print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/smallnet.pt",
-                           saveDirectory="New Networks/smallnet.pt", EPOCHS=1,
-                           BATCH_SIZE=64, LR=0.001)
-
-    boards = []
-    outputs = []
+    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/[6x128|4|8]64fish.pt",
+                           saveDirectory="New Networks/[6x128|4|8]64fish.pt", EPOCHS=1,
+                           BATCH_SIZE=64, LR=0.005)

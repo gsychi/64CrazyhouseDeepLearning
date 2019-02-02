@@ -2,10 +2,10 @@
 import numpy as np
 from ChessEnvironment import ChessEnvironment
 from DoubleHeadDataset import DoubleHeadDataset
-from MyDataset import MyDataset
 import ActionToArray
 import ChessConvNet
 import torch
+import _thread
 import torch.nn as nn
 import sys
 import torch.utils.data as data_utils
@@ -22,9 +22,12 @@ import os
 dir_path = os.path.dirname(os.path.realpath(__file__))
 print(dir_path)
 
-board = ChessEnvironment()
-model = MCTS('/Users/gordon/Documents/CrazyhouseRL/New Networks/smallnet.pt', 2)
+# PARAMETERS
+depth = 16
 playouts = 0
+
+board = ChessEnvironment()
+model = MCTS('/Volumes/back up/CrazyhouseRL/New Networks/(MCTS)(6X128|4|8)(V1)64fish.pt', depth)
 
 while True:
     command = input("")
@@ -37,6 +40,18 @@ while True:
         if settings.__contains__("playouts"):
             settings = int(settings[9:])
             playouts = settings
+        elif settings.__contains__("depth"):
+            settings = int(settings[6:])
+            model.DEPTH_VALUE = settings
+        elif settings.__contains__("network"):
+            settings = settings[8:]
+            # switch to other test networks
+            """
+            if settings.__contains__("stockfish"):
+                model = MCTS('/Users/gordon/Documents/CrazyhouseRL/New Networks/stock-8X256-PV.pt', depth)
+            elif settings.__contains__("test"):
+                model = MCTS('/Users/gordon/Documents/CrazyhouseRL/New Networks/NEW-8X256-PV.pt', depth)
+            """
         elif settings.__contains__("depth"):
             settings = int(settings[6:])
             model.DEPTH_VALUE = settings
@@ -81,20 +96,16 @@ while True:
 
     # make a move
     elif command.startswith("go"):
-        noiseVal = 3.0 / (10 * (board.plies // 2 + 1))
+        noiseVal = 4 / (8 * (board.plies // 2 + 1))
         if playouts > 0:
-                model.competitivePlayoutsFromPosition(playouts, board)
+            model.competitivePlayoutsFromPosition(playouts, board)
         else:
                 position = board.boardToString()
                 if position not in model.dictionary:
-                    state = torch.from_numpy(board.boardToState())
-                    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
-                    testSet = DoubleHeadDataset(state, nullAction, nullAction)
-                    generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
-                    with torch.no_grad():
-                        for images, labels1, labels2 in generatePredic:
+                            state = torch.from_numpy(board.boardToState())
                             model.neuralNet.eval()
-                            outputs = model.neuralNet(images)[0]
+                            outputs = model.neuralNet(state)[0]
+                            model.neuralNet.eval()
                             if playouts > 0:
                                 model.addPositionToMCTS(board.boardToString(),
                                               ActionToArray.legalMovesForState(board.arrayBoard,
@@ -122,6 +133,7 @@ while True:
         if chess.Move.from_uci(move) not in board.board.legal_moves:
             move = ActionToArray.legalMovesForState(board.arrayBoard, board.board)[0]
         print("bestmove " + move)
+        print("Win Rate:",100*round(ValueEvaluation.positionEval(board, model.neuralNet), 4),"%")
         print("info depth 1 score cp", str(int(1000*round(ValueEvaluation.objectivePositionEval(board, model.neuralNet), 3))), "time 1 nodes 1 nps 1 pv", move)
 
         board.makeMove(move)

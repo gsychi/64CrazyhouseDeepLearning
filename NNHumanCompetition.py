@@ -1,12 +1,11 @@
 # best net vs old net competition!
 import datetime
-
+import threading
 import numpy as np
 from ChessEnvironment import ChessEnvironment
-from MyDataset import MyDataset
-from DoubleHeadDataset import DoubleHeadDataset
 import ActionToArray
 import ChessConvNet
+import _thread
 import torch
 import torch.nn as nn
 import torch.utils.data as data_utils
@@ -28,7 +27,7 @@ def NetworkCompetitionWhite(bestNet, playouts, round="1"):
     PGN.headers["Round"] = round
     PGN.headers["White"] = "Network: " + bestNet.nameOfNetwork
     PGN.headers["Black"] = "You"
-    PGN.headers["Variant"] = "Crazyhouse"
+    PGN.headers["Variant"] = "crazyhouse"
 
 
     sim = ChessEnvironment()
@@ -36,18 +35,15 @@ def NetworkCompetitionWhite(bestNet, playouts, round="1"):
         noiseVal = 0.0 / (10 * (sim.plies // 2 + 1))
         if sim.plies % 2 == 0:
             if playouts > 0:
+                start = time.time()
                 bestNet.competitivePlayoutsFromPosition(playouts, sim)
+                end = time.time()
+                print(end-start)
             else:
                 position = sim.boardToString()
                 if position not in bestNet.dictionary:
-                    state = torch.from_numpy(sim.boardToState())
-                    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
-                    testSet = DoubleHeadDataset(state, nullAction, nullAction)
-                    generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
-                    with torch.no_grad():
-                        for images, labels1, labels2 in generatePredic:
-                            bestNet.neuralNet.eval()
-                            outputs = bestNet.neuralNet(images)[0]
+                            image = torch.from_numpy(sim.boardToState())
+                            outputs = bestNet.neuralNet(image)[0]
                             if playouts > 0:
                                 bestNet.addPositionToMCTS(sim.boardToString(),
                                                       ActionToArray.legalMovesForState(sim.arrayBoard,
@@ -134,25 +130,22 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
     PGN.headers["Round"] = round
     PGN.headers["White"] = "You"
     PGN.headers["Black"] = "Network: " + bestNet.nameOfNetwork
-    PGN.headers["Variant"] = "Crazyhouse"
+    PGN.headers["Variant"] = "crazyhouse"
 
     sim = ChessEnvironment()
     while sim.result == 2:
         noiseVal = 0.0 / (10*(sim.plies//2 + 1))
         if sim.plies % 2 == 1:
             if playouts > 0:
+                start = time.time()
                 bestNet.competitivePlayoutsFromPosition(playouts, sim)
+                end = time.time()
+                print(end-start)
             else:
                 position = sim.boardToString()
                 if position not in bestNet.dictionary:
-                    state = torch.from_numpy(sim.boardToState())
-                    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
-                    testSet = DoubleHeadDataset(state, nullAction, nullAction)
-                    generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
-                    with torch.no_grad():
-                        for images, labels1, labels2 in generatePredic:
-                            bestNet.neuralNet.eval()
-                            outputs = bestNet.neuralNet(images)[0]
+                            image = torch.from_numpy(sim.boardToState())
+                            outputs = bestNet.neuralNet(image)[0]
                             if playouts > 0:
                                 bestNet.addPositionToMCTS(sim.boardToString(),
                                               ActionToArray.legalMovesForState(sim.arrayBoard,
@@ -220,7 +213,6 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
         print(sim.whiteCaptivePieces)
         print("BLACK POCKET")
         print(sim.blackCaptivePieces)
-        
 
     if sim.result == 1:
         PGN.headers["Result"] = "1-0"
@@ -232,5 +224,5 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
     print(PGN)
 
 # PLAY!
-network = MCTS('New Networks/smallnet.pt', 4)
-NetworkCompetitionWhite(network, 10)
+network = MCTS('New Networks/[MCTS][6X128|4|8][V1]64fish.pt', 5)
+NetworkCompetitionBlack(network, 100)

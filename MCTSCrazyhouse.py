@@ -19,9 +19,9 @@ import chess.pgn
 import chess
 import time
 from ChessEnvironment import ChessEnvironment
-from MyDataset import MyDataset
 import ActionToArray
 import ChessResNet
+import _thread
 import ChessConvNet
 import torch
 import torch.nn as nn
@@ -83,8 +83,7 @@ class MCTS():
         self.neuralNet = ChessResNet.ResNetDoubleHead().double()
 
         try:
-            checkpoint = torch.load(directory)
-            self.neuralNet.load_state_dict(checkpoint['model_state_dict'])
+            self.neuralNet.load_state_dict(torch.load(directory))
             self.neuralNet.eval()
         except:
             print("Network not found!")
@@ -125,8 +124,9 @@ class MCTS():
         policy = ActionToArray.moveEvaluations(legalMoves, arrayBoard, prediction)
         self.childrenPolicyEval.append(policy)
 
-        value = ValueEvaluation.moveValueEvaluations(legalMoves, actualBoard, self.neuralNet)
-        self.childrenValueEval.append(value)
+        #value = ValueEvaluation.moveValueEvaluations(legalMoves, actualBoard, self.neuralNet)
+        noValue = np.zeros(len(legalMoves))
+        self.childrenValueEval.append(noValue)
 
     def playout(self, round,
                 explorationConstant=2**0.5,  # lower? will test more.
@@ -134,16 +134,6 @@ class MCTS():
                 actuallyAPawn=0,
                 noise=True,
                 printPGN=True):  # Here is the information just for starting at a different position
-
-        if printPGN:
-            PGN = chess.pgn.Game()
-            PGN.headers["Event"] = "Playout"
-            PGN.headers["Site"] = "Cozy Computer Lounge"
-            PGN.headers["Date"] = datetime.datetime.today().strftime('%Y-%m-%d')
-            PGN.headers["Round"] = round
-            PGN.headers["White"] = "Network: " + self.nameOfNetwork
-            PGN.headers["Black"] = "Network: " + self.nameOfNetwork
-            PGN.headers["Variant"] = "Crazyhouse"
 
         whiteParentStateDictionary = []
         whiteStateSeen = []
@@ -168,14 +158,11 @@ class MCTS():
             depth += 1
             position = tempBoard.boardToString()
             if position not in self.dictionary:
-                # Create a new entry in the tree, if the state is not seen before.
-                state = torch.from_numpy(tempBoard.boardToState())
-                nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
-                testSet = DoubleHeadDataset(state, nullAction, nullAction)
-                generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
-                with torch.no_grad():
-                    for images, labels1, labels2 in generatePredic:
-                        outputs = self.neuralNet(images)[0]
+                        # Create a new entry in the tree, if the state is not seen before.
+                        state = torch.from_numpy(tempBoard.boardToState())
+                        start = time.time()
+                        outputs = self.neuralNet(state)[0]
+                        end = time.time()
                         self.addPositionToMCTS(tempBoard.boardToString(),
                                                ActionToArray.legalMovesForState(tempBoard.arrayBoard,
                                                                                 tempBoard.board),
@@ -202,11 +189,6 @@ class MCTS():
 
                         move = self.childrenMoveNames[len(self.childrenStateSeen) - 1][index]
 
-                        if chess.Move.from_uci(move) not in tempBoard.board.legal_moves:
-                            print("Not legal move.")
-                            # play a random move
-                            move = self.childrenMoveNames[len(self.childrenStateSeen) - 1][0]
-
                         # print(move)
                         tempBoard.makeMove(move)
 
@@ -220,6 +202,7 @@ class MCTS():
                     noiseConstant = 0.6 / (2.5 * (1 + tempBoard.plies))
                 else:
                     noiseConstant = 0
+
                 index = np.argmax(PUCT_Algorithm(self.childrenStateWin[directory],
                                                  self.childrenStateSeen[directory], explorationConstant,
                                                  np.sum(self.childrenStateSeen[directory]),
@@ -234,12 +217,6 @@ class MCTS():
                 # the move will have to be indexed correctly based on where the position is.
                 actionVector = np.zeros(len(self.childrenMoveNames[directory]))
                 actionVector[index] = 1
-
-            if printPGN:
-                if tempBoard.plies == 1:
-                    node = PGN.add_variation(chess.Move.from_uci(move))
-                else:
-                    node = node.add_variation(chess.Move.from_uci(move))
 
             # add this into the actions chosen.
             if tempBoard.plies % 2 == 1:  # white has moved.
@@ -257,8 +234,6 @@ class MCTS():
                 whiteStateWin.append(whiteStateSeen[i])
             for j in range(len(blackStateSeen)):
                 blackStateWin.append(blackStateSeen[j] * 0)
-            if printPGN:
-                PGN.headers["Result"] = "1-0"
         if tempBoard.result == -1:  # black victory
             for i in range(len(whiteStateSeen)):
                 whiteStateWin.append(whiteStateSeen[i] * 0)
@@ -266,15 +241,12 @@ class MCTS():
                 blackStateWin.append(blackStateSeen[j])
                 # this is okay, because if the game is played til checkmate then
                 # this ensures that the move count for both sides is equal.
-            if printPGN:
-                PGN.headers["Result"] = "0-1"
         if tempBoard.result == 0:  # 'tis a tie
             for i in range(len(whiteStateSeen)):
                 whiteStateWin.append(whiteStateSeen[i] * 0.5)
             for j in range(len(blackStateSeen)):
                 blackStateWin.append(blackStateSeen[j] * 0.5)
-            if printPGN:
-                PGN.headers["Result"] = "1/2-1/2"
+
         if tempBoard.result == 2:  # game isn't played to very end
             winRate = ValueEvaluation.positionEval(tempBoard, self.neuralNet)
             # tempBoard.printBoard()
@@ -308,11 +280,6 @@ class MCTS():
                     for j in range(len(blackStateSeen)):
                         blackStateWin.append(blackStateSeen[j] * winRate)
 
-        # Print PGN and final state
-        if printPGN:
-            print("PGN: ")
-            print(PGN)
-
         # now, add the information into the MCTS database.
         for i in range(len(whiteStateSeen)):
             directory = self.dictionary[whiteParentStateDictionary[i]]
@@ -322,10 +289,6 @@ class MCTS():
             directory = self.dictionary[blackParentStateDictionary[i]]
             self.childrenStateSeen[directory] = self.childrenStateSeen[directory] + blackStateSeen[i]
             self.childrenStateWin[directory] = self.childrenStateWin[directory] + blackStateWin[i]
-
-        if printPGN:
-            print(tempBoard.board)
-            self.printSize()
 
     def trainingPlayoutFromBeginning(self, runs, printPGN):
         for i in range(1, runs + 1):
@@ -347,17 +310,13 @@ class MCTS():
                          bCap=tempBoard.blackCaptivePieces, actuallyAPawn=tempBoard.actuallyAPawn,
                          explorationConstant=2**0.5, printPGN=False)
 
-            # self.printSize()
-            # print(self.childrenMoveNames[self.dictionary[sim.boardToString()]])
-            # print(self.childrenStateSeen[self.dictionary[sim.boardToString()]])
-
     def competitivePlayoutsFromPosition(self, runs, sim):
         for i in range(runs):
             tempBoard = copy.deepcopy(sim)
             # playout from a certain position.
             self.playout(str(int(i + 1)), notFromBeginning=True, arrayBoard=tempBoard.arrayBoard,
                          pythonBoard=tempBoard.board,
-                         plies=tempBoard.plies, wCap=tempBoard.whiteCaptivePieces, explorationConstant=1,
+                         plies=tempBoard.plies, wCap=tempBoard.whiteCaptivePieces, explorationConstant=2**0.5,
                          bCap=tempBoard.blackCaptivePieces, noise=False, actuallyAPawn=tempBoard.actuallyAPawn,
                          printPGN=False)
 
@@ -380,7 +339,7 @@ class MCTS():
         PGN.headers["Round"] = round
         PGN.headers["White"] = "Network: " + self.nameOfNetwork
         PGN.headers["Black"] = "Network: " + self.nameOfNetwork
-        PGN.headers["Variant"] = "Crazyhouse"
+        PGN.headers["Variant"] = "crazyhouse"
 
         sim = ChessEnvironment()
         while sim.result == 2:
@@ -461,7 +420,7 @@ class MCTS():
         PGN.headers["Round"] = "1"
         PGN.headers["White"] = "Network: " + self.nameOfNetwork
         PGN.headers["Black"] = "Network: " + self.nameOfNetwork
-        PGN.headers["Variant"] = "Crazyhouse"
+        PGN.headers["Variant"] = "crazyhouse"
 
         # refresh the MCTS tree from scratch initially.
         self.dictionary = {
