@@ -50,7 +50,7 @@ You can learn more about the training checkpoints, parameters, and others on the
 The input for the neural network is a basic (raw) representation of the board. It is an array of 960 values (15 planes of 8×8 boards), which determines the player turn, position of each piece type, captive pieces held by a player, and whether the piece is a promotion. The last part is relevant since promoted pieces can only be placed down as pawns after being captured.
 
 ### Output Representation
-The output for the neural network is a 1D representation of multiple move planes (8×8 boards). The current action is represented by an array of (5+1+56+8) x (8×8) + 3×8 = 4504 values but is currently being edited and tested to work with a vector of 2864 values (deleting 1640 useless planes). This can still be theoretically edited.
+The output for the neural network is a 1D representation of multiple move planes (8×8 boards). The current action is represented by an array of (5+1+56+8) x (8×8) + 3×8 = 4504 values but is currently being edited and tested to work with a vector of 2308 values (deleting 2196 useless entries). This can still be theoretically edited.
 
 ## Sample Games
 
