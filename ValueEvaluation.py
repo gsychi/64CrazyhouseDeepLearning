@@ -6,6 +6,7 @@ import ActionToArray
 from DoubleHeadDataset import DoubleHeadDataset
 import ChessResNet
 import time
+import math
 import threading
 
 def moveValueEvaluation(move, board, network):
@@ -159,9 +160,9 @@ def objectivePositionEval(board, network):
     output = (output/2) + 0.5
 
     turn = evalBoard.plies % 2
-
+    output = (output*2)-1
     # now, this is a probability of white winning. we need to change this to centipawns...
-    output = min(1, 4*np.arctanh(output-0.500001))
+    output = 290.680623072 * math.tan(1.548090806 * output)
 
     if turn == 1:
         output = -output
@@ -214,17 +215,7 @@ def positionEval(board, network):
 
 testing = False
 if testing:
-    hi = ChessEnvironment()
-    moves = ActionToArray.legalMovesForState(hi.arrayBoard, hi.board)
-    print(moves)
-    checkpoint = torch.load('New Networks/smallnet.pt')
-    network = ChessResNet.ResNetDoubleHead().double()
-    network.load_state_dict(checkpoint['model_state_dict'])
-    start = time.time()
-    evaluations = moveValueEvaluations(moves, hi, network)
-    print(evaluations)
-    end=time.time()
-    print(end-start)
-
-
-
+    output = 0.55
+    output = output*2-1
+    output = 290.680623072 * math.tan(1.548090806 * output)
+    print(output)

@@ -23,7 +23,7 @@ listOfResults = []
 for g in range(1): #len(pgnGames)):
     pgn = open(pgnGames[g])
     listOfMoves = []
-    for k in range(100):  # 190,000 assures all games are looked at.
+    for k in range(5000):  # 190,000 assures all games are looked at.
         try:
             game = chess.pgn.read_game(pgn)
 
@@ -67,7 +67,6 @@ for g in range(1): #len(pgnGames)):
     for j in range(len(listOfMoves)):
         board = ChessEnvironment()
         for i in range(len(listOfMoves[j])):
-            #state = ActionToArray.boardToInt(board.boardToState())
             state = ActionToArray.boardToBinaryArray(board.boardToState())
             value = listOfResults[j]
             action = ActionToArray.moveArray(listOfMoves[j][i], board.arrayBoard)
@@ -96,7 +95,7 @@ for g in range(1): #len(pgnGames)):
     policyOutputs = np.zeros(len(actionList))
 
     i = 0
-    while len(inList) > 0:
+    while len(outList) > 0:
         inputs[i] = inList[len(inList)-1]
         valueOutputs[i] = outList[len(outList)-1]
         policyOutputs[i] = actionList[len(actionList)-1]

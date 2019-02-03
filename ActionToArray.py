@@ -317,6 +317,19 @@ def moveArray(move, board):
                                 movePlane[(64*7*7)+(64*4)+10], movePlane[(64*7*7)+(64*4)+16],
                                 movePlane[(64*7*7)+(64*4)+17], movePlane[(64*7*7)+(64*4)+18],
                                 movePlane[((64*7*7)+64*5):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*7)+64*3)], movePlane[(64*7*7)+(64*3)+0:(64*7*7)+(64*3)+4],
+                                movePlane[(64*7*7)+(64*3)+8:(64*7*7)+(64*3)+12], movePlane[(64*7*7)+(64*3)+16:(64*7*7)+(64*3)+20],
+                                movePlane[(64*7*7)+(64*3)+24:(64*7*7)+(64*3)+28],
+                                movePlane[((64*7*7)+64*4):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*7)+64*2)], movePlane[(64*7*7)+(64*2)+0:(64*7*7)+(64*2)+5],
+                                movePlane[(64*7*7)+(64*2)+8:(64*7*7)+(64*2)+13], movePlane[(64*7*7)+(64*2)+16:(64*7*7)+(64*2)+21],
+                                movePlane[(64*7*7)+(64*2)+24:(64*7*7)+(64*2)+29], movePlane[(64*7*7)+(64*2)+32:(64*7*7)+(64*2)+37],
+                                movePlane[((64*7*7)+64*3):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*7)+64*1)], movePlane[(64*7*7)+(64*1)+0:(64*7*7)+(64*1)+6],
+                                movePlane[(64*7*7)+(64*1)+8:(64*7*7)+(64*1)+14], movePlane[(64*7*7)+(64*1)+16:(64*7*7)+(64*1)+22],
+                                movePlane[(64*7*7)+(64*1)+24:(64*7*7)+(64*1)+30], movePlane[(64*7*7)+(64*1)+32:(64*7*7)+(64*1)+38],
+                                movePlane[(64*7*7)+(64*1)+40:(64*7*7)+(64*1)+46],
+                                movePlane[((64*7*7)+64*2):]), axis=None)
 
     # remove unnecessary parts of west moves
     movePlane = np.concatenate((movePlane[:((64*7*6)+64*6)+57], movePlane[((64*7*6)+64*6)+64:]), axis=None)
@@ -394,6 +407,19 @@ def moveArray(move, board):
                                 movePlane[(64*7*5)+(64*4)+50], movePlane[(64*7*5)+(64*4)+56],
                                 movePlane[(64*7*5)+(64*4)+57], movePlane[(64*7*5)+(64*4)+58],
                                 movePlane[((64*7*5)+64*5):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*5)+64*3)], movePlane[(64*7*5)+(64*3)+32:(64*7*5)+(64*3)+36],
+                                movePlane[(64*7*5)+(64*3)+40:(64*7*5)+(64*3)+44], movePlane[(64*7*5)+(64*3)+48:(64*7*5)+(64*3)+52],
+                                movePlane[(64*7*5)+(64*3)+56:(64*7*5)+(64*3)+60],
+                                movePlane[((64*7*5)+64*4):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*5)+64*2)], movePlane[(64*7*5)+(64*2)+24:(64*7*5)+(64*2)+29],
+                                movePlane[(64*7*5)+(64*2)+32:(64*7*5)+(64*2)+37], movePlane[(64*7*5)+(64*2)+40:(64*7*5)+(64*2)+45],
+                                movePlane[(64*7*5)+(64*2)+48:(64*7*5)+(64*2)+53], movePlane[(64*7*5)+(64*2)+56:(64*7*5)+(64*2)+61],
+                                movePlane[((64*7*5)+64*3):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*5)+64*1)],
+                                movePlane[(64*7*5)+(64*1)+16:(64*7*5)+(64*1)+22], movePlane[(64*7*5)+(64*1)+24:(64*7*5)+(64*1)+30],
+                                movePlane[(64*7*5)+(64*1)+32:(64*7*5)+(64*1)+38], movePlane[(64*7*5)+(64*1)+40:(64*7*5)+(64*1)+46],
+                                movePlane[(64*7*5)+(64*1)+48:(64*7*5)+(64*1)+54], movePlane[(64*7*5)+(64*1)+56:(64*7*5)+(64*1)+62],
+                                movePlane[((64*7*5)+64*2):]), axis=None)
 
     # remove unnecessary parts of south moves
     movePlane = np.concatenate((movePlane[:((64*7*4)+64*6)], movePlane[((64*7*4)+64*6)+56:]), axis=None)
@@ -415,6 +441,19 @@ def moveArray(move, board):
                                 movePlane[(64*7*3)+(64*4)+55], movePlane[(64*7*3)+(64*4)+61],
                                 movePlane[(64*7*3)+(64*4)+62], movePlane[(64*7*3)+(64*4)+63],
                                 movePlane[((64*7*3)+64*5):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*3)+64*3)], movePlane[(64*7*3)+(64*3)+36:(64*7*3)+(64*3)+40],
+                                movePlane[(64*7*3)+(64*3)+44:(64*7*3)+(64*3)+48], movePlane[(64*7*3)+(64*3)+52:(64*7*3)+(64*3)+56],
+                                movePlane[(64*7*3)+(64*3)+60:(64*7*3)+(64*3)+64],
+                                movePlane[((64*7*3)+64*4):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*3)+64*2)], movePlane[(64*7*3)+(64*2)+27:(64*7*3)+(64*2)+32],
+                                movePlane[(64*7*3)+(64*2)+35:(64*7*3)+(64*2)+40], movePlane[(64*7*3)+(64*2)+43:(64*7*3)+(64*2)+48],
+                                movePlane[(64*7*3)+(64*2)+51:(64*7*3)+(64*2)+56], movePlane[(64*7*3)+(64*2)+59:(64*7*3)+(64*2)+64],
+                                movePlane[((64*7*3)+64*3):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*3)+64*1)],
+                                movePlane[(64*7*3)+(64*1)+18:(64*7*3)+(64*1)+24], movePlane[(64*7*3)+(64*1)+26:(64*7*3)+(64*1)+32],
+                                movePlane[(64*7*3)+(64*1)+34:(64*7*3)+(64*1)+40], movePlane[(64*7*3)+(64*1)+42:(64*7*3)+(64*1)+48],
+                                movePlane[(64*7*3)+(64*1)+50:(64*7*3)+(64*1)+56], movePlane[(64*7*3)+(64*1)+58:(64*7*3)+(64*1)+64],
+                                movePlane[((64*7*3)+64*2):]), axis=None)
 
     # remove unnecessary parts of east moves
     movePlane = np.concatenate((movePlane[:((64*7*2)+64*6)+56], movePlane[((64*7*2)+64*6)+63:]), axis=None)
@@ -491,6 +530,19 @@ def moveArray(move, board):
                                 movePlane[(64*7*1)+(64*4)+15], movePlane[(64*7*1)+(64*4)+21],
                                 movePlane[(64*7*1)+(64*4)+22], movePlane[(64*7*1)+(64*4)+23],
                                 movePlane[((64*7*1)+64*5):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*1)+64*3)], movePlane[(64*7*1)+(64*3)+4:(64*7*1)+(64*3)+8],
+                                movePlane[(64*7*1)+(64*3)+12:(64*7*1)+(64*3)+16], movePlane[(64*7*1)+(64*3)+20:(64*7*1)+(64*3)+24],
+                                movePlane[(64*7*1)+(64*3)+28:(64*7*1)+(64*3)+32],
+                                movePlane[((64*7*1)+64*4):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*1)+64*2)], movePlane[(64*7*1)+(64*2)+3:(64*7*1)+(64*2)+8],
+                                movePlane[(64*7*1)+(64*2)+11:(64*7*1)+(64*2)+16], movePlane[(64*7*1)+(64*2)+19:(64*7*1)+(64*2)+24],
+                                movePlane[(64*7*1)+(64*2)+27:(64*7*1)+(64*2)+32], movePlane[(64*7*1)+(64*2)+35:(64*7*1)+(64*2)+40],
+                                movePlane[((64*7*1)+64*3):]), axis=None)
+    movePlane = np.concatenate((movePlane[:((64*7*1)+64*1)],
+                                movePlane[(64*7*1)+(64*1)+2:(64*7*1)+(64*1)+8], movePlane[(64*7*1)+(64*1)+10:(64*7*1)+(64*1)+16],
+                                movePlane[(64*7*1)+(64*1)+18:(64*7*1)+(64*1)+24], movePlane[(64*7*1)+(64*1)+26:(64*7*1)+(64*1)+32],
+                                movePlane[(64*7*1)+(64*1)+34:(64*7*1)+(64*1)+40], movePlane[(64*7*1)+(64*1)+42:(64*7*1)+(64*1)+48],
+                                movePlane[((64*7*1)+64*2):]), axis=None)
 
     # remove unnecessary parts of north moves
     movePlane = np.concatenate((movePlane[:(64*6)+8], movePlane[(64*6)+64:]), axis=None)
@@ -522,7 +574,7 @@ def moveArray(move, board):
     #print(end-start)
     if np.sum(moveToArray) != 1:
         print("error")
-    return moveToArray.reshape((1, 2768))
+    return moveToArray.reshape((1, 2308))
 
 def placementPieceAvailable(captivePieces):
     newArray = [0, 0, 0, 0, 0]

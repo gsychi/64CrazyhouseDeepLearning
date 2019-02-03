@@ -76,7 +76,7 @@ class ResNet(nn.Module):
             nn.BatchNorm2d(self.policy_planes),
             nn.PReLU()
             )
-        self.policyLinear = nn.Linear(64*self.policy_planes*block.expansion, 2768)
+        self.policyLinear = nn.Linear(64*self.policy_planes*block.expansion, 2308)
 
         # value head
         self.finalLayerValue = nn.Sequential(

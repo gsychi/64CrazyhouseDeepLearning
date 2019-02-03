@@ -27,7 +27,7 @@ class DoubleHeadTrainingDataset(torch.utils.data.Dataset):
         inArray = ActionToArray.binaryArrayToBoard(self.features[index])
 
         # policy output vector created
-        array = np.zeros(2768)
+        array = np.zeros(2308)
         array[int(self.numpy[index])] = 1
         output = torch.from_numpy(array)
 
@@ -47,7 +47,7 @@ class DoubleHeadDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
 
         # output vector created
-        array = np.zeros(2768)
+        array = np.zeros(2308)
         array[int(self.numpy[index])] = 1
         output = torch.from_numpy(array)
         return self.features[index], output, np.expand_dims(self.targets2[index], axis=0)

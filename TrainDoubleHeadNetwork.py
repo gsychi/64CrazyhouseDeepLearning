@@ -135,10 +135,10 @@ def trainDoubleHeadNetwork(boards, policyOutputs, valueOutputs, EPOCHS=1, BATCH_
 train = True
 if train:
 
-    with h5py.File("Training Data/StockfishInputs[960String].h5", 'r') as hf:
+    with h5py.File("Training Data/960String/StockfishInputs[String960].h5", 'r') as hf:
         boards = hf["Inputs"][:]
         print(len(boards))
-    with h5py.File("Training Data/StockfishOutputs.h5", 'r') as hf:
+    with h5py.File("Training Data/960String/StockfishOutputs.h5", 'r') as hf:
         policy = hf["Policy Outputs"][:]
         value = hf["Value Outputs"][:]
         print(len(value))
