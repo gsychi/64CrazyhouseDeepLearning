@@ -16,6 +16,10 @@ As of now, due to the lack of computational resources readily available for me, 
 
 Your name will be added on the list of contributors once you have uploaded a relevant file. :)
 
+## Training Data
+
+The latest training dataset contains 11.2 million moves played by Stockfish in 124,872 games. More will be generated soon. The total database of 11.2 million moves are saved as binary arrays and require only 65 MB of storage! It can be found in the Database folder.
+
 ## Requirements
 
 It will be necessary to download the following packages:
