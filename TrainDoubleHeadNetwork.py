@@ -135,13 +135,13 @@ def trainDoubleHeadNetwork(boards, policyOutputs, valueOutputs, EPOCHS=1, BATCH_
 train = True
 if train:
 
-    with h5py.File("Training Data/960String/StockfishInputs[String960].h5", 'r') as hf:
+    with h5py.File("Training Data/StockfishInputs[binaryConverted].h5", 'r') as hf:
         boards = hf["Inputs"][:]
         print(len(boards))
-    with h5py.File("Training Data/960String/StockfishOutputs.h5", 'r') as hf:
+    with h5py.File("Training Data/StockfishOutputs.h5", 'r') as hf:
         policy = hf["Policy Outputs"][:]
         value = hf["Value Outputs"][:]
         print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/[6x128|4|8]64fish.pt",
-                           saveDirectory="New Networks/[6x128|4|8]64fish.pt", EPOCHS=1,
+    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/[6x256|4|8]64fish.pt",
+                           saveDirectory="New Networks/[6x256|4|8]64fish.pt", EPOCHS=1,
                            BATCH_SIZE=64, LR=0.005)

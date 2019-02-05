@@ -23,7 +23,7 @@ listOfResults = []
 for g in range(1): #len(pgnGames)):
     pgn = open(pgnGames[g])
     listOfMoves = []
-    for k in range(5000):  # 190,000 assures all games are looked at.
+    for k in range(125000):  # 190,000 assures all games are looked at.
         try:
             game = chess.pgn.read_game(pgn)
 
