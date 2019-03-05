@@ -23,7 +23,7 @@ listOfResults = []
 for g in range(1): #len(pgnGames)):
     pgn = open(pgnGames[g])
     listOfMoves = []
-    for k in range(125000):  # 190,000 assures all games are looked at.
+    for k in range(5000):  # 190,000 assures all games are looked at.
         try:
             game = chess.pgn.read_game(pgn)
 
@@ -46,17 +46,16 @@ for g in range(1): #len(pgnGames)):
             benchmark = 2000
             if whiteElo >= benchmark and blackElo >= benchmark:
                 print("Index: ", k)
-                print(whiteElo)
-                print(blackElo)
+                #print(whiteElo)
+                #print(blackElo)
                 board = game.board()
                 singleGame = []
                 for move in game.main_line():
-                    board.push(move)
+                    board.push_uci(move.uci())
                     singleGame.append(move.uci())
                 listOfMoves.append(singleGame)
                 listOfResults.append(result)
                 print(pgnGames[g])
-                # print(listOfResults)
         except:
             print("", end="")
 
@@ -114,14 +113,14 @@ for g in range(1): #len(pgnGames)):
 
 
     # save outputs!
-    saveName = 'Training Data/[experiment]StockfishOutputs.h5'
+    saveName = 'Training Data/StockfishOutputs3.h5'
 
     with h5py.File(saveName, 'w') as hf:
         hf.create_dataset("Policy Outputs", data=policyOutputs, compression='gzip', compression_opts=5)
         hf.create_dataset("Value Outputs", data=valueOutputs, compression='gzip', compression_opts=5)
 
 
-    saveName = 'Training Data/[experiment]StockfishInputs[binaryConverted].h5'
+    saveName = 'Training Data/StockfishInputs3[binaryConverted].h5'
 
     with h5py.File(saveName, 'w') as hf:
         #dtype = h5py.special_dtype(vlen=str)

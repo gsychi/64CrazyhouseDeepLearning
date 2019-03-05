@@ -28,6 +28,7 @@ import torch.nn as nn
 import torch.utils.data as data_utils
 from DoubleHeadDataset import DoubleHeadDataset
 import ValueEvaluation
+from DoubleHeadDataset import DoubleHeadTrainingDataset
 
 # Creates a list of zeros hmmm...
 def zeroList(n):
@@ -160,9 +161,17 @@ class MCTS():
             if position not in self.dictionary:
                         # Create a new entry in the tree, if the state is not seen before.
                         state = torch.from_numpy(tempBoard.boardToState())
+                        action = torch.from_numpy(np.zeros(1))
+
+                        data = DoubleHeadDataset(state, action, action)
+                        testLoader = torch.utils.data.DataLoader(dataset=data, batch_size=1, shuffle=False)
+                        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
                         start = time.time()
-                        outputs = self.neuralNet(state)[0]
+                        for images, irrelevant1, irrelevant2 in testLoader:
+                            images = images.to(device)
+                            outputs = self.neuralNet(images)[0]
                         end = time.time()
+                        #print("BLAH:", end-start)
                         self.addPositionToMCTS(tempBoard.boardToString(),
                                                ActionToArray.legalMovesForState(tempBoard.arrayBoard,
                                                                                 tempBoard.board),
@@ -312,6 +321,7 @@ class MCTS():
 
     def competitivePlayoutsFromPosition(self, runs, sim):
         for i in range(runs):
+            #print(i, "playouts finished.")
             tempBoard = copy.deepcopy(sim)
             # playout from a certain position.
             self.playout(str(int(i + 1)), notFromBeginning=True, arrayBoard=tempBoard.arrayBoard,
@@ -368,17 +378,22 @@ class MCTS():
                 self.trainingPlayoutsFromPosition(playouts, sim)
                 position = sim.boardToString()
                 if position not in self.dictionary:
-                    state = torch.from_numpy(sim.boardToState())
-                    nullAction = torch.from_numpy(np.zeros(1))  # this will not be used, is only a filler
-                    testSet = DoubleHeadDataset(state, nullAction, nullAction)
-                    generatePredic = torch.utils.data.DataLoader(dataset=testSet, batch_size=len(state), shuffle=False)
-                    with torch.no_grad():
-                        for images, labels1, labels2 in generatePredic:
+                        state = torch.from_numpy(sim.boardToState())
+                        action = torch.from_numpy(np.zeros(1))
+
+                        data = DoubleHeadDataset(state, action, action)
+                        testLoader = torch.utils.data.DataLoader(dataset=data, batch_size=1, shuffle=False)
+                        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+                        start = time.time()
+                        for images, irrelevant1, irrelevant2 in testLoader:
+                            images = images.to(device)
                             outputs = self.neuralNet(images)[0]
-                            self.addPositionToMCTS(sim.boardToString(),
-                                                   ActionToArray.legalMovesForState(sim.arrayBoard,
-                                                                                    sim.board),
-                                                   sim.arrayBoard, outputs, sim)
+                        end = time.time()
+                        print("BLAH:", end-start)
+                        self.addPositionToMCTS(sim.boardToString(),
+                                               ActionToArray.legalMovesForState(sim.arrayBoard,
+                                                                                sim.board),
+                                               sim.arrayBoard, outputs, sim)
                 directory = self.dictionary[sim.boardToString()]
                 index = np.argmax(
                                 PUCT_Algorithm(self.childrenStateWin[directory], self.childrenStateSeen[directory], 2**0.5,

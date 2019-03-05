@@ -12,11 +12,11 @@ import h5py
 # if it's not imported, accuracy will never be 100%, so it will just output the trained network after 10,000 epochs.
 def validateNetwork(loadDirectory):
 
-    with h5py.File('Training Data/[experiment]StockfishOutputs.h5', 'r') as hf:
-        actions = hf["Policy Outputs"][:]
+    with h5py.File('Training Data/StockfishOutputs.h5', 'r') as hf:
+        actions = hf["Policy Outputs"][0:1000000]
         print(len(actions))
-    with h5py.File('Training Data/[experiment]StockfishInputs[binaryConverted].h5', 'r') as hf:
-        inputs = hf["Inputs"][:]
+    with h5py.File('Training Data/StockfishInputs[binaryConverted].h5', 'r') as hf:
+        inputs = hf["Inputs"][0:1000000]
         print(len(inputs))
     actions = torch.from_numpy(actions)
     data = DoubleHeadTrainingDataset(inputs, actions, actions)
@@ -49,4 +49,4 @@ def validateNetwork(loadDirectory):
 
 validate = True
 if validate:
-    validateNetwork("New Networks/(MCTS)(6X128|4|8)(V1)64fish.pt")
+    validateNetwork("New Networks/(MCTS)(8X256|8|8)(GPU)64fish.pt")

@@ -34,7 +34,7 @@ def NetworkCompetitionWhite(bestNet, testingNet, playouts, round="1"):
     sim = ChessEnvironment()
     while sim.result == 2:
         #print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.neuralNet))
-        noiseVal = 4.0 / (8 * (sim.plies // 2 + 1))
+        noiseVal = 1.0 / (2 * (sim.plies // 2 + 1))
         if sim.plies % 2 == 0:
             if playouts > 0:
                 bestNet.competitivePlayoutsFromPosition(playouts, sim)
@@ -162,7 +162,7 @@ def NetworkCompetitionBlack(bestNet, testingNet, playouts, round="1"):
     sim = ChessEnvironment()
     while sim.result == 2:
         #print("Win Probability:", ValueEvaluation.positionEval(sim, bestNet.neuralNet))
-        noiseVal = 4.0 / (8*(sim.plies//2 + 1))
+        noiseVal = 1.0 / (2*(sim.plies//2 + 1))
         if sim.plies % 2 == 1:
             if playouts > 0:
                 bestNet.competitivePlayoutsFromPosition(playouts, sim)
@@ -303,6 +303,6 @@ def bestNetworkTest(bestNet, testingNet, games, playouts, clearAfterEachRound=Fa
 
 testing = True
 if testing:
-    best = MCTS("New Networks/(MCTS)(6X128|4|8)(fake)64fish.pt", 6)
-    newNet = MCTS("New Networks/(MCTS)(6X128|4|8)(V1)64fish.pt", 6)
-    print(bestNetworkTest(best, newNet, 200, 0))
+    best = MCTS("New Networks/(MCTS)(6X256|4|8)(V4)(DESKTOP)64fish.pt", 6)
+    newNet = MCTS("New Networks/(MCTS)(6X256|4|8)(GPU)64fish.pt", 6)
+    print(bestNetworkTest(best, newNet, 500, 0))

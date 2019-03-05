@@ -106,7 +106,7 @@ class ChessEnvironment():
         if self.board.is_stalemate():
             self.result = 0
             self.gameStatus = "Draw."
-        if self.board.is_fivefold_repetition():  # have to check for 3 fold soon
+        if self.board.can_claim_draw():  # have to check for 3 fold soon
             self.result = 0
             self.gameStatus = "Draw."
         if self.board.is_checkmate():

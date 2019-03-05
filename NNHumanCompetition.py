@@ -224,5 +224,5 @@ def NetworkCompetitionBlack(bestNet, playouts, round="1"):
     print(PGN)
 
 # PLAY!
-network = MCTS('New Networks/[MCTS][6X128|4|8][V1]64fish.pt', 5)
+network = MCTS('Users/Gordon/Documents/CrazyhouseRL/New Networks/(MCTS)(8X256|8|8)(GPU)64fish.pt', 5)
 NetworkCompetitionBlack(network, 100)

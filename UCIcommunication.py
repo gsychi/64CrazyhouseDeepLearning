@@ -23,13 +23,14 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 print(dir_path)
 
 # PARAMETERS
-ENGINE_DEPTH = 16
+ENGINE_DEPTH = 8
 ENGINE_PLAYOUTS = 0
-NOISE_INITIAL = 0.2
-NOISE_DECAY = 5
+NOISE_INITIAL = 0.4
+NOISE_DECAY = 1.4
+ESTIMATED_NPS = 18
 
 board = ChessEnvironment()
-model = MCTS('/Volumes/back up/CrazyhouseRL/New Networks/(MCTS)(6X128|4|8)(V1)64fish.pt', ENGINE_DEPTH)
+model = MCTS('/Users/gordon/Documents/CrazyhouseRL/New Networks/(MCTS)(8X256|8|8)(GPU)64fish.pt', ENGINE_DEPTH)
 
 while True:
     command = input("")
@@ -40,23 +41,15 @@ while True:
     elif command.startswith("setoption"):
         settings = command[10:]
         if settings.__contains__("ENGINE_PLAYOUTS"):
-            settings = int(settings[9:])
+            settings = int(settings[16:])
             ENGINE_PLAYOUTS = settings
         elif settings.__contains__("ENGINE_DEPTH"):
-            settings = int(settings[6:])
+            settings = int(settings[13:])
+            print(settings)
             model.ENGINE_DEPTH_VALUE = settings
-        elif settings.__contains__("network"):
+        elif settings.__contains__("NETWORK"):
             settings = settings[8:]
             # switch to other test networks
-            """
-            if settings.__contains__("stockfish"):
-                model = MCTS('/Users/gordon/Documents/CrazyhouseRL/New Networks/stock-8X256-PV.pt', ENGINE_DEPTH)
-            elif settings.__contains__("test"):
-                model = MCTS('/Users/gordon/Documents/CrazyhouseRL/New Networks/NEW-8X256-PV.pt', ENGINE_DEPTH)
-            """
-        elif settings.__contains__("ENGINE_DEPTH"):
-            settings = int(settings[6:])
-            model.ENGINE_DEPTH_VALUE = settings
 
     elif command == "isready":
         print("readyok")
@@ -99,8 +92,96 @@ while True:
     # make a move
     elif command.startswith("go"):
         noiseVal = (NOISE_INITIAL*NOISE_DECAY) / (NOISE_DECAY * (board.plies // 2 + 1))
+
+        # See if time management is needed.
+        if not command.__contains__("infinite"):
+            wtime = command.index("wtime")
+            btime = command.index("btime")
+
+            whiteTimeRemaining = int(int(command[wtime+6:btime-1])/1000)
+            blackTimeRemaining = int(int(command[btime+6:])/1000)
+
+            # TIME MANAGEMENT FOR WHITE:
+            if board.plies % 2 == 0:
+                # If it's the first move, spend roughly 10 seconds looking for the first move.
+                # Only needed for lichess API.
+                if board.plies == 0:
+                    model.ENGINE_DEPTH_VALUE = 6
+                    ENGINE_PLAYOUTS = 20
+                else:
+                    if whiteTimeRemaining < 10:
+                        ENGINE_PLAYOUTS = 0
+                    else:
+                        # spend roughly 1/7 of available time
+                        AVAILABLE_TIME = int(whiteTimeRemaining/7)
+                        SEARCHABLE_NODES = ESTIMATED_NPS*AVAILABLE_TIME
+
+                        # If over fifteen minutes on the clock...
+                        if whiteTimeRemaining > 1500:
+                            model.ENGINE_DEPTH_VALUE = 20
+                        # If over five minutes on the clock...
+                        if whiteTimeRemaining > 300:
+                            model.ENGINE_DEPTH_VALUE = 15
+                        # If over two minutes on the clock:
+                        elif whiteTimeRemaining > 120:
+                            model.ENGINE_DEPTH_VALUE = 10
+                        # If over one minute on the clock
+                        elif whiteTimeRemaining > 60:
+                            model.ENGINE_DEPTH_VALUE = 8
+                        else:
+                            model.ENGINE_DEPTH_VALUE = 4
+
+                        ENGINE_PLAYOUTS = int(SEARCHABLE_NODES/model.ENGINE_DEPTH_VALUE)
+
+                        # Avoid engine from wasting time searching 1 or 2 playouts.
+                        if ENGINE_PLAYOUTS < 3:
+                            ENGINE_PLAYOUTS = 0
+
+                        print("PLAYOUTS:", ENGINE_PLAYOUTS)
+            # TIME MANAGEMENT FOR BLACK:
+            else:
+                # If it's the first move, spend roughly 10 seconds looking for the first move.
+                if board.plies == 1:
+                    model.ENGINE_DEPTH_VALUE = 6
+                    ENGINE_PLAYOUTS = 20
+                else:
+                    if blackTimeRemaining < 10:
+                        ENGINE_PLAYOUTS = 0
+                    else:
+                        # spend roughly 1/7 of available time
+                        AVAILABLE_TIME = int(blackTimeRemaining/7)
+                        SEARCHABLE_NODES = ESTIMATED_NPS*AVAILABLE_TIME
+
+                        # If over fifteen minutes on the clock...
+                        if blackTimeRemaining > 1500:
+                            model.ENGINE_DEPTH_VALUE = 20
+                        # If over five minutes on the clock...
+                        if blackTimeRemaining > 300:
+                            model.ENGINE_DEPTH_VALUE = 15
+                        # If over two minutes on the clock:
+                        elif blackTimeRemaining > 120:
+                            model.ENGINE_DEPTH_VALUE = 10
+                        # If over one minute on the clock
+                        elif blackTimeRemaining > 60:
+                            model.ENGINE_DEPTH_VALUE = 8
+                        else:
+                            model.ENGINE_DEPTH_VALUE = 4
+
+                        ENGINE_PLAYOUTS = int(SEARCHABLE_NODES/model.ENGINE_DEPTH_VALUE)
+
+                        # Avoid engine from wasting time searching 1 or 2 playouts.
+                        if ENGINE_PLAYOUTS < 3:
+                            ENGINE_PLAYOUTS = 0
+
+                        print("PLAYOUTS:", ENGINE_PLAYOUTS)
+
+
+        # START SEARCHING FOR MCTS TREE
         if ENGINE_PLAYOUTS > 0:
+            start = time.time()
             model.competitivePlayoutsFromPosition(ENGINE_PLAYOUTS, board)
+            end = time.time()
+            TIME_SPENT = end-start
         else:
                 position = board.boardToString()
                 if position not in model.dictionary:
@@ -122,21 +203,40 @@ while True:
                                 model.childrenMoveNames.append(ActionToArray.legalMovesForState(board.arrayBoard,
                                                                                board.board))
         directory = model.dictionary[board.boardToString()]
+
+        # MAKE A MOVE
         if ENGINE_PLAYOUTS > 0:
+            index = np.argmax(model.childrenStateSeen[directory])
+            """
                                 index = np.argmax(
                                     MCTSCrazyhouse.PUCT_Algorithm(model.childrenStateWin[directory], model.childrenStateSeen[directory], 1,
                                                    np.sum(model.childrenStateSeen[directory]),
                                                                   model.childrenValueEval[directory],
                                                    MCTSCrazyhouse.noiseEvals(model.childrenPolicyEval[directory], noiseVal))
                                 )
+            """
         else:
             index = np.argmax(MCTSCrazyhouse.noiseEvals(model.childrenPolicyEval[directory], noiseVal))
         move = model.childrenMoveNames[directory][index]
         if chess.Move.from_uci(move) not in board.board.legal_moves:
             move = ActionToArray.legalMovesForState(board.arrayBoard, board.board)[0]
         print("bestmove " + move)
-        #print("Win Rate:",100*round(ValueEvaluation.positionEval(board, model.neuralNet), 4),"%")
-        print("info depth 1 score cp", str(int(round(ValueEvaluation.objectivePositionEval(board, model.neuralNet), 4))), "time 1 nodes 1 nps 1 pv", move)
+
+        # PRINT LOG
+        if ENGINE_PLAYOUTS > 0:
+            NODES_PER_SECOND = int(round((model.ENGINE_DEPTH_VALUE*ENGINE_PLAYOUTS)/TIME_SPENT, 0))
+            MCTS_WIN_RATE = model.childrenStateWin[directory][index]/model.childrenStateSeen[directory][index]
+            WINRATE_LOG = str(int(round(ValueEvaluation.objectivePositionEvalMCTS(board, model.neuralNet, MCTS_WIN_RATE), 4)))
+            print("Win Probability (0-1):", MCTS_WIN_RATE)
+        else:
+            NODES_PER_SECOND = 0
+            WINRATE_LOG = str(int(round(ValueEvaluation.objectivePositionEval(board, model.neuralNet), 4)))
+        if ENGINE_PLAYOUTS > 0:
+            print("info depth", model.ENGINE_DEPTH_VALUE, "score cp", WINRATE_LOG, "time", int(TIME_SPENT*1000),
+                  "nodes", ENGINE_PLAYOUTS*model.ENGINE_DEPTH_VALUE, "nps", NODES_PER_SECOND, "pv", move)
+        else:
+            print("info depth 0 score cp", WINRATE_LOG, "time 1 nodes 1 nps", NODES_PER_SECOND, "pv", move)
+
 
         board.makeMove(move)
         #print(board.board)

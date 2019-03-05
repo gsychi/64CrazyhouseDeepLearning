@@ -113,7 +113,7 @@ class ResNet(nn.Module):
         return out1, out2
 
 def ResNetDoubleHead():
-    return ResNet(BasicBlock, [2,2,1,1], [256,256,256,256], p_planes=4, v_planes=8)
+    return ResNet(BasicBlock, [2,2,2,2], [256,256,256,256], p_planes=8, v_planes=8)
 
 def ResNetDoubleHeadSmall():
     return ResNet(BasicBlock, [1,1,1,2], [32,32,32,32], p_planes=1, v_planes=4)
