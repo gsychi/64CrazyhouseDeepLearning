@@ -20,10 +20,10 @@ import json
 pgnGames = list(pathlib.Path('stockfishdatabase').glob('*.pgn'))
 listOfMoves = []
 listOfResults = []
-for g in range(1): #len(pgnGames)):
+for g in range(2): #len(pgnGames)):
     pgn = open(pgnGames[g])
     listOfMoves = []
-    for k in range(5000):  # 190,000 assures all games are looked at.
+    for k in range(20):  # 190,000 assures all games are looked at.
         try:
             game = chess.pgn.read_game(pgn)
 
@@ -50,7 +50,7 @@ for g in range(1): #len(pgnGames)):
                 #print(blackElo)
                 board = game.board()
                 singleGame = []
-                for move in game.main_line():
+                for move in game.mainline_moves():
                     board.push_uci(move.uci())
                     singleGame.append(move.uci())
                 listOfMoves.append(singleGame)
@@ -59,74 +59,96 @@ for g in range(1): #len(pgnGames)):
         except:
             print("", end="")
 
-    inList = []
-    outList = []
-    actionList = []
+inList = []
+outList = []
+actionList = []
+actionMagList = []
 
-    for j in range(len(listOfMoves)):
-        board = ChessEnvironment()
-        for i in range(len(listOfMoves[j])):
-            state = ActionToArray.boardToBinaryArray(board.boardToState())
-            value = listOfResults[j]
-            action = ActionToArray.moveArray(listOfMoves[j][i], board.arrayBoard)
-            if board.board.legal_moves.count() != len(ActionToArray.legalMovesForState(board.arrayBoard, board.board)):
-                print("ERROR!")
+for j in range(len(listOfMoves)):
+    board = ChessEnvironment()
+    for i in range(len(listOfMoves[j])):
+        state = ActionToArray.boardToBinaryArray(board.boardToState())
+        value = listOfResults[j]
+        action = ActionToArray.moveArray(listOfMoves[j][i], board.arrayBoard)
+        if i%2 == 0:
+            if value == 1:
+                mag = 1
+            elif value == 0:
+                mag = 0.5
+            else:
+                mag = 0.2
+        else:
+            if value == -1:
+                mag = 1
+            elif value == 0:
+                mag = 0.5
+            else:
+                mag = 0.2
+        if board.board.legal_moves.count() != len(ActionToArray.legalMovesForState(board.arrayBoard, board.board)):
+            print("ERROR!")
 
-            # make move
-            board.makeMove(listOfMoves[j][i])
+        # make move
+        board.makeMove(listOfMoves[j][i])
 
-            # add to database
-            inList.append(state)
-            outList.append(value)
-            actionList.append(np.argmax(action))
+        # add to database
+        inList.append(state)
+        outList.append(value)
+        actionList.append(np.argmax(action))
+        actionMagList.append(mag)
 
-        print(board.board)
-        board.gameResult()
-        print(board.gameStatus)
-        print(len(inList))
-        print(len(outList))
-        print(len(actionList))
-        print(str(int(j + 1)), "out of ", len(listOfMoves), "parsed.")
+    print(board.board)
+    board.gameResult()
+    print(board.gameStatus)
+    print(len(inList))
+    print(len(outList))
+    print(len(actionList))
+    print(len(actionMagList))
+    print(str(int(j + 1)), "out of ", len(listOfMoves), "parsed.")
 
-    # all games are parsed, now convert list into array for outputs
-    inputs = np.zeros((len(inList), 15))
-    valueOutputs = np.zeros(len(outList))
-    policyOutputs = np.zeros(len(actionList))
+# all games are parsed, now convert list into array for outputs
+inputs = np.zeros((len(inList), 15))
+valueOutputs = np.zeros(len(outList))
+policyOutputs = np.zeros(len(actionList))
+policyMagOutputs = np.zeros(len(actionMagList))
 
-    i = 0
-    while len(outList) > 0:
-        inputs[i] = inList[len(inList)-1]
-        valueOutputs[i] = outList[len(outList)-1]
-        policyOutputs[i] = actionList[len(actionList)-1]
-        outList.pop()
-        actionList.pop()
-        inList.pop()
-        i += 1
+i = 0
+while len(outList) > 0:
+    inputs[i] = inList[len(inList)-1]
+    valueOutputs[i] = outList[len(outList)-1]
+    policyOutputs[i] = actionList[len(actionList)-1]
+    policyMagOutputs[i] = actionMagList[len(actionMagList)-1]
+    outList.pop()
+    actionList.pop()
+    inList.pop()
+    actionMagList.pop()
+    i += 1
 
-    print(inputs)
-    print(valueOutputs)
-    print(policyOutputs)
+#print(inputs)
+print(valueOutputs)
+#print(policyOutputs)
+print(policyMagOutputs)
 
-    print(inputs.shape)
-    print(valueOutputs.shape)
-    print(policyOutputs.shape)
-
-
-    # save outputs!
-    saveName = 'Training Data/StockfishOutputs3.h5'
-
-    with h5py.File(saveName, 'w') as hf:
-        hf.create_dataset("Policy Outputs", data=policyOutputs, compression='gzip', compression_opts=5)
-        hf.create_dataset("Value Outputs", data=valueOutputs, compression='gzip', compression_opts=5)
+print(inputs.shape)
+print(valueOutputs.shape)
+print(policyOutputs.shape)
+print(policyMagOutputs.shape)
 
 
-    saveName = 'Training Data/StockfishInputs3[binaryConverted].h5'
+# save outputs!
+saveName = 'Training Data/StockfishOutputs3.h5'
 
-    with h5py.File(saveName, 'w') as hf:
-        #dtype = h5py.special_dtype(vlen=str)
-        hf.create_dataset("Inputs", data=inputs, compression='gzip', compression_opts=9) #dtype=dtype,
+with h5py.File(saveName, 'w') as hf:
+    hf.create_dataset("Policy Outputs", data=policyOutputs, compression='gzip', compression_opts=5)
+    hf.create_dataset("Policy Magnitude Outputs", data=policyMagOutputs, compression='gzip', compression_opts=5)
+    hf.create_dataset("Value Outputs", data=valueOutputs, compression='gzip', compression_opts=5)
 
-    inputs = []
-    valueOutputs = []
-    policyOutputs = []
+saveName = 'Training Data/StockfishInputs3[binaryConverted].h5'
+
+with h5py.File(saveName, 'w') as hf:
+    #dtype = h5py.special_dtype(vlen=str)
+    hf.create_dataset("Inputs", data=inputs, compression='gzip', compression_opts=9) #dtype=dtype,
+
+inputs = []
+valueOutputs = []
+policyOutputs = []
 

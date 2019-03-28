@@ -25,12 +25,12 @@ print(dir_path)
 # PARAMETERS
 ENGINE_DEPTH = 8
 ENGINE_PLAYOUTS = 0
-NOISE_INITIAL = 0.4
+NOISE_INITIAL = 0.3
 NOISE_DECAY = 1.4
 ESTIMATED_NPS = 18
 
 board = ChessEnvironment()
-model = MCTS('/Users/gordon/Documents/CrazyhouseRL/New Networks/(MCTS)(8X256|8|8)(GPU)64fish.pt', ENGINE_DEPTH)
+model = MCTS('/Users/gordon/Documents/CrazyhouseRL/New Networks/(MCTS)(8X256|8|8)(GPU)(V4)64fish.pt', ENGINE_DEPTH)
 
 while True:
     command = input("")

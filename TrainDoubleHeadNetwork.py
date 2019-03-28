@@ -10,7 +10,7 @@ import h5py
 
 # inputs and outputs are numpy arrays. This method of checking accuracy only works with imported games.
 # if it's not imported, accuracy will never be 100%, so it will just output the trained network after 10,000 epochs.
-def trainDoubleHeadNetwork(boards, policyOutputs, valueOutputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
+def trainDoubleHeadNetwork(boards, policyOutputs, policyMag, valueOutputs, EPOCHS=1, BATCH_SIZE=1, LR=0.001,
                            loadDirectory='none.pt', saveDirectory='network1.pt'):
 
     policyLossHistory = []
@@ -21,7 +21,7 @@ def trainDoubleHeadNetwork(boards, policyOutputs, valueOutputs, EPOCHS=1, BATCH_
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
 
-    data = DoubleHeadTrainingDataset(boards, policyOutputs, valueOutputs)
+    data = DoubleHeadTrainingDataset(boards, policyOutputs, policyMag, valueOutputs)
 
     trainLoader = torch.utils.data.DataLoader(dataset=data, batch_size=BATCH_SIZE, shuffle=True)
 
@@ -140,8 +140,9 @@ if train:
         print(len(boards))
     with h5py.File("Training Data/StockfishOutputs3.h5", 'r') as hf:
         policy = hf["Policy Outputs"][:]
+        policyMag = hf["Policy Magnitude Outputs"][:]
         value = hf["Value Outputs"][:]
         print(len(value))
-    trainDoubleHeadNetwork(boards, policy, value, loadDirectory="New Networks/[6x256|4|8]64fish.pt",
-                           saveDirectory="New Networks/[6x256|4|8]64fish.pt", EPOCHS=2,
+    trainDoubleHeadNetwork(boards, policy, policyMag, value, loadDirectory="New Networks/[12X256_8_8]64fish.pt",
+                           saveDirectory="New Networks/[12X256_8_8]64fish.pt", EPOCHS=2,
                            BATCH_SIZE=64, LR=0.001)

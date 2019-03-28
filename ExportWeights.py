@@ -15,9 +15,9 @@ from torch import nn
 model = ChessResNet.ResNetDoubleHead()
 
 # Load training checkpoint
-savedFile = torch.load("New Networks/[6x256|4|8]64fish.pt", map_location='cpu')
+savedFile = torch.load("New Networks/[12X256_16_8_SCALED]64fish.pt", map_location='cpu')
 model.load_state_dict(savedFile['model_state_dict'])
 
 # Save Weights
-torch.save(model.state_dict(), "New Networks/(MCTS)(6X256|4|8)(V4)(DESKTOP)64fish.pt")
+torch.save(model.state_dict(), "New Networks/(MCTS)(12X256_16_8_SCALED)(DESKTOP)64fish.pt")
 

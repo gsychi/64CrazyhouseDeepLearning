@@ -303,6 +303,6 @@ def bestNetworkTest(bestNet, testingNet, games, playouts, clearAfterEachRound=Fa
 
 testing = True
 if testing:
-    best = MCTS("New Networks/(MCTS)(6X256|4|8)(V4)(DESKTOP)64fish.pt", 6)
-    newNet = MCTS("New Networks/(MCTS)(6X256|4|8)(GPU)64fish.pt", 6)
-    print(bestNetworkTest(best, newNet, 500, 0))
+    best = MCTS("New Networks/(MCTS)(8X256|8|8)(GPU)(V4)64fish.pt", 6)
+    newNet = MCTS("New Networks/(MCTS)(8X256|8|8)(GPU)64fish.pt", 6)
+    print(bestNetworkTest(best, newNet, 200, 0))

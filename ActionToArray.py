@@ -657,19 +657,11 @@ testing = False
 if testing:
 
     board = ChessEnvironment()
-    board.makeMove("e2e4")
-    board.makeMove("d7d5")
-    board.makeMove("e4d5")
-    save = boardToBinaryArray(board.boardToState())
-    recovered = binaryArrayToBoard(save)
-    print(recovered)
-    recovered=recovered.flatten()
-    actual = board.boardToState().flatten()
-
-    for i in range(960):
-        if recovered[i] != actual[i]:
-            print("erroneous")
+    board.makeMove("g1f3")
+    board.makeMove("g8f6")
+    board.makeMove("f3g1")
+    board.makeMove("f6g8")
+    print(board.board.is_repetition(count=2))
 
 
-    #print(np.argmax(moveArray("a8a1", ChessEnvironment().arrayBoard)))
-    #print(np.argmax(moveArray("d8d1", ChessEnvironment().arrayBoard)))
+

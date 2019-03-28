@@ -269,6 +269,13 @@ class ChessEnvironment():
                 captiveToBinary[8][6] = 1
                 captiveToBinary[8][7] = 1
 
+            if self.board.is_repetition(count=3):
+                captiveToBinary[9][0] = 1
+                print("THREE TIME")
+            elif self.board.is_repetition(count=2):
+                captiveToBinary[9][1] = 1
+                print("TWO TIME")
+
         self.updateNumpyBoards()
 
         # perhaps work on adding 1s for spaces....
