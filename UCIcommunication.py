@@ -19,18 +19,31 @@ import time
 import ValueEvaluation
 import os
 
+def isThereMate(board, moves, engine):
+    info = engine.analyse(board.board, chess.engine.Limit(time=0.005))
+    if str(info["score"])[0] == "#":
+        #print("mate found")
+        move = str(info["pv"][0])
+        # find where this move is in the possible actions
+        for i in range(len(moves)):
+            if moves[i] == move:
+                #print("found index")
+                return i
+    return None
+
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 print(dir_path)
 
 # PARAMETERS
 ENGINE_DEPTH = 8
 ENGINE_PLAYOUTS = 0
-NOISE_INITIAL = 0.3
-NOISE_DECAY = 1.4
-ESTIMATED_NPS = 18
+NOISE_INITIAL = 0.5
+NOISE_DECAY = 1.22
+ESTIMATED_NPS = 6
 
 board = ChessEnvironment()
-model = MCTS('/Users/gordon/Documents/CrazyhouseRL/New Networks/(MCTS)(8X256|8|8)(GPU)(V4)64fish.pt', ENGINE_DEPTH)
+model = MCTS('/Users/gordon/Documents/CrazyhouseRL/New Networks/(MCTS)(12X256|16|8)(GPU)64fish.pt', ENGINE_DEPTH)
 
 while True:
     command = input("")
@@ -46,7 +59,7 @@ while True:
         elif settings.__contains__("ENGINE_DEPTH"):
             settings = int(settings[13:])
             print(settings)
-            model.ENGINE_DEPTH_VALUE = settings
+            model.DEPTH_VALUE = settings
         elif settings.__contains__("NETWORK"):
             settings = settings[8:]
             # switch to other test networks
@@ -95,43 +108,54 @@ while True:
 
         # See if time management is needed.
         if not command.__contains__("infinite"):
-            wtime = command.index("wtime")
-            btime = command.index("btime")
+            command = command.split(" ")
 
-            whiteTimeRemaining = int(int(command[wtime+6:btime-1])/1000)
-            blackTimeRemaining = int(int(command[btime+6:])/1000)
+            if len(command) > 4:  # this means that there is time for both users!
+                whiteTimeRemaining = int(int(command[2])/1000)
+                blackTimeRemaining = int(int(command[4])/1000)
+            else:
+                whiteTimeRemaining = int(int(command[2])/1000)
+                blackTimeRemaining = int(int(command[2])/1000)
 
             # TIME MANAGEMENT FOR WHITE:
             if board.plies % 2 == 0:
                 # If it's the first move, spend roughly 10 seconds looking for the first move.
                 # Only needed for lichess API.
                 if board.plies == 0:
-                    model.ENGINE_DEPTH_VALUE = 6
-                    ENGINE_PLAYOUTS = 20
+                    model.DEPTH_VALUE = 6
+                    ENGINE_PLAYOUTS = 10
                 else:
-                    if whiteTimeRemaining < 10:
+                    if whiteTimeRemaining < 20:
                         ENGINE_PLAYOUTS = 0
                     else:
                         # spend roughly 1/7 of available time
-                        AVAILABLE_TIME = int(whiteTimeRemaining/7)
+                        if board.plies > 20:
+                            AVAILABLE_TIME = int(whiteTimeRemaining/7.5)
+                        elif board.plies > 14:
+                            AVAILABLE_TIME = int(whiteTimeRemaining/10)
+                        elif board.plies > 6:
+                            AVAILABLE_TIME = int(whiteTimeRemaining/15)
+                        else:
+                            AVAILABLE_TIME = 2
+
                         SEARCHABLE_NODES = ESTIMATED_NPS*AVAILABLE_TIME
 
-                        # If over fifteen minutes on the clock...
-                        if whiteTimeRemaining > 1500:
-                            model.ENGINE_DEPTH_VALUE = 20
-                        # If over five minutes on the clock...
-                        if whiteTimeRemaining > 300:
-                            model.ENGINE_DEPTH_VALUE = 15
+                        # If over fifteen minutes on the clock
+                        if whiteTimeRemaining > 750:
+                            model.DEPTH_VALUE = 20
+                        # If over five minutes on the clock
+                        elif whiteTimeRemaining > 300:
+                            model.DEPTH_VALUE = 15
                         # If over two minutes on the clock:
                         elif whiteTimeRemaining > 120:
-                            model.ENGINE_DEPTH_VALUE = 10
-                        # If over one minute on the clock
+                            model.DEPTH_VALUE = 12
+                        # If over one minute on the clock:
                         elif whiteTimeRemaining > 60:
-                            model.ENGINE_DEPTH_VALUE = 8
+                            model.DEPTH_VALUE = 10
                         else:
-                            model.ENGINE_DEPTH_VALUE = 4
+                            model.DEPTH_VALUE = 4
 
-                        ENGINE_PLAYOUTS = int(SEARCHABLE_NODES/model.ENGINE_DEPTH_VALUE)
+                        ENGINE_PLAYOUTS = int(SEARCHABLE_NODES/model.DEPTH_VALUE)
 
                         # Avoid engine from wasting time searching 1 or 2 playouts.
                         if ENGINE_PLAYOUTS < 3:
@@ -142,32 +166,40 @@ while True:
             else:
                 # If it's the first move, spend roughly 10 seconds looking for the first move.
                 if board.plies == 1:
-                    model.ENGINE_DEPTH_VALUE = 6
-                    ENGINE_PLAYOUTS = 20
+                    model.DEPTH_VALUE = 6
+                    ENGINE_PLAYOUTS = 10
                 else:
-                    if blackTimeRemaining < 10:
+                    if blackTimeRemaining < 20:
                         ENGINE_PLAYOUTS = 0
                     else:
                         # spend roughly 1/7 of available time
-                        AVAILABLE_TIME = int(blackTimeRemaining/7)
+                        if board.plies > 21:
+                            AVAILABLE_TIME = int(blackTimeRemaining/7.5)
+                        elif board.plies > 15:
+                            AVAILABLE_TIME = int(blackTimeRemaining/10)
+                        elif board.plies > 7:
+                            AVAILABLE_TIME = int(blackTimeRemaining/15)
+                        else:
+                            AVAILABLE_TIME = 2
+                        
                         SEARCHABLE_NODES = ESTIMATED_NPS*AVAILABLE_TIME
 
-                        # If over fifteen minutes on the clock...
-                        if blackTimeRemaining > 1500:
-                            model.ENGINE_DEPTH_VALUE = 20
-                        # If over five minutes on the clock...
-                        if blackTimeRemaining > 300:
-                            model.ENGINE_DEPTH_VALUE = 15
-                        # If over two minutes on the clock:
+                        # If over fifteen minutes on the clock
+                        if blackTimeRemaining > 750:
+                            model.DEPTH_VALUE = 20
+                        # If over five minutes on the clock
+                        elif blackTimeRemaining > 300:
+                            model.DEPTH_VALUE = 15
+                        # If over two minutes on the clock
                         elif blackTimeRemaining > 120:
-                            model.ENGINE_DEPTH_VALUE = 10
+                            model.DEPTH_VALUE = 12
                         # If over one minute on the clock
                         elif blackTimeRemaining > 60:
-                            model.ENGINE_DEPTH_VALUE = 8
+                            model.DEPTH_VALUE = 10
                         else:
-                            model.ENGINE_DEPTH_VALUE = 4
+                            model.DEPTH_VALUE = 4
 
-                        ENGINE_PLAYOUTS = int(SEARCHABLE_NODES/model.ENGINE_DEPTH_VALUE)
+                        ENGINE_PLAYOUTS = int(SEARCHABLE_NODES/model.DEPTH_VALUE)
 
                         # Avoid engine from wasting time searching 1 or 2 playouts.
                         if ENGINE_PLAYOUTS < 3:
@@ -179,61 +211,56 @@ while True:
         # START SEARCHING FOR MCTS TREE
         if ENGINE_PLAYOUTS > 0:
             start = time.time()
+            print("CHOSEN DEPTH:",model.DEPTH_VALUE)
             model.competitivePlayoutsFromPosition(ENGINE_PLAYOUTS, board)
             end = time.time()
             TIME_SPENT = end-start
-        else:
-                position = board.boardToString()
-                if position not in model.dictionary:
-                            state = torch.from_numpy(board.boardToState())
-                            model.neuralNet.eval()
-                            outputs = model.neuralNet(state)[0]
-                            model.neuralNet.eval()
-                            if ENGINE_PLAYOUTS > 0:
-                                model.addPositionToMCTS(board.boardToString(),
-                                              ActionToArray.legalMovesForState(board.arrayBoard,
-                                                                               board.board),
-                                              board.arrayBoard, outputs, board)
-                            else:
-                                model.dictionary[board.boardToString()] = len(model.dictionary)
-                                policy = ActionToArray.moveEvaluations(ActionToArray.legalMovesForState(board.arrayBoard,
-                                                                               board.board),
-                                                                       board.arrayBoard, outputs)
-                                model.childrenPolicyEval.append(policy)
-                                model.childrenMoveNames.append(ActionToArray.legalMovesForState(board.arrayBoard,
-                                                                               board.board))
-        directory = model.dictionary[board.boardToString()]
+            directory = model.dictionary[board.boardToString()]
+            if board.plies > 10 or board.plies < 2:
+                index = np.argmax(model.childrenStateSeen[directory])
+            else:
+                index = np.argmax(MCTSCrazyhouse.noiseEvals(model.childrenPolicyEval[directory], noiseVal))
 
-        # MAKE A MOVE
-        if ENGINE_PLAYOUTS > 0:
-            index = np.argmax(model.childrenStateSeen[directory])
-            """
-                                index = np.argmax(
-                                    MCTSCrazyhouse.PUCT_Algorithm(model.childrenStateWin[directory], model.childrenStateSeen[directory], 1,
-                                                   np.sum(model.childrenStateSeen[directory]),
-                                                                  model.childrenValueEval[directory],
-                                                   MCTSCrazyhouse.noiseEvals(model.childrenPolicyEval[directory], noiseVal))
-                                )
-            """
+            move = model.childrenMoveNames[directory][index]
         else:
-            index = np.argmax(MCTSCrazyhouse.noiseEvals(model.childrenPolicyEval[directory], noiseVal))
-        move = model.childrenMoveNames[directory][index]
+            state = torch.from_numpy(board.boardToState())
+
+            # moves in a position
+            moveNames = ActionToArray.legalMovesForState(board.arrayBoard, board.board)
+
+            mate = isThereMate(board, moveNames, model.matefinder)
+            if mate != None:
+                index = mate
+                print("I see mate!")
+            else:
+                model.neuralNet.eval()
+                outputs = model.neuralNet(state)[0]
+
+                policyScore = ActionToArray.moveEvaluations(moveNames, board.arrayBoard, outputs)
+                noise = (np.random.rand(len(policyScore)) * 2 * noiseVal) - (noiseVal)
+                index = np.argmax(policyScore+noise)
+
+            move = moveNames[index]
+
         if chess.Move.from_uci(move) not in board.board.legal_moves:
             move = ActionToArray.legalMovesForState(board.arrayBoard, board.board)[0]
         print("bestmove " + move)
 
         # PRINT LOG
         if ENGINE_PLAYOUTS > 0:
-            NODES_PER_SECOND = int(round((model.ENGINE_DEPTH_VALUE*ENGINE_PLAYOUTS)/TIME_SPENT, 0))
+            NODES_PER_SECOND = int(round((model.DEPTH_VALUE*ENGINE_PLAYOUTS)/TIME_SPENT, 0))
             MCTS_WIN_RATE = model.childrenStateWin[directory][index]/model.childrenStateSeen[directory][index]
-            WINRATE_LOG = str(int(round(ValueEvaluation.objectivePositionEvalMCTS(board, model.neuralNet, MCTS_WIN_RATE), 4)))
+            try:
+                WINRATE_LOG = str(int(round(ValueEvaluation.objectivePositionEvalMCTS(board, model.neuralNet, MCTS_WIN_RATE), 4)))
+            except:
+                 WINRATE_LOG = 0.5
             print("Win Probability (0-1):", MCTS_WIN_RATE)
         else:
             NODES_PER_SECOND = 0
             WINRATE_LOG = str(int(round(ValueEvaluation.objectivePositionEval(board, model.neuralNet), 4)))
         if ENGINE_PLAYOUTS > 0:
-            print("info depth", model.ENGINE_DEPTH_VALUE, "score cp", WINRATE_LOG, "time", int(TIME_SPENT*1000),
-                  "nodes", ENGINE_PLAYOUTS*model.ENGINE_DEPTH_VALUE, "nps", NODES_PER_SECOND, "pv", move)
+            print("info depth", model.DEPTH_VALUE, "score cp", WINRATE_LOG, "time", int(TIME_SPENT*1000),
+                  "nodes", ENGINE_PLAYOUTS*model.DEPTH_VALUE, "nps", NODES_PER_SECOND, "pv", move)
         else:
             print("info depth 0 score cp", WINRATE_LOG, "time 1 nodes 1 nps", NODES_PER_SECOND, "pv", move)
 

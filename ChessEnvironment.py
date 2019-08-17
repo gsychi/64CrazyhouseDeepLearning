@@ -271,10 +271,10 @@ class ChessEnvironment():
 
             if self.board.is_repetition(count=3):
                 captiveToBinary[9][0] = 1
-                print("THREE TIME")
+                #print("THREE TIME")
             elif self.board.is_repetition(count=2):
                 captiveToBinary[9][1] = 1
-                print("TWO TIME")
+                #print("TWO TIME")
 
         self.updateNumpyBoards()
 

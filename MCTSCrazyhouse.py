@@ -29,11 +29,27 @@ import torch.utils.data as data_utils
 from DoubleHeadDataset import DoubleHeadDataset
 import ValueEvaluation
 from DoubleHeadDataset import DoubleHeadTrainingDataset
+import chess.engine
+
 
 # Creates a list of zeros hmmm...
 def zeroList(n):
     temp = [0] * n
     return temp
+
+def isThereMate(board, moves, engine):
+    info = engine.analyse(board.board, chess.engine.Limit(time=0.005))
+    if str(info["score"])[0] == "#":
+        #print("mate found")
+        move = str(info["pv"][0])
+        # find where this move is in the possible actions
+        for i in range(len(moves)):
+            if moves[i] == move:
+                #print("found index")
+                return i
+        #print("found mate but not index")
+    return None
+
 
 
 # w stands for # of wins, n stands for number of times node has been visited.
@@ -46,8 +62,14 @@ def PUCT_Algorithm(w, n, c, N, q, p):
     selfPlayEvaluation = np.divide(w, n, out=np.zeros_like(w), where=n != 0)
     winRate = (q + selfPlayEvaluation) * 0.5
 
+    if len(p) != len(n):
+        print(len(p))
+        print(len(n))
+
+    #print("WIN RATE:", winRate)
+
     # Exploration
-    exploration = (c * p * np.sqrt(N)) / (1 + n)
+    exploration = (c * p * np.sqrt(N+1)) / (1 + n)
 
     PUCT = winRate + exploration
 
@@ -82,6 +104,7 @@ class MCTS():
         self.childrenPolicyEval = []  # a 2D list, each directory contains numpy array
         self.childrenValueEval = []  # a 2D list, each directory contains numpy array
         self.neuralNet = ChessResNet.ResNetDoubleHead().double()
+        self.matefinder = chess.engine.SimpleEngine.popen_uci("/Users/gordon/Documents/sixtyfour/engines/matefinder")
 
         try:
             self.neuralNet.load_state_dict(torch.load(directory))
@@ -105,12 +128,12 @@ class MCTS():
         self.childrenValueEval = []  # a 2D list, each directory contains numpy array
 
     def printInformation(self):
-        print(self.dictionary)
-        print(self.childrenMoveNames)
-        print(self.childrenStateSeen)
-        print(self.childrenStateWin)
-        print(self.childrenPolicyEval)
-        print(self.childrenValueEval)
+        print(len(self.dictionary))
+        print(len(self.childrenMoveNames))
+        print(len(self.childrenStateSeen))
+        print(len(self.childrenStateWin))
+        print(len(self.childrenPolicyEval))
+        print(len(self.childrenValueEval))
         print("Parent states in tree: ", len(self.childrenMoveNames))
 
     def printSize(self):
@@ -135,6 +158,8 @@ class MCTS():
                 actuallyAPawn=0,
                 noise=True,
                 printPGN=True):  # Here is the information just for starting at a different position
+
+        moves = []
 
         whiteParentStateDictionary = []
         whiteStateSeen = []
@@ -182,17 +207,21 @@ class MCTS():
                         else:
                             noiseConstant = 0
 
-                        if len(self.childrenStateWin) > 0:
-                            index = np.argmax(PUCT_Algorithm(self.childrenStateWin[len(self.childrenStateSeen) - 1],
-                                                             self.childrenStateSeen[len(self.childrenStateSeen) - 1],
-                                                             explorationConstant,
-                                                             np.sum(self.childrenStateSeen[
-                                                                        len(self.childrenStateSeen) - 1]),
-                                                             self.childrenValueEval[
-                                                                            len(self.childrenStateSeen) - 1],
-                                                             noiseEvals(self.childrenPolicyEval[
-                                                                            len(self.childrenStateSeen) - 1],
-                                                                        noiseConstant)))
+                        if len(self.childrenMoveNames[len(self.childrenMoveNames)-1]) > 1:
+                            mate = isThereMate(tempBoard, ActionToArray.legalMovesForState(tempBoard.arrayBoard, tempBoard.board), self.matefinder)
+                            if mate != None:
+                                index = mate
+                            else:
+                                index = np.argmax(PUCT_Algorithm(self.childrenStateWin[len(self.childrenStateWin) - 1],
+                                                                 self.childrenStateSeen[len(self.childrenStateSeen) - 1],
+                                                                 explorationConstant,
+                                                                 np.sum(self.childrenStateSeen[
+                                                                            len(self.childrenStateSeen) - 1]),
+                                                                 self.childrenValueEval[
+                                                                                len(self.childrenValueEval) - 1],
+                                                                 noiseEvals(self.childrenPolicyEval[
+                                                                                len(self.childrenPolicyEval) - 1],
+                                                                            noiseConstant)))
                         else:
                             index = 0
 
@@ -200,6 +229,8 @@ class MCTS():
 
                         # print(move)
                         tempBoard.makeMove(move)
+                        moves.append(move)
+                        #print(len(moves))
 
                         actionVector = np.zeros(len(self.childrenMoveNames[len(self.childrenStateSeen) - 1]))
                         actionVector[index] = 1
@@ -212,16 +243,22 @@ class MCTS():
                 else:
                     noiseConstant = 0
 
-                index = np.argmax(PUCT_Algorithm(self.childrenStateWin[directory],
-                                                 self.childrenStateSeen[directory], explorationConstant,
-                                                 np.sum(self.childrenStateSeen[directory]),
-                                                 self.childrenValueEval[directory],
-                                                 noiseEvals(self.childrenPolicyEval[directory], noiseConstant)
-                                                 ))
+                mate = isThereMate(tempBoard, ActionToArray.legalMovesForState(tempBoard.arrayBoard, tempBoard.board), self.matefinder)
+                if mate != None:
+                    index = mate
+                else:
+                    index = np.argmax(PUCT_Algorithm(self.childrenStateWin[directory],
+                                                         self.childrenStateSeen[directory], explorationConstant,
+                                                         np.sum(self.childrenStateSeen[directory]),
+                                                         self.childrenValueEval[directory],
+                                                         noiseEvals(self.childrenPolicyEval[directory], noiseConstant)
+                                                         ))
                 move = self.childrenMoveNames[directory][index]
 
                 # print(move)
                 tempBoard.makeMove(move)
+                moves.append(move)
+                #print(len(moves))
 
                 # the move will have to be indexed correctly based on where the position is.
                 actionVector = np.zeros(len(self.childrenMoveNames[directory]))
@@ -240,14 +277,20 @@ class MCTS():
 
         if tempBoard.result == 1:  # white victory
             for i in range(len(whiteStateSeen)):
-                whiteStateWin.append(whiteStateSeen[i])
+                whiteStateWin.append(whiteStateSeen[i]*1.8)
             for j in range(len(blackStateSeen)):
-                blackStateWin.append(blackStateSeen[j] * 0)
+                if depth == 1:
+                    blackStateWin.append(blackStateSeen[j] * -1)
+                else:
+                    blackStateWin.append(blackStateSeen[j] * 0)
         if tempBoard.result == -1:  # black victory
             for i in range(len(whiteStateSeen)):
-                whiteStateWin.append(whiteStateSeen[i] * 0)
+                if depth == 1:
+                    whiteStateWin.append(whiteStateSeen[i] * -1)
+                else:
+                    whiteStateWin.append(whiteStateSeen[i] * 0)
             for j in range(len(blackStateSeen)):
-                blackStateWin.append(blackStateSeen[j])
+                blackStateWin.append(blackStateSeen[j]*1.8)
                 # this is okay, because if the game is played til checkmate then
                 # this ensures that the move count for both sides is equal.
         if tempBoard.result == 0:  # 'tis a tie
@@ -298,6 +341,7 @@ class MCTS():
             directory = self.dictionary[blackParentStateDictionary[i]]
             self.childrenStateSeen[directory] = self.childrenStateSeen[directory] + blackStateSeen[i]
             self.childrenStateWin[directory] = self.childrenStateWin[directory] + blackStateWin[i]
+        print("playout:", *moves, sep=" ")
 
     def trainingPlayoutFromBeginning(self, runs, printPGN):
         for i in range(1, runs + 1):
@@ -329,16 +373,6 @@ class MCTS():
                          plies=tempBoard.plies, wCap=tempBoard.whiteCaptivePieces, explorationConstant=2**0.5,
                          bCap=tempBoard.blackCaptivePieces, noise=False, actuallyAPawn=tempBoard.actuallyAPawn,
                          printPGN=False)
-
-            #self.printSize()
-            #"""
-            #print(self.childrenMoveNames[self.dictionary[sim.boardToString()]])
-            #print(self.childrenStateWin[self.dictionary[sim.boardToString()]])
-            #print(self.childrenStateSeen[self.dictionary[sim.boardToString()]])
-            #print(self.childrenPolicyEval[self.dictionary[sim.boardToString()]])
-            #print((self.childrenValueEval[self.dictionary[sim.boardToString()]]))
-            #print("Playout:", np.sum(self.childrenStateSeen[self.dictionary[sim.boardToString()]]))
-            #"""
 
     def simulateTrainingGame(self, playouts, round="1"):
 

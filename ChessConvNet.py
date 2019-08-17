@@ -3,10 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
-def sigmoid(x):
-  return 1 / (1 + math.exp(-x))
-
-
 class ChessConvNet(nn.Module):
     def __init__(self, num_classes):
         self.numClasses = num_classes
