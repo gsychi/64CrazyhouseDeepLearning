@@ -34,9 +34,9 @@ Once these are all running on your computer, then you will be able to continue t
 ## How do I run the program?
 Start off by downloading the repository through terminal...
 
-'''
+```
 git clone https://github.com/FTdiscovery/64CrazyhouseDeepLearning.git
-'''
+```
 ... or by downloading the ZIP file on the top right hand corner.
 
 ##How does this program work?
