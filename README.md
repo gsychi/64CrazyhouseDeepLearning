@@ -39,7 +39,7 @@ git clone https://github.com/FTdiscovery/64CrazyhouseDeepLearning.git
 ```
 ... or by downloading the ZIP file on the top right hand corner.
 
-##How does this program work?
+## How does this program work?
 You can learn more about the training checkpoints, parameters, and others on the wiki!
 
 ## Additional Code Information
