@@ -20,12 +20,12 @@ The latest training dataset contains 11.2 million moves played by Stockfish in 1
 ## Requirements
 It will be necessary to download the following packages:
 
-python-chess 
-scipy 
-numpy (if that's somehow not on your computer) 
-torch (pytorch) 
-torchvision 
-pathlib 
+python-chess <br>
+scipy <br>
+numpy (if that's somehow not on your computer) <br>
+torch (pytorch) <br>
+torchvision <br>
+pathlib <br>
 
 As this program was written, tested, and edited on the PyCharm CE IDE, I also recommend that users also download the interpreter and run the code on it. However, I acknowledge that it is possible to run any of the attached files through terminal/other IDEs, provided that all the necessary libraries are downloaded. Python 3 (3.6) is strongly recommended.
 
@@ -34,7 +34,9 @@ Once these are all running on your computer, then you will be able to continue t
 ## How do I run the program?
 Start off by downloading the repository through terminal...
 
+'''
 git clone https://github.com/FTdiscovery/64CrazyhouseDeepLearning.git
+'''
 ... or by downloading the ZIP file on the top right hand corner.
 
 ##How does this program work?
